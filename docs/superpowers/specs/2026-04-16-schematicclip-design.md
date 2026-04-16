@@ -221,6 +221,7 @@ Idle ──(Ctrl+V + EMF detectado)──► Converting
 ```
 
 ### `%APPDATA%\SchematicClip\history.json`
+Sobrescrito a cada início do app (histórico apenas da sessão atual).
 ```json
 {
   "entries": [
@@ -242,12 +243,12 @@ Idle ──(Ctrl+V + EMF detectado)──► Converting
 
 | Pacote | Versão | Função |
 |---|---|---|
-| `electron` | 29.x | Shell desktop |
+| `electron` | latest stable | Shell desktop |
 | `react` + `react-dom` | 18.x | UI do Renderer |
 | `vite` + `electron-vite` | latest | Build |
 | `tailwindcss` | 3.x | Estilos utilitários |
 | `lucide-react` | latest | Ícones |
-| `electron-store` | 9.x | Persistência JSON no AppData |
+| `electron-store` | latest | Persistência JSON no AppData |
 | `electron-builder` | latest | Gera instalador `.exe` (NSIS) |
 
 **Dependência externa obrigatória:** Inkscape 1.x instalado no Windows.  

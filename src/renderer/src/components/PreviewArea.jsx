@@ -48,8 +48,8 @@ export default function PreviewArea() {
         </div>
       </div>
 
-      {/* SVG Preview */}
-      <div className="flex items-center justify-center p-4 min-h-[140px] bg-white dark:bg-[#1a1a1a]">
+      {/* SVG Preview — always white background; schematics are designed for light backgrounds */}
+      <div className="flex items-center justify-center p-4 min-h-[140px] bg-white">
         <img
           src={svgDataUrl}
           alt="Prévia do esquemático"

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, CheckCircle2, FolderOpen } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowLeft, CheckCircle2, FolderOpen, Sun, Moon, Monitor } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 
 const PROJECT_COLORS = ['#2f81f7', '#27c93f', '#ff9f43', '#e74c3c', '#9b59b6', '#1abc9c']
@@ -153,9 +153,32 @@ export default function Settings({ onBack }) {
 
         {/* Appearance section */}
         <section>
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#9b9a97] dark:text-[#4c4c4c] mb-2">Aparência</p>
-          <p className="text-[12px] text-[#6b6a68] dark:text-[#9b9a97]">
-            O tema segue automaticamente a configuração do Windows (claro ou escuro). Não é necessário ajustar manualmente.
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#9b9a97] dark:text-[#4c4c4c] mb-3">Aparência</p>
+          <div className="flex gap-2">
+            {[
+              { value: 'light', label: 'Claro', icon: Sun },
+              { value: 'dark',  label: 'Escuro', icon: Moon },
+              { value: 'system', label: 'Sistema', icon: Monitor },
+            ].map(({ value, label, icon: Icon }) => {
+              const active = (state.settings.theme ?? 'system') === value
+              return (
+                <button
+                  key={value}
+                  onClick={() => actions.updateSettings({ theme: value })}
+                  className={`flex-1 flex flex-col items-center gap-1.5 py-2.5 rounded-md border text-[11.5px] font-medium transition-colors
+                    ${active
+                      ? 'border-[#2f81f7] bg-[#f0f7ff] dark:bg-[#1a2535] text-[#2f81f7] dark:text-[#7cb3f5]'
+                      : 'border-[#e0e0de] dark:border-[#3a3a3a] bg-white dark:bg-[#2a2a2a] text-[#6b6a68] dark:text-[#9b9a97] hover:bg-[#f7f7f5] dark:hover:bg-[#333]'
+                    }`}
+                >
+                  <Icon size={15} />
+                  {label}
+                </button>
+              )
+            })}
+          </div>
+          <p className="text-[10.5px] text-[#9b9a97] dark:text-[#4c4c4c] mt-2">
+            "Sistema" segue automaticamente a configuração do Windows.
           </p>
         </section>
 

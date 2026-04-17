@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer, useEffect } from 'react'
+import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
 
 // status: 'idle' | 'converting' | 'preview' | 'saving' | 'error'
 
@@ -97,18 +97,40 @@ function reducer(state, action) {
 
 const AppContext = createContext(null)
 
+// Applies 'dark' class to <html> based on theme setting + system preference.
+// Called whenever settings change or system theme changes.
+function applyTheme(theme, systemIsDark) {
+  const isDark =
+    theme === 'dark' ? true :
+    theme === 'light' ? false :
+    systemIsDark // 'system'
+  document.documentElement.classList.toggle('dark', isDark)
+}
+
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
+  // Ref so the onThemeChanged closure always reads the latest theme setting
+  const themeRef = useRef('system')
 
   useEffect(() => {
     // Invoke pattern avoids the did-finish-load race condition where the
     // one-shot 'init' event would fire before React registers its listener.
-    window.electronAPI.getInitData().then((data) => dispatch({ type: 'INIT', ...data }))
+    window.electronAPI.getInitData().then((data) => {
+      dispatch({ type: 'INIT', ...data })
+      const theme = data.settings?.theme ?? 'system'
+      themeRef.current = theme
+      const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      applyTheme(theme, systemIsDark)
+    })
 
     const cleanups = [
       window.electronAPI.onProjectsUpdated((data) =>
         dispatch({ type: 'PROJECTS_UPDATED', ...data })
       ),
+      // Re-apply theme when Windows system theme changes (only matters for 'system' mode)
+      window.electronAPI.onThemeChanged(({ isDark }) => {
+        applyTheme(themeRef.current, isDark)
+      }),
       window.electronAPI.onNavigateTo((_screen) => {
         // Navigation handled in App.jsx via state
       }),
@@ -177,6 +199,12 @@ export function AppProvider({ children }) {
     async updateSettings(updates) {
       const settings = await window.electronAPI.updateSettings(updates)
       dispatch({ type: 'SETTINGS_UPDATED', settings })
+      // If theme changed, apply immediately and keep ref in sync
+      if (updates.theme) {
+        themeRef.current = settings.theme
+        const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+        applyTheme(settings.theme, systemIsDark)
+      }
     },
 
     clearError() {

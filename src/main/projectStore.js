@@ -13,6 +13,7 @@ const SETTINGS_DEFAULTS = {
   inkscapePath: null,
   conversionTimeout: 15000,
   startMinimized: false,
+  theme: 'system', // 'system' | 'light' | 'dark'
 }
 
 export class ProjectStore {
@@ -79,6 +80,7 @@ export class ProjectStore {
       inkscapePath: this._settings.get('inkscapePath', null),
       conversionTimeout: this._settings.get('conversionTimeout', 15000),
       startMinimized: this._settings.get('startMinimized', false),
+      theme: this._settings.get('theme', 'system'),
     }
   }
 

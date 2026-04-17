@@ -30,7 +30,7 @@ function makeFakeProcess(exitCode = 0, delay = 10) {
   return proc
 }
 
-const { findInkscape, convert, isValidSVG } = await import('../../src/main/conversionService.js')
+const { findInkscape, convert, isValidSVG, getSVGMetadata } = await import('../../src/main/conversionService.js')
 
 describe('ConversionService', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -66,6 +66,34 @@ describe('ConversionService', () => {
       existsSync.mockReturnValue(false)
       const result = findInkscape()
       expect(result).toBeNull()
+    })
+  })
+
+  describe('getSVGMetadata()', () => {
+    it('extracts width and height from svg root element', () => {
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="148mm"><rect width="50" height="50"/></svg>'
+      const meta = getSVGMetadata(svg, 500)
+      // Must pick the SVG root width/height, not the rect's
+      expect(meta.width).toBe('210mm')
+      expect(meta.height).toBe('148mm')
+    })
+
+    it('returns unknown when svg has no width/height attributes', () => {
+      const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect/></svg>'
+      const meta = getSVGMetadata(svg, 100)
+      expect(meta.width).toBe('unknown')
+      expect(meta.height).toBe('unknown')
+    })
+
+    it('reports sizeBytes as byte length of the SVG string', () => {
+      const svg = '<svg></svg>'
+      const meta = getSVGMetadata(svg, 0)
+      expect(meta.sizeBytes).toBe(Buffer.byteLength(svg, 'utf8'))
+    })
+
+    it('passes through conversionMs unchanged', () => {
+      const meta = getSVGMetadata('<svg width="1" height="1"></svg>', 1234)
+      expect(meta.conversionMs).toBe(1234)
     })
   })
 

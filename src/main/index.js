@@ -189,8 +189,12 @@ ipcMain.handle('set-active-project', (_event, { id }) => {
 
 ipcMain.handle('add-project', (_event, project) => {
   store.addProject(project)
+  // Auto-activate if this is the first (or only) project
+  if (!store.getActiveProjectId()) {
+    store.setActiveProject(project.id)
+  }
   updateTrayMenu(mainWindow, store)
-  return { projects: store.getProjects() }
+  return { projects: store.getProjects(), activeProjectId: store.getActiveProjectId() }
 })
 
 ipcMain.handle('update-project', (_event, { id, updates }) => {

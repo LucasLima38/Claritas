@@ -32,6 +32,11 @@ describe('SaveService', () => {
     it('handles counter over 999', () => {
       expect(generateFilename('BLDC_', 1000)).toBe('BLDC_1000.svg')
     })
+
+    it('first save on a new project (counter=0) produces _001', () => {
+      // counter starts at 0; save handler calls generateFilename(prefix, counter + 1)
+      expect(generateFilename('BLDC_', 0 + 1)).toBe('BLDC_001.svg')
+    })
   })
 
   describe('saveSVG()', () => {

@@ -160,7 +160,8 @@ export function AppProvider({ children }) {
 
     async addProject(project) {
       const result = await window.electronAPI.addProject(project)
-      dispatch({ type: 'PROJECTS_UPDATED', projects: result.projects, activeProjectId: state.activeProjectId })
+      // Use activeProjectId from server so auto-activation of first project is reflected
+      dispatch({ type: 'PROJECTS_UPDATED', projects: result.projects, activeProjectId: result.activeProjectId })
     },
 
     async updateProject(id, updates) {

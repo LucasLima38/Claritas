@@ -14,7 +14,7 @@ export default function Settings({ onBack }) {
   // ── Project form ──────────────────────────────────────────────────────────
 
   function openAdd() {
-    setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', counter: 1, color: PROJECT_COLORS[0] })
+    setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', counter: 0, color: PROJECT_COLORS[0] })
     setEditingId('new')
   }
 

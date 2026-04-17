@@ -101,8 +101,11 @@ export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
 
   useEffect(() => {
+    // Invoke pattern avoids the did-finish-load race condition where the
+    // one-shot 'init' event would fire before React registers its listener.
+    window.electronAPI.getInitData().then((data) => dispatch({ type: 'INIT', ...data }))
+
     const cleanups = [
-      window.electronAPI.onInit((data) => dispatch({ type: 'INIT', ...data })),
       window.electronAPI.onProjectsUpdated((data) =>
         dispatch({ type: 'PROJECTS_UPDATED', ...data })
       ),

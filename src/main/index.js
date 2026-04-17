@@ -70,15 +70,10 @@ app.whenReady().then(() => {
     if (found) store.updateSettings({ inkscapePath: found })
   }
 
+  // Send theme immediately after load (listener is passive, no race condition)
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send('theme-changed', {
       isDark: nativeTheme.shouldUseDarkColors,
-    })
-    mainWindow.webContents.send('init', {
-      projects: store.getProjects(),
-      activeProjectId: store.getActiveProjectId(),
-      settings: store.getSettings(),
-      history: store.getHistory(),
     })
   })
 })
@@ -226,3 +221,11 @@ ipcMain.handle('choose-directory', async () => {
 })
 
 ipcMain.handle('get-history', () => store.getHistory())
+
+// Renderer calls this once on mount to get initial state (avoids did-finish-load race condition)
+ipcMain.handle('get-init-data', () => ({
+  projects: store.getProjects(),
+  activeProjectId: store.getActiveProjectId(),
+  settings: store.getSettings(),
+  history: store.getHistory(),
+}))

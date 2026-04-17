@@ -7,7 +7,7 @@ function generateNextName(project) {
 
 export default function Toolbar() {
   const { state, actions } = useApp()
-  const isPreview = state.status === 'preview'
+  const isPreview = state.status === 'preview' || state.status === 'saving'
   const isSaving = state.status === 'saving'
   const isConverting = state.status === 'converting'
 

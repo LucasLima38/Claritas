@@ -1,4 +1,4 @@
-import { Tray, Menu, nativeImage } from 'electron'
+import { app, Tray, Menu, nativeImage } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -80,7 +80,7 @@ export function updateTrayMenu(mainWindow, projectStore) {
       label: 'Sair',
       click: () => {
         tray.destroy()
-        mainWindow.destroy()
+        app.quit()
       },
     },
   ])

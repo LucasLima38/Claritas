@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // History
   getHistory: () => ipcRenderer.invoke('get-history'),
 
+  // Initial data fetch (called by renderer on mount — avoids did-finish-load race)
+  getInitData: () => ipcRenderer.invoke('get-init-data'),
+
   // Event listeners (return cleanup function)
   onInit: (cb) => {
     const handler = (_e, data) => cb(data)

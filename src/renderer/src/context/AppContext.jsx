@@ -136,7 +136,7 @@ export function AppProvider({ children }) {
       window.electronAPI.onThemeChanged(({ isDark }) => {
         applyTheme(themeRef.current, isDark)
       }),
-      window.electronAPI.onNavigateTo((_screen) => {}),
+      // onNavigateTo is handled in App.jsx — no listener needed here
     ]
     return () => cleanups.forEach((fn) => fn?.())
   }, [])
@@ -178,7 +178,7 @@ export function AppProvider({ children }) {
         dispatch({ type: 'SAVE_SUCCESS', filename: result.filename, entry: result.entry, newCounter: result.newCounter })
         toast.success(`Salvo: ${result.filename}`)
       } else if (result.dirMissing) {
-        dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir })
+        dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
       } else if (result.error === 'EACCES') {
         toast.error('Sem permissão de escrita na pasta de destino.')
         dispatch({ type: 'SAVE_ERROR' })

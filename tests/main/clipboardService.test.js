@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// availableFormats() is intentionally NOT mocked here — it never returns
+// 'CF_ENHMETAFILE' on Windows (system format, not a MIME-type name).
+// Detection is done exclusively via readBuffer().
 const mockClipboard = {
-  availableFormats: vi.fn(),
   readBuffer: vi.fn(),
 }
 
@@ -15,37 +17,44 @@ describe('ClipboardService', () => {
   beforeEach(() => vi.clearAllMocks())
 
   describe('hasEMF()', () => {
-    it('returns true when CF_ENHMETAFILE is available', () => {
-      mockClipboard.availableFormats.mockReturnValue(['text/plain', 'CF_ENHMETAFILE'])
+    it('returns true when readBuffer yields a non-empty Buffer', () => {
+      mockClipboard.readBuffer.mockReturnValue(Buffer.from([0x01, 0x02, 0x03]))
       expect(hasEMF()).toBe(true)
+      expect(mockClipboard.readBuffer).toHaveBeenCalledWith('CF_ENHMETAFILE')
     })
 
-    it('returns false when clipboard has no EMF', () => {
-      mockClipboard.availableFormats.mockReturnValue(['text/plain', 'image/png'])
+    it('returns false when readBuffer returns an empty Buffer', () => {
+      mockClipboard.readBuffer.mockReturnValue(Buffer.alloc(0))
       expect(hasEMF()).toBe(false)
     })
 
-    it('returns false when clipboard is empty', () => {
-      mockClipboard.availableFormats.mockReturnValue([])
+    it('returns false when readBuffer throws (format not on clipboard)', () => {
+      mockClipboard.readBuffer.mockImplementation(() => {
+        throw new Error('Clipboard format not available')
+      })
       expect(hasEMF()).toBe(false)
     })
   })
 
   describe('readEMF()', () => {
-    it('returns Buffer when EMF is available', () => {
+    it('returns the Buffer when EMF data is present', () => {
       const fakeBuffer = Buffer.from([0x01, 0x02, 0x03])
-      mockClipboard.availableFormats.mockReturnValue(['CF_ENHMETAFILE'])
       mockClipboard.readBuffer.mockReturnValue(fakeBuffer)
       const result = readEMF()
       expect(result).toBe(fakeBuffer)
       expect(mockClipboard.readBuffer).toHaveBeenCalledWith('CF_ENHMETAFILE')
     })
 
-    it('returns null when no EMF on clipboard', () => {
-      mockClipboard.availableFormats.mockReturnValue(['text/plain'])
-      const result = readEMF()
-      expect(result).toBeNull()
-      expect(mockClipboard.readBuffer).not.toHaveBeenCalled()
+    it('returns null when readBuffer returns an empty Buffer', () => {
+      mockClipboard.readBuffer.mockReturnValue(Buffer.alloc(0))
+      expect(readEMF()).toBeNull()
+    })
+
+    it('returns null when readBuffer throws', () => {
+      mockClipboard.readBuffer.mockImplementation(() => {
+        throw new Error('Clipboard format not available')
+      })
+      expect(readEMF()).toBeNull()
     })
   })
 })

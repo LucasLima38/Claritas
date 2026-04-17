@@ -48,6 +48,8 @@ export default function PreviewArea() {
     const result = await window.electronAPI.chooseDirectory()
     actions.clearDirMissing()
     if (!result.canceled && activeProject) {
+      // updateProject IPC mutates the main-process store synchronously before resolving,
+      // so save() will use the updated outputDir when it calls save-svg.
       await actions.updateProject(activeProject.id, { outputDir: result.path })
       await actions.save()
     }

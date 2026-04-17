@@ -1,4 +1,4 @@
-import { promises as fsp } from 'fs'
+import { promises as fsp, constants as fsConstants } from 'fs'
 import path from 'path'
 
 /**
@@ -12,11 +12,13 @@ export function generateFilename(prefix, counter) {
 }
 
 /**
- * Checks whether an output directory exists and is accessible.
+ * Checks whether an output directory exists and is writable.
+ * Uses W_OK so that read-only directories are treated as missing,
+ * prompting the user to choose another folder rather than hitting EACCES.
  */
 export async function checkOutputDir(dir) {
   try {
-    await fsp.access(dir)
+    await fsp.access(dir, fsConstants.W_OK)
     return { exists: true }
   } catch {
     return { exists: false }

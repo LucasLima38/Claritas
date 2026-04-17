@@ -30,7 +30,7 @@ function makeFakeProcess(exitCode = 0, delay = 10) {
   return proc
 }
 
-const { findInkscape, convert, isValidSVG, getSVGMetadata } = await import('../../src/main/conversionService.js')
+const { findInkscape, convert, isValidSVG, getSVGMetadata, checkInkscapeVersion } = await import('../../src/main/conversionService.js')
 
 describe('ConversionService', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -119,5 +119,37 @@ describe('ConversionService', () => {
       await expect(convert(Buffer.from([0x01]), 'C:\\inkscape.exe'))
         .rejects.toThrow('code 1')
     })
+  })
+})
+
+describe('checkInkscapeVersion()', () => {
+  it('returns { ok: true, version } when inkscape --version succeeds', async () => {
+    mockSpawn.mockReturnValueOnce((() => {
+      const proc = new EventEmitter()
+      proc.stdout = new EventEmitter()
+      proc.stderr = new EventEmitter()
+      proc.kill = vi.fn()
+      setTimeout(() => {
+        proc.stdout.emit('data', 'Inkscape 1.3.2 (091e20e, 2023-11-25)\n')
+        proc.emit('close', 0)
+      }, 10)
+      return proc
+    })())
+    const result = await checkInkscapeVersion('C:\\inkscape.exe')
+    expect(result.ok).toBe(true)
+    expect(result.version).toBe('1.3.2')
+  })
+
+  it('returns { ok: false } when inkscape path is invalid or exits non-zero', async () => {
+    mockSpawn.mockReturnValueOnce((() => {
+      const proc = new EventEmitter()
+      proc.stdout = new EventEmitter()
+      proc.stderr = new EventEmitter()
+      proc.kill = vi.fn()
+      setTimeout(() => proc.emit('close', 1), 10)
+      return proc
+    })())
+    const result = await checkInkscapeVersion('C:\\bad-path.exe')
+    expect(result.ok).toBe(false)
   })
 })

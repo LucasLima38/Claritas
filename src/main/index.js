@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
-import { convert, findInkscape, isValidSVG, getSVGMetadata } from './conversionService.js'
+import { convert, findInkscape, isValidSVG, getSVGMetadata, checkInkscapeVersion } from './conversionService.js'
 import { generateFilename, saveSVG } from './saveService.js'
 import { createTray, updateTrayMenu } from './tray.js'
 
@@ -220,6 +220,10 @@ ipcMain.handle('choose-directory', async () => {
 })
 
 ipcMain.handle('get-history', () => store.getHistory())
+
+ipcMain.handle('check-inkscape-version', async (_event, { path: inkPath }) => {
+  return await checkInkscapeVersion(inkPath)
+})
 
 // Renderer calls this once on mount to get initial state (avoids did-finish-load race condition)
 ipcMain.handle('get-init-data', () => {

@@ -18,6 +18,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   updateSettings: (updates) => ipcRenderer.invoke('update-settings', updates),
   chooseDirectory: () => ipcRenderer.invoke('choose-directory'),
+  checkInkscapeVersion: (data) => ipcRenderer.invoke('check-inkscape-version', data),
 
   // History
   getHistory: () => ipcRenderer.invoke('get-history'),

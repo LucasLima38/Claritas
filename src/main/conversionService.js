@@ -78,7 +78,7 @@ export async function convert(emfBuffer, inkscapePath, timeout = 15000) {
 
   try {
     await new Promise((resolve, reject) => {
-      const proc = spawn(inkscapePath, [`--export-filename=${svgPath}`, emfPath], {
+      const proc = spawn(inkscapePath, [`--export-filename=${svgPath}`, '--export-area-drawing', emfPath], {
         stdio: ['ignore', 'pipe', 'pipe'],
       })
 

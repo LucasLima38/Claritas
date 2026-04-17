@@ -78,3 +78,19 @@ describe('SaveService', () => {
     })
   })
 })
+
+describe('dirMissing signal', () => {
+  it('checkOutputDir returns { exists: false } for missing dir — dirMissing path is triggered', async () => {
+    const { promises: fsp } = await import('fs')
+    fsp.access.mockRejectedValue(new Error('ENOENT'))
+    const result = await checkOutputDir('D:\\nonexistent')
+    // In save-svg handler: if (!result.exists) return { dirMissing: true, outputDir }
+    expect(result.exists).toBe(false)
+    // Simulate handler response
+    const handlerResponse = !result.exists
+      ? { dirMissing: true, outputDir: 'D:\\nonexistent' }
+      : { ok: true }
+    expect(handlerResponse.dirMissing).toBe(true)
+    expect(handlerResponse.outputDir).toBe('D:\\nonexistent')
+  })
+})

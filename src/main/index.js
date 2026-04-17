@@ -5,7 +5,7 @@ import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
 import { convert, findInkscape, isValidSVG, getSVGMetadata, checkInkscapeVersion } from './conversionService.js'
-import { generateFilename, saveSVG } from './saveService.js'
+import { generateFilename, saveSVG, checkOutputDir } from './saveService.js'
 import { createTray, updateTrayMenu } from './tray.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -128,6 +128,12 @@ ipcMain.handle('save-svg', async (_event, { projectId }) => {
 
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
+
+  // Check if output directory exists — if not, signal renderer to show dialog
+  const dirCheck = await checkOutputDir(project.outputDir)
+  if (!dirCheck.exists) {
+    return { dirMissing: true, outputDir: project.outputDir }
+  }
 
   const filename = generateFilename(project.prefix, project.counter + 1)
 

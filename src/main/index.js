@@ -91,7 +91,7 @@ nativeTheme.on('updated', () => {
 // ── IPC Handlers ──────────────────────────────────────────────────────────
 
 ipcMain.handle('paste-schematic', async () => {
-  const emfBuffer = readEMF()
+  const emfBuffer = await readEMF()
   if (!emfBuffer) {
     return { error: 'NO_EMF', message: 'Nenhum esquemático vetorial encontrado no clipboard.' }
   }

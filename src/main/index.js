@@ -1,74 +1,228 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import { app, BrowserWindow, ipcMain, nativeTheme, dialog } from 'electron'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { is } from '@electron-toolkit/utils'
+import { ProjectStore } from './projectStore.js'
+import { readEMF } from './clipboardService.js'
+import { convert, findInkscape, isValidSVG, getSVGMetadata } from './conversionService.js'
+import { generateFilename, saveSVG, checkOutputDir } from './saveService.js'
+import { createTray, updateTrayMenu } from './tray.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// ── State ─────────────────────────────────────────────────────────────────
+
+const store = new ProjectStore()
+let mainWindow = null
+let tray = null
+// Holds the last converted SVG waiting for user confirmation
+let pendingSVG = null   // { svgContent: string, metadata: object }
+
+// ── Window ────────────────────────────────────────────────────────────────
 
 function createWindow() {
-  // Create the browser window.
-  const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
-    show: false,
-    autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
+  store.initSession()
+
+  mainWindow = new BrowserWindow({
+    width: 960,
+    height: 640,
+    minWidth: 760,
+    minHeight: 500,
+    titleBarStyle: 'hidden',
+    titleBarOverlay: {
+      color: nativeTheme.shouldUseDarkColors ? '#1f1f1f' : '#ffffff',
+      symbolColor: nativeTheme.shouldUseDarkColors ? '#e6e6e3' : '#37352f',
+      height: 40,
+    },
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
-    }
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false,
+    },
+    icon: path.join(__dirname, '../../resources/icon.png'),
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
-  })
-
-  mainWindow.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
-    return { action: 'deny' }
-  })
-
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
+
+  mainWindow.on('close', (e) => {
+    e.preventDefault()
+    mainWindow.hide()
+  })
+
+  return mainWindow
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
+// ── App lifecycle ─────────────────────────────────────────────────────────
+
 app.whenReady().then(() => {
-  // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron')
+  mainWindow = createWindow()
+  tray = createTray(mainWindow, store)
 
-  // Default open or close DevTools by F12 in development
-  // and ignore CommandOrControl + R in production.
-  // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
-  })
+  // Auto-detect Inkscape if not yet configured
+  const settings = store.getSettings()
+  if (!settings.inkscapePath) {
+    const found = findInkscape()
+    if (found) store.updateSettings({ inkscapePath: found })
+  }
 
-  // IPC test
-  ipcMain.on('ping', () => console.log('pong'))
-
-  createWindow()
-
-  app.on('activate', function () {
-    // On macOS it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  mainWindow.webContents.on('did-finish-load', () => {
+    mainWindow.webContents.send('theme-changed', {
+      isDark: nativeTheme.shouldUseDarkColors,
+    })
+    mainWindow.webContents.send('init', {
+      projects: store.getProjects(),
+      activeProjectId: store.getActiveProjectId(),
+      settings: store.getSettings(),
+      history: store.getHistory(),
+    })
   })
 })
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+  // Keep running in tray — don't quit
+})
+
+nativeTheme.on('updated', () => {
+  mainWindow?.webContents.send('theme-changed', {
+    isDark: nativeTheme.shouldUseDarkColors,
+  })
+})
+
+// ── IPC Handlers ──────────────────────────────────────────────────────────
+
+ipcMain.handle('paste-schematic', async () => {
+  const emfBuffer = readEMF()
+  if (!emfBuffer) {
+    return { error: 'NO_EMF', message: 'Nenhum esquemático vetorial encontrado no clipboard.' }
+  }
+
+  const settings = store.getSettings()
+  if (!settings.inkscapePath) {
+    return { error: 'INKSCAPE_NOT_FOUND', message: 'Inkscape não encontrado. Configure o caminho nas configurações.' }
+  }
+
+  const startTime = Date.now()
+
+  try {
+    const svgContent = await convert(emfBuffer, settings.inkscapePath, settings.conversionTimeout)
+
+    if (!isValidSVG(svgContent)) {
+      return { error: 'INVALID_SVG', message: 'Conversão incompleta — o SVG gerado está em branco. Verifique o Inkscape.' }
+    }
+
+    const metadata = getSVGMetadata(svgContent, Date.now() - startTime)
+    pendingSVG = { svgContent, metadata }
+
+    return { ok: true, svgContent, metadata }
+  } catch (err) {
+    pendingSVG = null
+    if (err.message === 'TIMEOUT') {
+      return { error: 'TIMEOUT', message: 'O Inkscape demorou mais de 15s. Tente novamente.' }
+    }
+    return { error: 'ERROR', message: `Erro de conversão: ${err.message}` }
   }
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+ipcMain.handle('save-svg', async (_event, { projectId }) => {
+  if (!pendingSVG) return { error: 'NO_PENDING', message: 'Nenhum SVG aguardando confirmação.' }
+
+  const project = store.getProjects().find((p) => p.id === projectId)
+  if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
+
+  const dirCheck = await checkOutputDir(project.outputDir)
+  if (!dirCheck.exists) {
+    return { error: 'DIR_NOT_FOUND', outputDir: project.outputDir }
+  }
+
+  const filename = generateFilename(project.prefix, project.counter + 1)
+
+  try {
+    const fullPath = await saveSVG(pendingSVG.svgContent, project.outputDir, filename)
+    const newCounter = store.incrementCounter(projectId)
+
+    const entry = {
+      id: crypto.randomUUID(),
+      filename,
+      fullPath,
+      projectId,
+      timestamp: new Date().toISOString(),
+      sizeBytes: pendingSVG.metadata.sizeBytes,
+    }
+    store.addHistoryEntry(entry)
+    pendingSVG = null
+
+    updateTrayMenu(mainWindow, store)
+    return { ok: true, filename, fullPath, entry, newCounter }
+  } catch (err) {
+    if (err.code === 'EACCES') {
+      return { error: 'EACCES', message: 'Sem permissão de escrita na pasta de destino.' }
+    }
+    return { error: 'ERROR', message: err.message }
+  }
+})
+
+ipcMain.handle('discard-svg', async () => {
+  pendingSVG = null
+  return { ok: true }
+})
+
+ipcMain.handle('create-output-dir', async (_event, { dir }) => {
+  try {
+    const { promises: fsp } = await import('fs')
+    await fsp.mkdir(dir, { recursive: true })
+    return { ok: true }
+  } catch (err) {
+    return { error: 'ERROR', message: err.message }
+  }
+})
+
+ipcMain.handle('get-projects', () => ({
+  projects: store.getProjects(),
+  activeProjectId: store.getActiveProjectId(),
+}))
+
+ipcMain.handle('set-active-project', (_event, { id }) => {
+  store.setActiveProject(id)
+  updateTrayMenu(mainWindow, store)
+  return { ok: true }
+})
+
+ipcMain.handle('add-project', (_event, project) => {
+  store.addProject(project)
+  updateTrayMenu(mainWindow, store)
+  return { projects: store.getProjects() }
+})
+
+ipcMain.handle('update-project', (_event, { id, updates }) => {
+  store.updateProject(id, updates)
+  updateTrayMenu(mainWindow, store)
+  return { projects: store.getProjects() }
+})
+
+ipcMain.handle('delete-project', (_event, { id }) => {
+  store.deleteProject(id)
+  updateTrayMenu(mainWindow, store)
+  return { projects: store.getProjects(), activeProjectId: store.getActiveProjectId() }
+})
+
+ipcMain.handle('get-settings', () => store.getSettings())
+
+ipcMain.handle('update-settings', (_event, updates) => {
+  store.updateSettings(updates)
+  return store.getSettings()
+})
+
+ipcMain.handle('choose-directory', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+  })
+  if (result.canceled) return { canceled: true }
+  return { path: result.filePaths[0] }
+})
+
+ipcMain.handle('get-history', () => store.getHistory())

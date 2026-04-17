@@ -5,7 +5,7 @@ import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
 import { convert, findInkscape, isValidSVG, getSVGMetadata } from './conversionService.js'
-import { generateFilename, saveSVG, checkOutputDir } from './saveService.js'
+import { generateFilename, saveSVG } from './saveService.js'
 import { createTray, updateTrayMenu } from './tray.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -129,11 +129,6 @@ ipcMain.handle('save-svg', async (_event, { projectId }) => {
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
 
-  const dirCheck = await checkOutputDir(project.outputDir)
-  if (!dirCheck.exists) {
-    return { error: 'DIR_NOT_FOUND', outputDir: project.outputDir }
-  }
-
   const filename = generateFilename(project.prefix, project.counter + 1)
 
   try {
@@ -154,7 +149,7 @@ ipcMain.handle('save-svg', async (_event, { projectId }) => {
     updateTrayMenu(mainWindow, store)
     return { ok: true, filename, fullPath, entry, newCounter }
   } catch (err) {
-    if (err.code === 'EACCES') {
+    if (err.code === 'EACCES' || err.message?.startsWith('EACCES')) {
       return { error: 'EACCES', message: 'Sem permissão de escrita na pasta de destino.' }
     }
     return { error: 'ERROR', message: err.message }

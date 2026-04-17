@@ -87,6 +87,14 @@ function reducer(state, action) {
     case 'CLEAR_TOAST':
       return { ...state, toast: null }
 
+    // Save failed but SVG is still available — keep preview, show toast
+    case 'SAVE_ERROR':
+      return {
+        ...state,
+        status: 'preview',
+        toast: { message: action.message, type: 'error' },
+      }
+
     case 'CLEAR_ERROR':
       return { ...state, status: 'idle', error: null }
 
@@ -158,15 +166,28 @@ export function AppProvider({ children }) {
 
     async save() {
       const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
-      if (!activeProject) return
+      if (!activeProject) {
+        dispatch({ type: 'SAVE_ERROR', message: 'Nenhum projeto ativo. Selecione um projeto antes de salvar.' })
+        return
+      }
       dispatch({ type: 'SAVE_START' })
-      const result = await window.electronAPI.saveSVG({ projectId: state.activeProjectId })
+      let result
+      try {
+        result = await window.electronAPI.saveSVG({ projectId: state.activeProjectId })
+      } catch (err) {
+        dispatch({ type: 'SAVE_ERROR', message: `Erro de comunicação: ${err.message}` })
+        return
+      }
+      if (!result) {
+        dispatch({ type: 'SAVE_ERROR', message: 'Resposta inválida do processo principal.' })
+        return
+      }
       if (result.ok) {
         dispatch({ type: 'SAVE_SUCCESS', filename: result.filename, entry: result.entry, newCounter: result.newCounter })
-      } else if (result.error === 'DIR_NOT_FOUND') {
-        dispatch({ type: 'CONVERSION_ERROR', errorType: 'DIR_NOT_FOUND', message: `Pasta não encontrada: ${result.outputDir}`, toastOnly: false })
+      } else if (result.error === 'EACCES') {
+        dispatch({ type: 'SAVE_ERROR', message: 'Sem permissão de escrita na pasta de destino.' })
       } else {
-        dispatch({ type: 'CONVERSION_ERROR', errorType: result.error, message: result.message, toastOnly: false })
+        dispatch({ type: 'SAVE_ERROR', message: result.message || 'Erro desconhecido ao salvar.' })
       }
     },
 

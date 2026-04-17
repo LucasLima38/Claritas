@@ -84,7 +84,7 @@ export default function PreviewArea() {
         </div>
 
         {/* SVG Preview */}
-        <div className="flex items-center justify-center p-4 min-h-[140px] bg-white">
+        <div className="flex items-center justify-center p-4 min-h-[140px] bg-card">
           <img
             src={svgDataUrl}
             alt="Prévia do esquemático"
@@ -130,8 +130,7 @@ export default function PreviewArea() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleChooseDir}
-              variant="outline"
-              className="border-border"
+              className="bg-background text-foreground border border-border hover:bg-accent"
             >
               Escolher outra pasta
             </AlertDialogAction>

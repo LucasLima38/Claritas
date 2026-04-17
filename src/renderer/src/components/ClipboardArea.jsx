@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Paperclip, AlertCircle, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { useApp } from '../context/AppContext.jsx'
 import PreviewArea from './PreviewArea.jsx'
 
@@ -20,10 +21,10 @@ export default function ClipboardArea() {
 
   if (state.status === 'converting') {
     return (
-      <div className="border-2 border-dashed border-[#d0cfc9] dark:border-[#3a3a3a] rounded-lg bg-[#fafaf8] dark:bg-[#242424] p-7 text-center">
-        <Loader2 size={28} className="mx-auto mb-2 text-[#2f81f7] animate-spin" />
-        <p className="text-[13.5px] font-medium">Convertendo com Inkscape...</p>
-        <p className="text-[11.5px] text-[#9b9a97] mt-1">Aguarde até 15 segundos</p>
+      <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
+        <Loader2 size={28} className="mx-auto mb-2 text-primary animate-spin" />
+        <p className="text-sm font-medium">Convertendo com Inkscape...</p>
+        <p className="text-xs text-muted-foreground mt-1">Aguarde até 15 segundos</p>
       </div>
     )
   }
@@ -34,30 +35,32 @@ export default function ClipboardArea() {
 
   if (state.status === 'error') {
     return (
-      <div className="border-2 border-dashed border-red-200 dark:border-red-900 rounded-lg bg-red-50 dark:bg-red-950/30 p-7 text-center">
-        <AlertCircle size={28} className="mx-auto mb-2 text-red-500" />
-        <p className="text-[13.5px] font-medium text-red-700 dark:text-red-400">{state.error?.message}</p>
-        <button
+      <div className="border-2 border-dashed border-destructive/40 rounded-lg bg-destructive/5 p-7 text-center">
+        <AlertCircle size={28} className="mx-auto mb-2 text-destructive" />
+        <p className="text-sm font-medium text-destructive">{state.error?.message}</p>
+        <Button
+          variant="link"
+          size="sm"
           onClick={actions.clearError}
-          className="mt-3 text-[11.5px] text-red-600 dark:text-red-400 underline"
+          className="mt-2 text-destructive"
         >
           Tentar novamente
-        </button>
+        </Button>
       </div>
     )
   }
 
   const hasProject = state.projects.length > 0
   return (
-    <div className="border-2 border-dashed border-[#d0cfc9] dark:border-[#3a3a3a] rounded-lg bg-[#fafaf8] dark:bg-[#242424] p-7 text-center">
-      <Paperclip size={28} className="mx-auto mb-2 text-[#9b9a97]" />
-      <p className="text-[13.5px] font-medium">
+    <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
+      <Paperclip size={28} className="mx-auto mb-2 text-muted-foreground" />
+      <p className="text-sm font-medium">
         {hasProject ? 'Cole o esquemático' : 'Crie um projeto nas configurações'}
       </p>
       {hasProject && (
-        <p className="text-[11.5px] text-[#9b9a97] mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Copie no Altium Designer →{' '}
-          <kbd className="bg-[#f0efec] dark:bg-[#2a2a2a] border border-[#d0cfc9] dark:border-[#3a3a3a] rounded px-1.5 py-0.5 text-[10.5px] font-semibold">Ctrl+V</kbd>
+          <kbd className="bg-muted border border-border rounded px-1.5 py-0.5 text-[10.5px] font-semibold">Ctrl+V</kbd>
           {' '}aqui
         </p>
       )}

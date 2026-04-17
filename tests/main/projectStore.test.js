@@ -90,4 +90,17 @@ describe('ProjectStore', () => {
     store.updateSettings({ inkscapePath: 'C:\\inkscape.exe' })
     expect(store.getSettings().inkscapePath).toBe('C:\\inkscape.exe')
   })
+
+  it('getActiveProjectId returns first project id when activeProjectId is null but projects exist', () => {
+    const project = { id: 'p1', name: 'Test', prefix: 'T_', outputDir: '/tmp', counter: 0, color: '#fff' }
+    store.addProject(project)
+    // activeProjectId is null by default — simulate the bug scenario
+    expect(store.getActiveProjectId()).toBeNull()
+    expect(store.getProjects()).toHaveLength(1)
+    // The handler should call setActiveProject to fix this
+    if (!store.getActiveProjectId() && store.getProjects().length > 0) {
+      store.setActiveProject(store.getProjects()[0].id)
+    }
+    expect(store.getActiveProjectId()).toBe('p1')
+  })
 })

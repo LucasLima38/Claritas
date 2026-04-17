@@ -222,9 +222,18 @@ ipcMain.handle('choose-directory', async () => {
 ipcMain.handle('get-history', () => store.getHistory())
 
 // Renderer calls this once on mount to get initial state (avoids did-finish-load race condition)
-ipcMain.handle('get-init-data', () => ({
-  projects: store.getProjects(),
-  activeProjectId: store.getActiveProjectId(),
-  settings: store.getSettings(),
-  history: store.getHistory(),
-}))
+ipcMain.handle('get-init-data', () => {
+  const projects = store.getProjects()
+  let activeProjectId = store.getActiveProjectId()
+  // Fallback: if activeProjectId is null but projects exist, auto-activate first project
+  if (!activeProjectId && projects.length > 0) {
+    activeProjectId = projects[0].id
+    store.setActiveProject(activeProjectId)
+  }
+  return {
+    projects,
+    activeProjectId,
+    settings: store.getSettings(),
+    history: store.getHistory(),
+  }
+})

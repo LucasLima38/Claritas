@@ -120,36 +120,36 @@ describe('ConversionService', () => {
         .rejects.toThrow('code 1')
     })
   })
-})
 
-describe('checkInkscapeVersion()', () => {
-  it('returns { ok: true, version } when inkscape --version succeeds', async () => {
-    mockSpawn.mockReturnValueOnce((() => {
-      const proc = new EventEmitter()
-      proc.stdout = new EventEmitter()
-      proc.stderr = new EventEmitter()
-      proc.kill = vi.fn()
-      setTimeout(() => {
-        proc.stdout.emit('data', 'Inkscape 1.3.2 (091e20e, 2023-11-25)\n')
-        proc.emit('close', 0)
-      }, 10)
-      return proc
-    })())
-    const result = await checkInkscapeVersion('C:\\inkscape.exe')
-    expect(result.ok).toBe(true)
-    expect(result.version).toBe('1.3.2')
-  })
+  describe('checkInkscapeVersion()', () => {
+    it('returns { ok: true, version } when inkscape --version succeeds', async () => {
+      mockSpawn.mockReturnValueOnce((() => {
+        const proc = new EventEmitter()
+        proc.stdout = new EventEmitter()
+        proc.stderr = new EventEmitter()
+        proc.kill = vi.fn()
+        setTimeout(() => {
+          proc.stdout.emit('data', 'Inkscape 1.3.2 (091e20e, 2023-11-25)\n')
+          proc.emit('close', 0)
+        }, 10)
+        return proc
+      })())
+      const result = await checkInkscapeVersion('C:\\inkscape.exe')
+      expect(result.ok).toBe(true)
+      expect(result.version).toBe('1.3.2')
+    })
 
-  it('returns { ok: false } when inkscape path is invalid or exits non-zero', async () => {
-    mockSpawn.mockReturnValueOnce((() => {
-      const proc = new EventEmitter()
-      proc.stdout = new EventEmitter()
-      proc.stderr = new EventEmitter()
-      proc.kill = vi.fn()
-      setTimeout(() => proc.emit('close', 1), 10)
-      return proc
-    })())
-    const result = await checkInkscapeVersion('C:\\bad-path.exe')
-    expect(result.ok).toBe(false)
+    it('returns { ok: false } when inkscape path is invalid or exits non-zero', async () => {
+      mockSpawn.mockReturnValueOnce((() => {
+        const proc = new EventEmitter()
+        proc.stdout = new EventEmitter()
+        proc.stderr = new EventEmitter()
+        proc.kill = vi.fn()
+        setTimeout(() => proc.emit('close', 1), 10)
+        return proc
+      })())
+      const result = await checkInkscapeVersion('C:\\bad-path.exe')
+      expect(result.ok).toBe(false)
+    })
   })
 })

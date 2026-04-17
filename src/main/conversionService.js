@@ -114,6 +114,7 @@ export async function convert(emfBuffer, inkscapePath, timeout = 15000) {
 export async function checkInkscapeVersion(inkscapePath) {
   return new Promise((resolve) => {
     let output = ''
+    let errOutput = ''
     let proc
     try {
       proc = spawn(inkscapePath, ['--version'], { stdio: ['ignore', 'pipe', 'pipe'] })
@@ -122,11 +123,11 @@ export async function checkInkscapeVersion(inkscapePath) {
     }
 
     proc.stdout.on('data', (chunk) => { output += chunk.toString() })
+    proc.stderr.on('data', (chunk) => { errOutput += chunk.toString() })
 
     proc.on('close', (code) => {
-      if (code !== 0) return resolve({ ok: false, error: `Exit code ${code}` })
-      // Output is like: "Inkscape 1.3.2 (091e20e, 2023-11-25)"
-      const match = output.match(/Inkscape\s+(\d+\.\d+[\.\d]*)/)
+      if (code !== 0) return resolve({ ok: false, error: errOutput.trim() || `Exit code ${code}` })
+      const match = output.match(/Inkscape\s+(\d+(?:\.\d+)+)/)
       if (match) {
         resolve({ ok: true, version: match[1] })
       } else {

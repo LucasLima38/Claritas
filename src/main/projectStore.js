@@ -1,4 +1,8 @@
-import Store from 'electron-store'
+import _Store from 'electron-store'
+// electron-store v9 is ESM-only; Rollup externalises it and emits require(), which
+// returns the namespace object { default: StoreClass }.  Unwrap .default so that
+// both the CJS production bundle and the ESM Vitest environment get the constructor.
+const Store = _Store.default ?? _Store
 
 const PROJECT_DEFAULTS = {
   projects: [],

@@ -1,4 +1,5 @@
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 
 // status: 'idle' | 'converting' | 'preview' | 'saving' | 'error'
 
@@ -11,7 +12,8 @@ const initialState = {
   activeProjectId: null,
   history: [],
   settings: {},
-  toast: null,
+  dirMissing: false,
+  dirMissingPath: null,
 }
 
 function reducer(state, action) {
@@ -40,8 +42,7 @@ function reducer(state, action) {
       return {
         ...state,
         status: action.toastOnly ? 'idle' : 'error',
-        error: { type: action.errorType, message: action.message },
-        toast: action.toastOnly ? { message: action.message, type: 'error' } : null,
+        error: action.toastOnly ? state.error : { type: action.errorType, message: action.message },
       }
 
     case 'SAVE_START':
@@ -59,8 +60,21 @@ function reducer(state, action) {
             ? { ...p, counter: action.newCounter }
             : p
         ),
-        toast: { message: `Salvo: ${action.filename}`, type: 'success' },
       }
+
+    case 'SAVE_ERROR':
+      return { ...state, status: 'preview' }
+
+    case 'DIR_MISSING':
+      return {
+        ...state,
+        status: 'preview',
+        dirMissing: true,
+        dirMissingPath: action.outputDir,
+      }
+
+    case 'CLEAR_DIR_MISSING':
+      return { ...state, dirMissing: false, dirMissingPath: null }
 
     case 'DISCARD':
       return {
@@ -84,17 +98,6 @@ function reducer(state, action) {
     case 'SETTINGS_UPDATED':
       return { ...state, settings: action.settings }
 
-    case 'CLEAR_TOAST':
-      return { ...state, toast: null }
-
-    // Save failed but SVG is still available — keep preview, show toast
-    case 'SAVE_ERROR':
-      return {
-        ...state,
-        status: 'preview',
-        toast: { message: action.message, type: 'error' },
-      }
-
     case 'CLEAR_ERROR':
       return { ...state, status: 'idle', error: null }
 
@@ -105,24 +108,19 @@ function reducer(state, action) {
 
 const AppContext = createContext(null)
 
-// Applies 'dark' class to <html> based on theme setting + system preference.
-// Called whenever settings change or system theme changes.
 function applyTheme(theme, systemIsDark) {
   const isDark =
     theme === 'dark' ? true :
     theme === 'light' ? false :
-    systemIsDark // 'system'
+    systemIsDark
   document.documentElement.classList.toggle('dark', isDark)
 }
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
-  // Ref so the onThemeChanged closure always reads the latest theme setting
   const themeRef = useRef('system')
 
   useEffect(() => {
-    // Invoke pattern avoids the did-finish-load race condition where the
-    // one-shot 'init' event would fire before React registers its listener.
     window.electronAPI.getInitData().then((data) => {
       dispatch({ type: 'INIT', ...data })
       const theme = data.settings?.theme ?? 'system'
@@ -135,22 +133,13 @@ export function AppProvider({ children }) {
       window.electronAPI.onProjectsUpdated((data) =>
         dispatch({ type: 'PROJECTS_UPDATED', ...data })
       ),
-      // Re-apply theme when Windows system theme changes (only matters for 'system' mode)
       window.electronAPI.onThemeChanged(({ isDark }) => {
         applyTheme(themeRef.current, isDark)
       }),
-      window.electronAPI.onNavigateTo((_screen) => {
-        // Navigation handled in App.jsx via state
-      }),
+      window.electronAPI.onNavigateTo((_screen) => {}),
     ]
     return () => cleanups.forEach((fn) => fn?.())
   }, [])
-
-  useEffect(() => {
-    if (!state.toast) return
-    const t = setTimeout(() => dispatch({ type: 'CLEAR_TOAST' }), 3000)
-    return () => clearTimeout(t)
-  }, [state.toast])
 
   const actions = {
     async paste() {
@@ -160,6 +149,7 @@ export function AppProvider({ children }) {
         dispatch({ type: 'SVG_READY', svgContent: result.svgContent, metadata: result.metadata })
       } else {
         const toastOnly = result.error === 'NO_EMF'
+        if (toastOnly) toast.error(result.message)
         dispatch({ type: 'CONVERSION_ERROR', errorType: result.error, message: result.message, toastOnly })
       }
     },
@@ -167,7 +157,7 @@ export function AppProvider({ children }) {
     async save() {
       const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
       if (!activeProject) {
-        dispatch({ type: 'SAVE_ERROR', message: 'Nenhum projeto ativo. Selecione um projeto antes de salvar.' })
+        toast.error('Nenhum projeto ativo. Selecione um projeto nas configurações.')
         return
       }
       dispatch({ type: 'SAVE_START' })
@@ -175,19 +165,26 @@ export function AppProvider({ children }) {
       try {
         result = await window.electronAPI.saveSVG({ projectId: state.activeProjectId })
       } catch (err) {
-        dispatch({ type: 'SAVE_ERROR', message: `Erro de comunicação: ${err.message}` })
+        toast.error(`Erro de comunicação: ${err.message}`)
+        dispatch({ type: 'SAVE_ERROR' })
         return
       }
       if (!result) {
-        dispatch({ type: 'SAVE_ERROR', message: 'Resposta inválida do processo principal.' })
+        toast.error('Resposta inválida do processo principal.')
+        dispatch({ type: 'SAVE_ERROR' })
         return
       }
       if (result.ok) {
         dispatch({ type: 'SAVE_SUCCESS', filename: result.filename, entry: result.entry, newCounter: result.newCounter })
+        toast.success(`Salvo: ${result.filename}`)
+      } else if (result.dirMissing) {
+        dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir })
       } else if (result.error === 'EACCES') {
-        dispatch({ type: 'SAVE_ERROR', message: 'Sem permissão de escrita na pasta de destino.' })
+        toast.error('Sem permissão de escrita na pasta de destino.')
+        dispatch({ type: 'SAVE_ERROR' })
       } else {
-        dispatch({ type: 'SAVE_ERROR', message: result.message || 'Erro desconhecido ao salvar.' })
+        toast.error(result.message || 'Erro desconhecido ao salvar.')
+        dispatch({ type: 'SAVE_ERROR' })
       }
     },
 
@@ -203,7 +200,6 @@ export function AppProvider({ children }) {
 
     async addProject(project) {
       const result = await window.electronAPI.addProject(project)
-      // Use activeProjectId from server so auto-activation of first project is reflected
       dispatch({ type: 'PROJECTS_UPDATED', projects: result.projects, activeProjectId: result.activeProjectId })
     },
 
@@ -220,12 +216,15 @@ export function AppProvider({ children }) {
     async updateSettings(updates) {
       const settings = await window.electronAPI.updateSettings(updates)
       dispatch({ type: 'SETTINGS_UPDATED', settings })
-      // If theme changed, apply immediately and keep ref in sync
       if (updates.theme) {
         themeRef.current = settings.theme
         const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
         applyTheme(settings.theme, systemIsDark)
       }
+    },
+
+    clearDirMissing() {
+      dispatch({ type: 'CLEAR_DIR_MISSING' })
     },
 
     clearError() {

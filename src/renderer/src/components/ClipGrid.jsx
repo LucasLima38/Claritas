@@ -1,4 +1,5 @@
 import { CheckCircle2 } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { useApp } from '../context/AppContext.jsx'
 
 function formatBytes(bytes) {
@@ -23,11 +24,11 @@ export default function ClipGrid() {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <p className="text-[10.5px] font-semibold uppercase tracking-wider text-[#9b9a97] dark:text-[#4c4c4c]">
+        <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
           Recentes
         </p>
         {state.history.length > 0 && (
-          <p className="text-[10.5px] text-[#9b9a97] dark:text-[#4c4c4c]">
+          <p className="text-[10.5px] text-muted-foreground">
             {state.history.length} arquivo{state.history.length !== 1 ? 's' : ''} nesta sessão
           </p>
         )}
@@ -38,12 +39,11 @@ export default function ClipGrid() {
           <ClipCard key={entry.id} entry={entry} />
         ))}
 
-        {/* Placeholder for the next clip */}
         {nextName && (
-          <div className="border border-dashed border-[#d0cfc9] dark:border-[#3a3a3a] rounded-md bg-[#fafaf8] dark:bg-[#242424] flex items-center justify-center min-h-[80px]">
+          <div className="border border-dashed border-border rounded-md bg-muted/30 flex items-center justify-center min-h-[80px]">
             <div className="text-center px-2">
-              <p className="text-[10px] text-[#9b9a97] dark:text-[#4c4c4c]">próximo</p>
-              <p className="text-[11px] font-semibold text-[#9b9a97] dark:text-[#4c4c4c] truncate">{nextName}</p>
+              <p className="text-[10px] text-muted-foreground">próximo</p>
+              <p className="text-[11px] font-semibold text-muted-foreground truncate">{nextName}</p>
             </div>
           </div>
         )}
@@ -54,18 +54,16 @@ export default function ClipGrid() {
 
 function ClipCard({ entry }) {
   return (
-    <div className="border border-[#e9e9e7] dark:border-[#2e2e2e] rounded-md overflow-hidden bg-white dark:bg-[#1f1f1f] hover:shadow-md transition-shadow cursor-default">
-      {/* Thumbnail area */}
-      <div className="h-[60px] bg-[#f7f7f5] dark:bg-[#242424] border-b border-[#e9e9e7] dark:border-[#2e2e2e] flex items-center justify-center relative">
-        <div className="w-8 h-8 bg-[#e9e9e7] dark:bg-[#2a2a2a] rounded" />
-        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-[#2f81f7] rounded-full flex items-center justify-center">
-          <CheckCircle2 size={10} className="text-white" />
+    <div className="border border-border rounded-md overflow-hidden bg-card hover:shadow-md transition-shadow cursor-default">
+      <div className="h-[60px] bg-muted border-b border-border flex items-center justify-center relative">
+        <div className="w-8 h-8 bg-border rounded" />
+        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+          <CheckCircle2 size={10} className="text-primary-foreground" />
         </div>
       </div>
-      {/* Info */}
       <div className="px-2 py-1.5">
         <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
-        <p className="text-[10px] text-[#9b9a97] dark:text-[#4c4c4c]">
+        <p className="text-[10px] text-muted-foreground">
           {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
         </p>
       </div>

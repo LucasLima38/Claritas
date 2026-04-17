@@ -231,7 +231,7 @@ export default function Settings({ onBack }) {
           </div>
           <div className="flex items-center gap-2 mt-1.5">
             {inkStatus === 'saved' && inkPath && !inkVersion && (
-              <p className="text-[10.5px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <p className="text-[10.5px] text-primary flex items-center gap-1">
                 <CheckCircle2 size={11} /> Inkscape configurado
               </p>
             )}

@@ -1,20 +1,46 @@
-import { contextBridge } from 'electron'
-import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
 
-// Custom APIs for renderer
-const api = {}
+contextBridge.exposeInMainWorld('electronAPI', {
+  // Clipboard / conversion
+  pasteSchematic: () => ipcRenderer.invoke('paste-schematic'),
+  saveSVG: (data) => ipcRenderer.invoke('save-svg', data),
+  discardSVG: () => ipcRenderer.invoke('discard-svg'),
+  createOutputDir: (data) => ipcRenderer.invoke('create-output-dir', data),
 
-// Use `contextBridge` APIs to expose Electron APIs to
-// renderer only if context isolation is enabled, otherwise
-// just add to the DOM global.
-if (process.contextIsolated) {
-  try {
-    contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
-  } catch (error) {
-    console.error(error)
-  }
-} else {
-  window.electron = electronAPI
-  window.api = api
-}
+  // Projects
+  getProjects: () => ipcRenderer.invoke('get-projects'),
+  setActiveProject: (data) => ipcRenderer.invoke('set-active-project', data),
+  addProject: (project) => ipcRenderer.invoke('add-project', project),
+  updateProject: (data) => ipcRenderer.invoke('update-project', data),
+  deleteProject: (data) => ipcRenderer.invoke('delete-project', data),
+
+  // Settings
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  updateSettings: (updates) => ipcRenderer.invoke('update-settings', updates),
+  chooseDirectory: () => ipcRenderer.invoke('choose-directory'),
+
+  // History
+  getHistory: () => ipcRenderer.invoke('get-history'),
+
+  // Event listeners (return cleanup function)
+  onInit: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('init', handler)
+    return () => ipcRenderer.removeListener('init', handler)
+  },
+  onThemeChanged: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('theme-changed', handler)
+    return () => ipcRenderer.removeListener('theme-changed', handler)
+  },
+  onProjectsUpdated: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('projects-updated', handler)
+    return () => ipcRenderer.removeListener('projects-updated', handler)
+  },
+  onNavigateTo: (cb) => {
+    const handler = (_e, screen) => cb(screen)
+    ipcRenderer.on('navigate-to', handler)
+    return () => ipcRenderer.removeListener('navigate-to', handler)
+  },
+})

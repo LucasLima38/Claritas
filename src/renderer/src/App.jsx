@@ -7,10 +7,9 @@ import ClipboardArea from './components/ClipboardArea.jsx'
 import ClipGrid from './components/ClipGrid.jsx'
 import StatusBar from './components/StatusBar.jsx'
 import Settings from './components/Settings.jsx'
-import InkscapeBanner from './components/InkscapeBanner.jsx'
 
 export default function App() {
-  const { state } = useApp()
+  useApp()
   const [screen, setScreen] = useState('main')
 
   useEffect(() => {
@@ -32,10 +31,6 @@ export default function App() {
         <Sidebar screen={screen} onNavigate={setScreen} />
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          {!state.settings.inkscapePath && (
-            <InkscapeBanner onGoToSettings={() => setScreen('settings')} />
-          )}
-
           {screen === 'main' ? (
             <>
               <Toolbar />

@@ -19,6 +19,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateSettings: (updates) => ipcRenderer.invoke('update-settings', updates),
   chooseDirectory: () => ipcRenderer.invoke('choose-directory'),
   checkInkscapeVersion: (data) => ipcRenderer.invoke('check-inkscape-version', data),
+  getLoginItemSettings: () => ipcRenderer.invoke('get-login-item-settings'),
+  setLoginItemSettings: (data) => ipcRenderer.invoke('set-login-item-settings', data),
 
   // History
   getHistory: () => ipcRenderer.invoke('get-history'),

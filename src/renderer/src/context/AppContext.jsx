@@ -108,12 +108,19 @@ function reducer(state, action) {
 
 const AppContext = createContext(null)
 
+const THEME_CLASSES = ['dark', 'theme-snnabb', 'theme-charcoal', 'theme-black-moon', 'theme-blue-moon']
+
 function applyTheme(theme, systemIsDark) {
-  const isDark =
-    theme === 'dark' ? true :
-    theme === 'light' ? false :
-    systemIsDark
-  document.documentElement.classList.toggle('dark', isDark)
+  const root = document.documentElement
+  root.classList.remove(...THEME_CLASSES)
+
+  if (theme === 'dark')            root.classList.add('dark')
+  else if (theme === 'light')      { /* :root light vars — no class needed */ }
+  else if (theme === 'system')     { if (systemIsDark) root.classList.add('dark') }
+  else if (theme === 'snnabb')     root.classList.add('theme-snnabb')
+  else if (theme === 'charcoal')   root.classList.add('theme-charcoal')
+  else if (theme === 'black-moon') root.classList.add('theme-black-moon')
+  else if (theme === 'blue-moon')  root.classList.add('theme-blue-moon')
 }
 
 export function AppProvider({ children }) {

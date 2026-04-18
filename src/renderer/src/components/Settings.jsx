@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, CheckCircle2, FolderOpen, Loader2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,10 +34,6 @@ export default function Settings({ onBack }) {
   const { state, actions } = useApp()
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(null)
-  const [inkPath, setInkPath] = useState(state.settings.inkscapePath || '')
-  const [inkStatus, setInkStatus] = useState(state.settings.inkscapePath ? 'saved' : 'unset')
-  const [inkVersion, setInkVersion] = useState(null)
-  const [inkChecking, setInkChecking] = useState(false)
   const [launchOnStartup, setLaunchOnStartup] = useState(false)
 
   // Load OS login-item state on mount
@@ -76,25 +72,6 @@ export default function Settings({ onBack }) {
   async function chooseDir() {
     const result = await window.electronAPI.chooseDirectory()
     if (!result.canceled) setForm((f) => ({ ...f, outputDir: result.path }))
-  }
-
-  async function saveInkscape() {
-    await actions.updateSettings({ inkscapePath: inkPath })
-    setInkStatus('saved')
-    setInkVersion(null)
-  }
-
-  async function checkInkscape() {
-    if (!inkPath) return
-    setInkChecking(true)
-    setInkVersion(null)
-    const result = await window.electronAPI.checkInkscapeVersion({ path: inkPath })
-    setInkChecking(false)
-    if (result.ok) {
-      setInkVersion({ ok: true, text: `Inkscape ${result.version}` })
-    } else {
-      setInkVersion({ ok: false, text: 'Não encontrado ou inválido' })
-    }
   }
 
   return (
@@ -261,46 +238,6 @@ export default function Settings({ onBack }) {
               checked={state.settings.closeHides ?? true}
               onCheckedChange={(v) => actions.updateSettings({ closeHides: v })}
             />
-          </div>
-        </section>
-
-        <Separator />
-
-        {/* Inkscape section */}
-        <section>
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Inkscape</p>
-          <div className="flex gap-2">
-            <Input
-              className="flex-1 font-mono text-xs h-7"
-              placeholder="C:\Program Files\Inkscape\bin\inkscape.exe"
-              value={inkPath}
-              onChange={(e) => { setInkPath(e.target.value); setInkStatus('dirty'); setInkVersion(null) }}
-            />
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={saveInkscape}>
-              Salvar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs"
-              onClick={checkInkscape}
-              disabled={inkChecking || !inkPath}
-            >
-              {inkChecking ? <Loader2 size={11} className="animate-spin" /> : 'Verificar'}
-            </Button>
-          </div>
-          <div className="flex items-center gap-2 mt-1.5">
-            {inkStatus === 'saved' && inkPath && !inkVersion && (
-              <p className="text-[10.5px] text-primary flex items-center gap-1">
-                <CheckCircle2 size={11} /> Inkscape configurado
-              </p>
-            )}
-            {inkVersion && (
-              <Badge variant={inkVersion.ok ? 'default' : 'destructive'} className="text-[10px] gap-1">
-                {inkVersion.ok ? <CheckCircle2 size={10} /> : null}
-                {inkVersion.text}
-              </Badge>
-            )}
           </div>
         </section>
 

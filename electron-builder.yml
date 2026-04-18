@@ -1,0 +1,29 @@
+appId: com.schematicclip.app
+productName: SchematicClip
+copyright: Copyright © 2026
+
+directories:
+  output: dist
+  buildResources: assets
+
+files:
+  - out/**/*
+
+asarUnpack:
+  - resources/**
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: SchematicClip
+
+npmRebuild: false
+publish: null

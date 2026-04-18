@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+
+  /* ── Snnabb ──────────────────────────────── warm cream light */
+  .theme-snnabb {
+    --background: 40 30% 96%;
+    --foreground: 30 15% 15%;
+    --card: 40 30% 96%;
+    --card-foreground: 30 15% 15%;
+    --popover: 40 30% 96%;
+    --popover-foreground: 30 15% 15%;
+    --primary: 25 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 40 20% 88%;
+    --secondary-foreground: 30 15% 20%;
+    --muted: 40 20% 90%;
+    --muted-foreground: 30 10% 45%;
+    --accent: 40 20% 88%;
+    --accent-foreground: 30 15% 20%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 40 15% 82%;
+    --input: 40 15% 82%;
+    --ring: 25 90% 55%;
+  }
+
+  /* ── Charcoal ────────────────────────────── very dark, blue accent */
+  .theme-charcoal {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 90%;
+    --card: 0 0% 14%;
+    --card-foreground: 0 0% 90%;
+    --popover: 0 0% 14%;
+    --popover-foreground: 0 0% 90%;
+    --primary: 213 80% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 85%;
+    --muted: 0 0% 18%;
+    --muted-foreground: 0 0% 55%;
+    --accent: 0 0% 18%;
+    --accent-foreground: 0 0% 90%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 213 80% 60%;
+  }
+
+  /* ── Black Moon ───────────────────────────── dark neutral */
+  .theme-black-moon {
+    --background: 220 10% 8%;
+    --foreground: 220 5% 90%;
+    --card: 220 10% 12%;
+    --card-foreground: 220 5% 90%;
+    --popover: 220 10% 12%;
+    --popover-foreground: 220 5% 90%;
+    --primary: 220 5% 80%;
+    --primary-foreground: 220 10% 8%;
+    --secondary: 220 8% 16%;
+    --secondary-foreground: 220 5% 85%;
+    --muted: 220 8% 16%;
+    --muted-foreground: 220 5% 50%;
+    --accent: 220 8% 20%;
+    --accent-foreground: 220 5% 90%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 8% 18%;
+    --input: 220 8% 18%;
+    --ring: 220 5% 60%;
+  }
+
+  /* ── Blue Moon ────────────────────────────── dark + amber accent */
+  .theme-blue-moon {
+    --background: 220 12% 10%;
+    --foreground: 220 5% 90%;
+    --card: 220 12% 14%;
+    --card-foreground: 220 5% 90%;
+    --popover: 220 12% 14%;
+    --popover-foreground: 220 5% 90%;
+    --primary: 35 90% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 10% 18%;
+    --secondary-foreground: 220 5% 85%;
+    --muted: 220 10% 18%;
+    --muted-foreground: 220 5% 52%;
+    --accent: 220 10% 20%;
+    --accent-foreground: 220 5% 90%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 35 90% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border box-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+}
+
+.app-region-drag {
+  -webkit-app-region: drag;
+}
+.app-region-no-drag {
+  -webkit-app-region: no-drag;
+}

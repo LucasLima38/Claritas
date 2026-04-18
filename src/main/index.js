@@ -32,6 +32,14 @@ function updateTitleBarOverlay(isDark) {
   mainWindow?.setTitleBarOverlay(titleBarColors(isDark))
 }
 
+function effectiveIsDark(theme, systemIsDark) {
+  if (theme === 'dark')   return true
+  if (theme === 'light')  return false
+  if (theme === 'snnabb') return false  // warm cream light theme
+  if (theme === 'system') return systemIsDark
+  return true  // charcoal, black-moon, blue-moon are dark
+}
+
 function createWindow() {
   store.initSession()
 
@@ -40,6 +48,7 @@ function createWindow() {
     height: 640,
     minWidth: 760,
     minHeight: 500,
+    show: false,
     titleBarStyle: 'hidden',
     titleBarOverlay: titleBarColors(nativeTheme.shouldUseDarkColors),
     webPreferences: {
@@ -58,8 +67,11 @@ function createWindow() {
   }
 
   mainWindow.on('close', (e) => {
-    e.preventDefault()
-    mainWindow.hide()
+    if (store.getSettings().closeHides) {
+      e.preventDefault()
+      mainWindow.hide()
+    }
+    // closeHides = false → window closes; app remains in tray
   })
 
   return mainWindow
@@ -78,6 +90,11 @@ app.whenReady().then(() => {
     if (found) store.updateSettings({ inkscapePath: found })
   }
 
+  // Show window unless startMinimized is set
+  if (!store.getSettings().startMinimized) {
+    mainWindow.show()
+  }
+
   // Send theme immediately after load (listener is passive, no race condition)
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send('theme-changed', {
@@ -91,12 +108,9 @@ app.on('window-all-closed', () => {
 })
 
 nativeTheme.on('updated', () => {
-  // For 'system' theme, keep titleBarOverlay in sync with OS dark mode
   const settings = store.getSettings()
   const theme = settings.theme ?? 'system'
-  if (theme === 'system') {
-    updateTitleBarOverlay(nativeTheme.shouldUseDarkColors)
-  }
+  updateTitleBarOverlay(effectiveIsDark(theme, nativeTheme.shouldUseDarkColors))
   mainWindow?.webContents.send('theme-changed', {
     isDark: nativeTheme.shouldUseDarkColors,
   })
@@ -228,13 +242,8 @@ ipcMain.handle('get-settings', () => store.getSettings())
 
 ipcMain.handle('update-settings', (_event, updates) => {
   store.updateSettings(updates)
-  // Sync titleBarOverlay when theme changes
   if (updates.theme !== undefined) {
-    const isDark =
-      updates.theme === 'dark' ? true :
-      updates.theme === 'light' ? false :
-      nativeTheme.shouldUseDarkColors
-    updateTitleBarOverlay(isDark)
+    updateTitleBarOverlay(effectiveIsDark(updates.theme, nativeTheme.shouldUseDarkColors))
   }
   return store.getSettings()
 })
@@ -251,6 +260,23 @@ ipcMain.handle('get-history', () => store.getHistory())
 
 ipcMain.handle('check-inkscape-version', async (_event, { path: inkPath }) => {
   return await checkInkscapeVersion(inkPath)
+})
+
+ipcMain.handle('get-login-item-settings', () => {
+  try {
+    return { openAtLogin: app.getLoginItemSettings().openAtLogin }
+  } catch {
+    return { openAtLogin: false }
+  }
+})
+
+ipcMain.handle('set-login-item-settings', (_event, { openAtLogin }) => {
+  try {
+    app.setLoginItemSettings({ openAtLogin })
+  } catch {
+    // Non-critical — silently ignore (e.g. sandboxed environments)
+  }
+  return { ok: true }
 })
 
 // Renderer calls this once on mount to get initial state (avoids did-finish-load race condition)

@@ -82,13 +82,14 @@ describe('ProjectStore', () => {
 
   it('getSettings returns defaults when unset', () => {
     const settings = store.getSettings()
-    expect(settings.conversionTimeout).toBe(15000)
     expect(settings.startMinimized).toBe(false)
+    expect(settings.theme).toBe('system')
+    expect(settings.closeHides).toBe(true)
   })
 
   it('updateSettings persists changes', () => {
-    store.updateSettings({ inkscapePath: 'C:\\inkscape.exe' })
-    expect(store.getSettings().inkscapePath).toBe('C:\\inkscape.exe')
+    store.updateSettings({ theme: 'dark' })
+    expect(store.getSettings().theme).toBe('dark')
   })
 
   it('getActiveProjectId returns first project id when activeProjectId is null but projects exist', () => {
@@ -112,5 +113,13 @@ describe('ProjectStore', () => {
   it('updateSettings persists closeHides false', () => {
     store.updateSettings({ closeHides: false })
     expect(store.getSettings().closeHides).toBe(false)
+  })
+
+  it('getSettings does not include inkscapePath', () => {
+    expect(store.getSettings()).not.toHaveProperty('inkscapePath')
+  })
+
+  it('getSettings does not include conversionTimeout', () => {
+    expect(store.getSettings()).not.toHaveProperty('conversionTimeout')
   })
 })

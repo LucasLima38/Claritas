@@ -10,11 +10,9 @@ const PROJECT_DEFAULTS = {
 }
 
 const SETTINGS_DEFAULTS = {
-  inkscapePath: null,
-  conversionTimeout: 15000,
   startMinimized: false,
   closeHides: true,
-  theme: 'system', // 'system' | 'light' | 'dark'
+  theme: 'system',
 }
 
 export class ProjectStore {
@@ -78,8 +76,6 @@ export class ProjectStore {
 
   getSettings() {
     return {
-      inkscapePath: this._settings.get('inkscapePath', null),
-      conversionTimeout: this._settings.get('conversionTimeout', 15000),
       startMinimized: this._settings.get('startMinimized', false),
       closeHides: this._settings.get('closeHides', true),
       theme: this._settings.get('theme', 'system'),

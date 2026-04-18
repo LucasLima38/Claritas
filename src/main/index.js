@@ -4,7 +4,8 @@ import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
-import { convert, findInkscape, isValidSVG, getSVGMetadata, checkInkscapeVersion } from './conversionService.js'
+import { convert, setShell, isValidSVG, getSVGMetadata } from './conversionService.js'
+import { InkscapeShell } from './inkscapeShell.js'
 import { generateFilename, saveSVG, checkOutputDir } from './saveService.js'
 import { createTray, updateTrayMenu } from './tray.js'
 
@@ -13,6 +14,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // ── State ─────────────────────────────────────────────────────────────────
 
 const store = new ProjectStore()
+
+// ── Inkscape shell ────────────────────────────────────────────────────────
+
+function resolveInkExe() {
+  return is.dev
+    ? path.join(process.cwd(), 'resources/inkscape/bin/inkscape.exe')
+    : path.join(process.resourcesPath, 'inkscape/bin/inkscape.exe')
+}
+
+const inkscapeShell = new InkscapeShell(resolveInkExe())
+
 let mainWindow = null
 let tray = null
 // Holds the last converted SVG waiting for user confirmation
@@ -80,16 +92,16 @@ function createWindow() {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   mainWindow = createWindow()
   tray = createTray(mainWindow, store)
 
-  // Auto-detect Inkscape if not yet configured
-  const settings = store.getSettings()
-  if (!settings.inkscapePath) {
-    const found = findInkscape()
-    if (found) store.updateSettings({ inkscapePath: found })
-  }
+  // Start the bundled Inkscape shell (non-blocking for window show)
+  inkscapeShell.start().then(() => {
+    setShell(inkscapeShell)
+  }).catch((err) => {
+    console.error('Inkscape shell failed to start:', err.message)
+  })
 
   // Show window unless startMinimized is set
   if (!store.getSettings().startMinimized) {
@@ -106,6 +118,10 @@ app.whenReady().then(() => {
 
 app.on('window-all-closed', () => {
   // Keep running in tray — don't quit
+})
+
+app.on('before-quit', () => {
+  inkscapeShell.stop()
 })
 
 nativeTheme.on('updated', () => {
@@ -125,18 +141,20 @@ ipcMain.handle('paste-schematic', async () => {
     return { error: 'NO_EMF', message: 'Nenhum esquemático vetorial encontrado no clipboard.' }
   }
 
-  const settings = store.getSettings()
-  if (!settings.inkscapePath) {
-    return { error: 'INKSCAPE_NOT_FOUND', message: 'Inkscape não encontrado. Configure o caminho nas configurações.' }
+  if (inkscapeShell.busy) {
+    return { error: 'BUSY' }
   }
 
   const startTime = Date.now()
 
   try {
-    const svgContent = await convert(emfBuffer, settings.inkscapePath, settings.conversionTimeout)
+    const svgContent = await convert(emfBuffer)
 
     if (!isValidSVG(svgContent)) {
-      return { error: 'INVALID_SVG', message: 'Conversão incompleta — o SVG gerado está em branco. Verifique o Inkscape.' }
+      return {
+        error: 'INVALID_SVG',
+        message: 'Conversão incompleta — o SVG gerado está em branco. Tente novamente.',
+      }
     }
 
     const metadata = getSVGMetadata(svgContent, Date.now() - startTime)
@@ -258,10 +276,6 @@ ipcMain.handle('choose-directory', async () => {
 })
 
 ipcMain.handle('get-history', () => store.getHistory())
-
-ipcMain.handle('check-inkscape-version', async (_event, { path: inkPath }) => {
-  return await checkInkscapeVersion(inkPath)
-})
 
 ipcMain.handle('get-login-item-settings', () => {
   try {

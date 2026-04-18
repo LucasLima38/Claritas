@@ -12,6 +12,12 @@ files:
 asarUnpack:
   - resources/**
 
+extraResources:
+  - from: resources/inkscape
+    to: inkscape
+    filter:
+      - "**/*"
+
 win:
   target:
     - target: nsis

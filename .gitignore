@@ -17,6 +17,9 @@ Thumbs.db
 # Electron temp files
 *.emf
 
+# Bundled Inkscape Portable (run: npm run setup-inkscape)
+resources/inkscape/
+
 # Editor-specific (local overrides)
 .eslintcache
 

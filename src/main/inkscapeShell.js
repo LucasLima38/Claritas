@@ -25,6 +25,7 @@ export class InkscapeShell {
    * Rejects with Error('STARTUP_TIMEOUT') if the prompt doesn't arrive in 10 s.
    */
   async start() {
+    if (this._proc !== null) return
     this._stopping = false
     this._ready = false
     this._buffer = ''
@@ -106,6 +107,8 @@ export class InkscapeShell {
       const timer = setTimeout(() => {
         this._pendingResolve = null
         this._pendingReject = null
+        this._ready = false
+        this._proc?.kill() // force restart; stale prompt won't corrupt the next convert()
         reject(new Error('TIMEOUT'))
       }, timeout)
 
@@ -118,7 +121,7 @@ export class InkscapeShell {
         reject(err)
       }
 
-      const cmd = `${emfPath} --export-filename=${svgPath} --export-area-drawing\n`
+      const cmd = `"${emfPath}" --export-filename="${svgPath}" --export-area-drawing\n`
       this._proc.stdin.write(cmd)
     })
   }

@@ -92,7 +92,7 @@ function createWindow() {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────
 
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
   mainWindow = createWindow()
   tray = createTray(mainWindow, store)
 
@@ -139,6 +139,10 @@ ipcMain.handle('paste-schematic', async () => {
   const emfBuffer = await readEMF()
   if (!emfBuffer) {
     return { error: 'NO_EMF', message: 'Nenhum esquemático vetorial encontrado no clipboard.' }
+  }
+
+  if (!inkscapeShell.ready) {
+    return { error: 'NOT_READY', message: 'Inkscape ainda está iniciando. Tente novamente em alguns segundos.' }
   }
 
   if (inkscapeShell.busy) {

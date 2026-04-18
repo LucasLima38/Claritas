@@ -19,6 +19,11 @@ export class InkscapeShell {
     return this._pendingResolve !== null
   }
 
+  /** True after the shell has started and is ready to accept commands. */
+  get ready() {
+    return this._ready
+  }
+
   /**
    * Spawns `inkscape --shell` and waits for the first `> ` prompt.
    * Resolves when the shell is ready to accept commands.

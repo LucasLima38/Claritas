@@ -49,6 +49,7 @@ describe('InkscapeShell', () => {
     it('rejects with STARTUP_TIMEOUT when no prompt arrives', async () => {
       vi.useFakeTimers()
       const p = shell.start()
+      p.catch(() => {}) // prevent unhandled rejection during timer advancement
       await vi.advanceTimersByTimeAsync(11_000)
       await expect(p).rejects.toThrow('STARTUP_TIMEOUT')
     })
@@ -81,6 +82,7 @@ describe('InkscapeShell', () => {
       await startShell()
 
       const p = shell.convert('in.emf', 'out.svg', 200)
+      p.catch(() => {}) // prevent unhandled rejection during timer advancement
       await vi.advanceTimersByTimeAsync(300)
       await expect(p).rejects.toThrow('TIMEOUT')
     })

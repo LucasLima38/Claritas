@@ -20,6 +20,18 @@ let pendingSVG = null   // { svgContent: string, metadata: object }
 
 // ── Window ────────────────────────────────────────────────────────────────
 
+function titleBarColors(isDark) {
+  return {
+    color: isDark ? '#1f1f1f' : '#ffffff',
+    symbolColor: isDark ? '#e6e6e3' : '#37352f',
+    height: 40,
+  }
+}
+
+function updateTitleBarOverlay(isDark) {
+  mainWindow?.setTitleBarOverlay(titleBarColors(isDark))
+}
+
 function createWindow() {
   store.initSession()
 
@@ -29,11 +41,7 @@ function createWindow() {
     minWidth: 760,
     minHeight: 500,
     titleBarStyle: 'hidden',
-    titleBarOverlay: {
-      color: nativeTheme.shouldUseDarkColors ? '#1f1f1f' : '#ffffff',
-      symbolColor: nativeTheme.shouldUseDarkColors ? '#e6e6e3' : '#37352f',
-      height: 40,
-    },
+    titleBarOverlay: titleBarColors(nativeTheme.shouldUseDarkColors),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -83,6 +91,12 @@ app.on('window-all-closed', () => {
 })
 
 nativeTheme.on('updated', () => {
+  // For 'system' theme, keep titleBarOverlay in sync with OS dark mode
+  const settings = store.getSettings()
+  const theme = settings.theme ?? 'system'
+  if (theme === 'system') {
+    updateTitleBarOverlay(nativeTheme.shouldUseDarkColors)
+  }
   mainWindow?.webContents.send('theme-changed', {
     isDark: nativeTheme.shouldUseDarkColors,
   })
@@ -214,6 +228,14 @@ ipcMain.handle('get-settings', () => store.getSettings())
 
 ipcMain.handle('update-settings', (_event, updates) => {
   store.updateSettings(updates)
+  // Sync titleBarOverlay when theme changes
+  if (updates.theme !== undefined) {
+    const isDark =
+      updates.theme === 'dark' ? true :
+      updates.theme === 'light' ? false :
+      nativeTheme.shouldUseDarkColors
+    updateTitleBarOverlay(isDark)
+  }
   return store.getSettings()
 })
 

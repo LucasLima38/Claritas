@@ -103,4 +103,14 @@ describe('ProjectStore', () => {
     }
     expect(store.getActiveProjectId()).toBe('p1')
   })
+
+  it('getSettings returns closeHides defaulting to true', () => {
+    const settings = store.getSettings()
+    expect(settings.closeHides).toBe(true)
+  })
+
+  it('updateSettings persists closeHides false', () => {
+    store.updateSettings({ closeHides: false })
+    expect(store.getSettings().closeHides).toBe(false)
+  })
 })

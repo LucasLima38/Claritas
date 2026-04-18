@@ -20,7 +20,7 @@
     "build:win": "npm run build && electron-builder --win",
     "build:mac": "npm run build && electron-builder --mac",
     "build:linux": "npm run build && electron-builder --linux",
-    "setup-inkscape": "node scripts/setup-inkscape.js"
+    "setup-inkscape": "node scripts/setup-inkscape.mjs"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",

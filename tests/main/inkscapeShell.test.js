@@ -69,7 +69,7 @@ describe('InkscapeShell', () => {
 
       const p = shell.convert('C:\\tmp\\in.emf', 'C:\\tmp\\out.svg')
       expect(proc.stdin.write).toHaveBeenCalledWith(
-        'C:\\tmp\\in.emf --export-filename=C:\\tmp\\out.svg --export-area-drawing\n'
+        '"C:\\tmp\\in.emf" --export-filename="C:\\tmp\\out.svg" --export-area-drawing\n'
       )
 
       proc.stdout.emit('data', '> ')

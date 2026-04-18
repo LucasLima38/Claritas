@@ -20,24 +20,25 @@ let pendingSVG = null   // { svgContent: string, metadata: object }
 
 // ── Window ────────────────────────────────────────────────────────────────
 
-function titleBarColors(isDark) {
-  return {
-    color: isDark ? '#1f1f1f' : '#ffffff',
-    symbolColor: isDark ? '#e6e6e3' : '#37352f',
-    height: 40,
-  }
+// Exact hex values derived from CSS vars in index.css for each theme.
+// These must match --background and --foreground of each theme class.
+const TITLE_BAR_PALETTE = {
+  light:          { color: '#ffffff',  symbolColor: '#09090b' },
+  dark:           { color: '#09090b',  symbolColor: '#fafafa' },
+  snnabb:         { color: '#f8f6f2',  symbolColor: '#332619' },
+  charcoal:       { color: '#1a1a1a',  symbolColor: '#e5e5e5' },
+  'black-moon':   { color: '#121416',  symbolColor: '#e4e4e8' },
+  'blue-moon':    { color: '#16181c',  symbolColor: '#e4e4e8' },
 }
 
-function updateTitleBarOverlay(isDark) {
-  mainWindow?.setTitleBarOverlay(titleBarColors(isDark))
+function titleBarColors(theme, systemIsDark) {
+  const key = theme === 'system' ? (systemIsDark ? 'dark' : 'light') : (theme ?? 'light')
+  const palette = TITLE_BAR_PALETTE[key] ?? (systemIsDark ? TITLE_BAR_PALETTE.dark : TITLE_BAR_PALETTE.light)
+  return { ...palette, height: 40 }
 }
 
-function effectiveIsDark(theme, systemIsDark) {
-  if (theme === 'dark')   return true
-  if (theme === 'light')  return false
-  if (theme === 'snnabb') return false  // warm cream light theme
-  if (theme === 'system') return systemIsDark
-  return true  // charcoal, black-moon, blue-moon are dark
+function updateTitleBarOverlay(theme, systemIsDark) {
+  mainWindow?.setTitleBarOverlay(titleBarColors(theme, systemIsDark))
 }
 
 function createWindow() {
@@ -50,7 +51,7 @@ function createWindow() {
     minHeight: 500,
     show: false,
     titleBarStyle: 'hidden',
-    titleBarOverlay: titleBarColors(nativeTheme.shouldUseDarkColors),
+    titleBarOverlay: titleBarColors(store.getSettings().theme ?? 'system', nativeTheme.shouldUseDarkColors),
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -110,7 +111,7 @@ app.on('window-all-closed', () => {
 nativeTheme.on('updated', () => {
   const settings = store.getSettings()
   const theme = settings.theme ?? 'system'
-  updateTitleBarOverlay(effectiveIsDark(theme, nativeTheme.shouldUseDarkColors))
+  updateTitleBarOverlay(theme, nativeTheme.shouldUseDarkColors)
   mainWindow?.webContents.send('theme-changed', {
     isDark: nativeTheme.shouldUseDarkColors,
   })
@@ -243,7 +244,7 @@ ipcMain.handle('get-settings', () => store.getSettings())
 ipcMain.handle('update-settings', (_event, updates) => {
   store.updateSettings(updates)
   if (updates.theme !== undefined) {
-    updateTitleBarOverlay(effectiveIsDark(updates.theme, nativeTheme.shouldUseDarkColors))
+    updateTitleBarOverlay(updates.theme, nativeTheme.shouldUseDarkColors)
   }
   return store.getSettings()
 })

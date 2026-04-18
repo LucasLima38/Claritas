@@ -1,14 +1,34 @@
-import { useState } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, CheckCircle2, FolderOpen, Sun, Moon, Monitor, Loader2 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Plus, Pencil, Trash2, ArrowLeft, CheckCircle2, FolderOpen, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Switch } from '@/components/ui/switch'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useApp } from '../context/AppContext.jsx'
 
 const PROJECT_COLORS = ['#2f81f7', '#27c93f', '#ff9f43', '#e74c3c', '#9b59b6', '#1abc9c']
+
+function BehaviorRow({ label, description, checked, onCheckedChange }) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <div className="flex-1 min-w-0 pr-4">
+        <p className="text-[12.5px] font-medium">{label}</p>
+        <p className="text-[10.5px] text-muted-foreground">{description}</p>
+      </div>
+      <Switch checked={checked} onCheckedChange={onCheckedChange} className="app-region-no-drag shrink-0" />
+    </div>
+  )
+}
 
 export default function Settings({ onBack }) {
   const { state, actions } = useApp()
@@ -18,6 +38,19 @@ export default function Settings({ onBack }) {
   const [inkStatus, setInkStatus] = useState(state.settings.inkscapePath ? 'saved' : 'unset')
   const [inkVersion, setInkVersion] = useState(null)
   const [inkChecking, setInkChecking] = useState(false)
+  const [launchOnStartup, setLaunchOnStartup] = useState(false)
+
+  // Load OS login-item state on mount
+  useEffect(() => {
+    window.electronAPI.getLoginItemSettings()
+      .then(({ openAtLogin }) => setLaunchOnStartup(openAtLogin))
+      .catch(() => setLaunchOnStartup(false))
+  }, [])
+
+  async function handleLaunchOnStartup(value) {
+    setLaunchOnStartup(value)
+    await window.electronAPI.setLoginItemSettings({ openAtLogin: value })
+  }
 
   function openAdd() {
     setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', counter: 0, color: PROJECT_COLORS[0] })
@@ -206,6 +239,33 @@ export default function Settings({ onBack }) {
 
         <Separator />
 
+        {/* Comportamento section */}
+        <section>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Comportamento</p>
+          <div className="flex flex-col divide-y divide-border">
+            <BehaviorRow
+              label="Iniciar com o Windows"
+              description="Inicia automaticamente ao fazer login"
+              checked={launchOnStartup}
+              onCheckedChange={handleLaunchOnStartup}
+            />
+            <BehaviorRow
+              label="Iniciar minimizado"
+              description="Abre sem exibir a janela (apenas bandeja)"
+              checked={state.settings.startMinimized ?? false}
+              onCheckedChange={(v) => actions.updateSettings({ startMinimized: v })}
+            />
+            <BehaviorRow
+              label="Botão fechar oculta o app"
+              description="× mantém o app rodando na bandeja do sistema"
+              checked={state.settings.closeHides ?? true}
+              onCheckedChange={(v) => actions.updateSettings({ closeHides: v })}
+            />
+          </div>
+        </section>
+
+        <Separator />
+
         {/* Inkscape section */}
         <section>
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Inkscape</p>
@@ -246,35 +306,32 @@ export default function Settings({ onBack }) {
 
         <Separator />
 
-        {/* Appearance section */}
+        {/* Aparência section */}
         <section>
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Aparência</p>
-          <div className="flex gap-2">
-            {[
-              { value: 'light',  label: 'Claro',  icon: Sun },
-              { value: 'dark',   label: 'Escuro', icon: Moon },
-              { value: 'system', label: 'Sistema', icon: Monitor },
-            ].map(({ value, label, icon: Icon }) => {
-              const active = (state.settings.theme ?? 'system') === value
-              return (
-                <Button
-                  key={value}
-                  variant={active ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => actions.updateSettings({ theme: value })}
-                  className={cn(
-                    'app-region-no-drag flex-1 flex flex-col items-center gap-1.5 py-2.5 h-auto text-xs font-medium',
-                  )}
-                >
-                  <Icon size={15} />
-                  {label}
-                </Button>
-              )
-            })}
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[10.5px]">Tema</Label>
+            <Select
+              value={state.settings.theme ?? 'system'}
+              onValueChange={(value) => actions.updateSettings({ theme: value })}
+            >
+              <SelectTrigger className="h-7 text-xs w-56 app-region-no-drag">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">Sistema (padrão)</SelectItem>
+                <SelectItem value="light">Claro</SelectItem>
+                <SelectItem value="dark">Escuro</SelectItem>
+                <SelectItem value="snnabb">Snnabb</SelectItem>
+                <SelectItem value="charcoal">Charcoal</SelectItem>
+                <SelectItem value="black-moon">Black Moon</SelectItem>
+                <SelectItem value="blue-moon">Blue Moon</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-[10.5px] text-muted-foreground mt-1">
+              "Sistema" segue automaticamente a configuração do Windows.
+            </p>
           </div>
-          <p className="text-[10.5px] text-muted-foreground mt-2">
-            "Sistema" segue automaticamente a configuração do Windows.
-          </p>
         </section>
 
       </div>

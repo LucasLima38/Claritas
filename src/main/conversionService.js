@@ -1,43 +1,23 @@
-import { spawn, execSync } from 'child_process'
-import { existsSync, promises as fsp } from 'fs'
+import { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
 
-const INKSCAPE_DEFAULT_PATHS = [
-  'C:\\Program Files\\Inkscape\\bin\\inkscape.exe',
-  'C:\\Program Files (x86)\\Inkscape\\bin\\inkscape.exe',
-]
+/** Injected by index.js after the shell has started. */
+let _shell = null
 
 /**
- * Attempts to find the Inkscape executable on the system.
- * Checks default paths, then Windows registry.
- * Returns the path string or null if not found.
+ * Injects the InkscapeShell instance.
+ * Called from index.js once the shell has successfully started.
+ * @param {import('./inkscapeShell.js').InkscapeShell} shell
  */
-export function findInkscape() {
-  for (const p of INKSCAPE_DEFAULT_PATHS) {
-    if (existsSync(p)) return p
-  }
-
-  try {
-    const regOutput = execSync(
-      'reg query "HKLM\\SOFTWARE\\Inkscape" /ve',
-      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
-    )
-    const match = regOutput.match(/REG_SZ\s+(.+)/)
-    if (match) {
-      const dir = match[1].trim()
-      const candidate = path.join(dir, 'bin', 'inkscape.exe')
-      if (existsSync(candidate)) return candidate
-    }
-  } catch {
-    // Registry not available or key missing
-  }
-
-  return null
+export function setShell(shell) {
+  _shell = shell
 }
 
 /**
  * Returns true if the SVG string contains meaningful content.
+ * @param {string} svgContent
+ * @returns {boolean}
  */
 export function isValidSVG(svgContent) {
   if (!svgContent || svgContent.trim().length === 0) return false
@@ -49,6 +29,8 @@ export function isValidSVG(svgContent) {
 
 /**
  * Extracts width, height and size metadata from an SVG string.
+ * @param {string} svgContent
+ * @param {number} conversionMs
  */
 export function getSVGMetadata(svgContent, conversionMs) {
   const widthMatch = svgContent.match(/width="([^"]+)"/)
@@ -62,79 +44,26 @@ export function getSVGMetadata(svgContent, conversionMs) {
 }
 
 /**
- * Converts an EMF Buffer to an SVG string using Inkscape CLI.
- * @param {Buffer} emfBuffer   Raw EMF bytes from the clipboard
- * @param {string} inkscapePath  Absolute path to inkscape.exe
- * @param {number} timeout     Milliseconds before aborting (default 15000)
+ * Converts an EMF Buffer to an SVG string using the bundled Inkscape shell.
+ * Writes the buffer to a temp .emf file, tells the shell to convert it,
+ * reads back the resulting .svg, then cleans up both temp files.
+ *
+ * @param {Buffer} emfBuffer  Raw EMF bytes from the clipboard
+ * @param {number} timeout    ms before aborting (default 15 s)
  * @returns {Promise<string>} SVG content string
  */
-export async function convert(emfBuffer, inkscapePath, timeout = 15000) {
+export async function convert(emfBuffer, timeout = 15_000) {
   const id = crypto.randomUUID()
   const tmpDir = os.tmpdir()
   const emfPath = path.join(tmpDir, `schclip_${id}.emf`)
   const svgPath = path.join(tmpDir, `schclip_${id}.svg`)
 
   await fsp.writeFile(emfPath, emfBuffer)
-
   try {
-    await new Promise((resolve, reject) => {
-      const proc = spawn(inkscapePath, [`--export-filename=${svgPath}`, '--export-area-drawing', emfPath], {
-        stdio: ['ignore', 'pipe', 'pipe'],
-      })
-
-      const timer = setTimeout(() => {
-        proc.kill()
-        reject(new Error('TIMEOUT'))
-      }, timeout)
-
-      proc.on('close', (code) => {
-        clearTimeout(timer)
-        if (code !== 0) reject(new Error(`Inkscape exited with code ${code}`))
-        else resolve()
-      })
-
-      proc.on('error', (err) => {
-        clearTimeout(timer)
-        reject(err)
-      })
-    })
-
+    await _shell.convert(emfPath, svgPath, timeout)
     return await fsp.readFile(svgPath, 'utf8')
   } finally {
     await fsp.unlink(emfPath).catch(() => {})
     await fsp.unlink(svgPath).catch(() => {})
   }
-}
-
-/**
- * Runs `inkscape --version` and parses the version string.
- * @param {string} inkscapePath Absolute path to inkscape.exe
- * @returns {Promise<{ok: boolean, version?: string, error?: string}>}
- */
-export async function checkInkscapeVersion(inkscapePath) {
-  return new Promise((resolve) => {
-    let output = ''
-    let errOutput = ''
-    let proc
-    try {
-      proc = spawn(inkscapePath, ['--version'], { stdio: ['ignore', 'pipe', 'pipe'] })
-    } catch (err) {
-      return resolve({ ok: false, error: err.message })
-    }
-
-    proc.stdout.on('data', (chunk) => { output += chunk.toString() })
-    proc.stderr.on('data', (chunk) => { errOutput += chunk.toString() })
-
-    proc.on('close', (code) => {
-      if (code !== 0) return resolve({ ok: false, error: errOutput.trim() || `Exit code ${code}` })
-      const match = output.match(/Inkscape\s+(\d+(?:\.\d+)+)/)
-      if (match) {
-        resolve({ ok: true, version: match[1] })
-      } else {
-        resolve({ ok: false, error: 'Could not parse version' })
-      }
-    })
-
-    proc.on('error', (err) => resolve({ ok: false, error: err.message }))
-  })
 }

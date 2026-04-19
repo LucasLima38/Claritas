@@ -126,7 +126,9 @@ export class InkscapeShell {
         reject(err)
       }
 
-      const cmd = `"${emfPath}" --export-filename="${svgPath}" --export-area-drawing\n`
+      // Inkscape 1.x shell mode requires the actions format:
+      // action1:arg1; action2:arg2; ...
+      const cmd = `file-open:${emfPath}; export-type:svg; export-filename:${svgPath}; export-do; file-close\n`
       this._proc.stdin.write(cmd)
     })
   }

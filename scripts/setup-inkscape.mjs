@@ -59,7 +59,7 @@ async function main() {
     unlinkSync(TMP_FILE)
     throw new Error(
       `Checksum mismatch!\n  expected: ${INKSCAPE_SHA256}\n  got:      ${actual}\n` +
-        `  Update INKSCAPE_SHA256 in scripts/setup-inkscape.js if this is a legitimate new release.`
+        `  Update INKSCAPE_SHA256 in scripts/setup-inkscape.mjs if this is a legitimate new release.`
     )
   }
   console.log('  → Checksum OK.')

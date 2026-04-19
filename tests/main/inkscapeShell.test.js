@@ -117,4 +117,38 @@ describe('InkscapeShell', () => {
       expect(shell.busy).toBe(false)
     })
   })
+
+  // ── execute() ────────────────────────────────────────────────────────────
+
+  describe('execute()', () => {
+    async function startShell() {
+      const p = shell.start()
+      proc.stdout.emit('data', '> ')
+      await p
+    }
+
+    it('writes actions + newline to stdin and resolves when stdout emits "> "', async () => {
+      await startShell()
+
+      const p = shell.execute('file-open:test.svg; export-do')
+      expect(proc.stdin.write).toHaveBeenCalledWith('file-open:test.svg; export-do\n')
+
+      proc.stdout.emit('data', '> ')
+      await expect(p).resolves.toBeUndefined()
+    })
+
+    it('rejects with TIMEOUT when no prompt arrives within timeout', async () => {
+      vi.useFakeTimers()
+      await startShell()
+
+      const p = shell.execute('file-open:test.svg', 200)
+      p.catch(() => {})
+      await vi.advanceTimersByTimeAsync(300)
+      await expect(p).rejects.toThrow('TIMEOUT')
+    })
+
+    it('rejects with SHELL_NOT_READY when called before start()', async () => {
+      await expect(shell.execute('any-action')).rejects.toThrow('SHELL_NOT_READY')
+    })
+  })
 })

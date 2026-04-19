@@ -99,13 +99,12 @@ export class InkscapeShell {
   }
 
   /**
-   * Sends an EMF→SVG conversion command to the running shell.
-   * @param {string} emfPath  Absolute path to the input .emf file (already written)
-   * @param {string} svgPath  Absolute path where Inkscape should write the output .svg
-   * @param {number} timeout  Milliseconds before rejecting with TIMEOUT (default 15 s)
-   * @returns {Promise<void>} Resolves when Inkscape signals completion with `> `
+   * Sends an arbitrary Inkscape action string to the running shell and waits for the `> ` prompt.
+   * @param {string} actions  e.g. "file-open:in.svg; export-do"
+   * @param {number} timeout  Milliseconds before rejecting with TIMEOUT (default 30 s)
+   * @returns {Promise<void>}
    */
-  async convert(emfPath, svgPath, timeout = 15_000) {
+  async execute(actions, timeout = 30_000) {
     if (!this._ready) throw new Error('SHELL_NOT_READY')
 
     return new Promise((resolve, reject) => {
@@ -113,7 +112,7 @@ export class InkscapeShell {
         this._pendingResolve = null
         this._pendingReject = null
         this._ready = false
-        this._proc?.kill() // force restart; stale prompt won't corrupt the next convert()
+        this._proc?.kill()
         reject(new Error('TIMEOUT'))
       }, timeout)
 
@@ -126,10 +125,19 @@ export class InkscapeShell {
         reject(err)
       }
 
-      // Inkscape 1.x shell mode requires the actions format:
-      // action1:arg1; action2:arg2; ...
-      const cmd = `file-open:${emfPath}; export-type:svg; export-filename:${svgPath}; export-do; file-close\n`
-      this._proc.stdin.write(cmd)
+      this._proc.stdin.write(actions + '\n')
     })
+  }
+
+  /**
+   * Sends an EMF→SVG conversion command to the running shell.
+   * @param {string} emfPath  Absolute path to the input .emf file (already written)
+   * @param {string} svgPath  Absolute path where Inkscape should write the output .svg
+   * @param {number} timeout  Milliseconds before rejecting with TIMEOUT (default 15 s)
+   * @returns {Promise<void>} Resolves when Inkscape signals completion with `> `
+   */
+  async convert(emfPath, svgPath, timeout = 15_000) {
+    const actions = `file-open:${emfPath}; export-type:svg; export-filename:${svgPath}; export-do; file-close`
+    return this.execute(actions, timeout)
   }
 }

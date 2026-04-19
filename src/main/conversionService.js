@@ -2,6 +2,7 @@ import { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
 import { randomUUID } from 'crypto'
+import { optimize } from 'svgo'
 
 /** Injected by index.js after the shell has started. */
 let _shell = null
@@ -45,6 +46,33 @@ export function getSVGMetadata(svgContent, conversionMs) {
 }
 
 /**
+ * Runs SVGO preset-default on the SVG string.
+ * Preserves viewBox and IDs (needed for KiCad output).
+ * Falls back to the original string if SVGO throws.
+ * @param {string} svgContent
+ * @returns {string}
+ */
+function optimizeSvg(svgContent) {
+  try {
+    const result = optimize(svgContent, {
+      plugins: [
+        {
+          name: 'preset-default',
+          params: {
+            overrides: {
+              cleanupIds: false,
+            },
+          },
+        },
+      ],
+    })
+    return result.data
+  } catch {
+    return svgContent
+  }
+}
+
+/**
  * Converts an EMF Buffer to an SVG string using the bundled Inkscape shell.
  * Writes the buffer to a temp .emf file, tells the shell to convert it,
  * reads back the resulting .svg, then cleans up both temp files.
@@ -63,7 +91,8 @@ export async function convert(emfBuffer, timeout = 15_000) {
   try {
     if (!_shell) throw new Error('SHELL_NOT_INITIALIZED')
     await _shell.convert(emfPath, svgPath, timeout)
-    return await fsp.readFile(svgPath, 'utf8')
+    const svgContent = await fsp.readFile(svgPath, 'utf8')
+    return optimizeSvg(svgContent)
   } finally {
     await fsp.unlink(emfPath).catch(() => {})
     await fsp.unlink(svgPath).catch(() => {})

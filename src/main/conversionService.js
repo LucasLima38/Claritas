@@ -1,6 +1,7 @@
 import { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
+import { randomUUID } from 'crypto'
 
 /** Injected by index.js after the shell has started. */
 let _shell = null
@@ -53,13 +54,14 @@ export function getSVGMetadata(svgContent, conversionMs) {
  * @returns {Promise<string>} SVG content string
  */
 export async function convert(emfBuffer, timeout = 15_000) {
-  const id = crypto.randomUUID()
+  const id = randomUUID()
   const tmpDir = os.tmpdir()
   const emfPath = path.join(tmpDir, `schclip_${id}.emf`)
   const svgPath = path.join(tmpDir, `schclip_${id}.svg`)
 
   await fsp.writeFile(emfPath, emfBuffer)
   try {
+    if (!_shell) throw new Error('SHELL_NOT_INITIALIZED')
     await _shell.convert(emfPath, svgPath, timeout)
     return await fsp.readFile(svgPath, 'utf8')
   } finally {

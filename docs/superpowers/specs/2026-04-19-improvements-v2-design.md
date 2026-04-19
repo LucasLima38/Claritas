@@ -100,18 +100,28 @@ return svgContent
 
 **Background:** The SVG canvas area always uses `background: #f5f4ef` (warm paper white) — independent of the active theme. This ensures dark-line schematics are legible in all themes including Blue Moon.
 
+**Zoom+pan interaction:** `react-zoom-pan-pinch` handles mouse-wheel zoom and click-drag pan. shadcn/ui has no equivalent component. The zoom **controls** (buttons) use shadcn `Button` + lucide-react icons.
+
 **`PreviewArea.jsx` image section replacement:**
 
 ```jsx
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch'
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 function ZoomControls() {
   const { zoomIn, zoomOut, resetTransform } = useControls()
   return (
     <div className="absolute bottom-2 right-2 flex gap-1 z-10">
-      <button onClick={() => zoomIn()} className="...">+</button>
-      <button onClick={() => zoomOut()} className="...">−</button>
-      <button onClick={() => resetTransform()} className="...">⟲</button>
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => zoomIn()}>
+        <ZoomIn size={13} />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => zoomOut()}>
+        <ZoomOut size={13} />
+      </Button>
+      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => resetTransform()}>
+        <RotateCcw size={13} />
+      </Button>
     </div>
   )
 }
@@ -531,9 +541,13 @@ export function initAutoUpdater(mainWindow) {
 
 **`Sidebar.jsx` — update button:**
 
-Added at the very top of the sidebar div, before the `<SectionLabel>Workspace</SectionLabel>`:
+Added at the very top of the sidebar div, before the `<SectionLabel>Workspace</SectionLabel>`. Uses `Download` icon from `lucide-react` (shadcn's icon library) with a `Badge` from shadcn for the update count:
 
 ```jsx
+import { Download } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+
 {state.updateInfo && (
   <div className="px-1.5 pb-1">
     <Button
@@ -543,7 +557,9 @@ Added at the very top of the sidebar div, before the `<SectionLabel>Workspace</S
     >
       <span className="relative flex items-center justify-center w-4 shrink-0">
         <Download size={14} />
-        <sup className="absolute -top-1 -right-1.5 text-[8px] font-bold">1</sup>
+        <Badge className="absolute -top-2 -right-2 h-3.5 min-w-[14px] px-0.5 text-[8px] leading-none flex items-center justify-center bg-amber-500 text-white border-0 rounded-full">
+          1
+        </Badge>
       </span>
       <span className="flex-1 truncate text-left">Atualização</span>
     </Button>

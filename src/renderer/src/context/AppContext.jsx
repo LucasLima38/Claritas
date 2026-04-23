@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 
 const initialState = {
   status: 'idle',
+  shellStatus: 'starting',
   svgContent: null,
   svgMetadata: null,
   error: null,
@@ -102,6 +103,9 @@ function reducer(state, action) {
     case 'SET_EXPORT_FORMAT':
       return { ...state, exportFormat: action.format }
 
+    case 'SHELL_STATUS':
+      return { ...state, shellStatus: action.status }
+
     case 'CLEAR_ERROR':
       return { ...state, status: 'idle', error: null }
 
@@ -146,6 +150,9 @@ export function AppProvider({ children }) {
       ),
       window.electronAPI.onThemeChanged(({ isDark }) => {
         applyTheme(themeRef.current, isDark)
+      }),
+      window.electronAPI.onShellStatus(({ status }) => {
+        dispatch({ type: 'SHELL_STATUS', status })
       }),
       // onNavigateTo is handled in App.jsx — no listener needed here
     ]

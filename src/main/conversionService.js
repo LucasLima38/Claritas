@@ -74,6 +74,43 @@ function optimizeSvg(svgContent) {
 }
 
 /**
+ * Exports SVG content to the final format and writes to outputPath.
+ * SVG: written directly.
+ * PNG/JPG/PDF: written via a second Inkscape action chain (SVG→target format).
+ *
+ * @param {string} svgContent   Already-optimized SVG string (from convert())
+ * @param {'svg'|'png'|'jpg'|'pdf'} format
+ * @param {string} outputPath   Absolute destination path
+ * @param {number} timeout      ms before rejecting with TIMEOUT (default 30 s)
+ */
+export async function exportToFormat(svgContent, format, outputPath, timeout = 30_000) {
+  if (format === 'svg') {
+    await fsp.writeFile(outputPath, svgContent, 'utf8')
+    return
+  }
+  if (!_shell) throw new Error('SHELL_NOT_INITIALIZED')
+
+  const tmpSvg = path.join(os.tmpdir(), `schclip_exp_${randomUUID()}.svg`)
+  await fsp.writeFile(tmpSvg, svgContent, 'utf8')
+  try {
+    // Inkscape uses 'jpeg' not 'jpg'
+    const inkFormat = format === 'jpg' ? 'jpeg' : format
+    const dpiPart = format !== 'pdf' ? 'export-dpi:300; ' : ''
+    const qualityPart = format === 'jpg' ? 'export-jpeg-quality:95; ' : ''
+    const actions =
+      `file-open:${tmpSvg}; ` +
+      `export-type:${inkFormat}; ` +
+      `${dpiPart}` +
+      `${qualityPart}` +
+      `export-filename:${outputPath}; ` +
+      `export-do; file-close`
+    await _shell.execute(actions, timeout)
+  } finally {
+    await fsp.unlink(tmpSvg).catch(() => {})
+  }
+}
+
+/**
  * Converts an EMF Buffer to an SVG string using the bundled Inkscape shell.
  * Writes the buffer to a temp .emf file, tells the shell to convert it,
  * reads back the resulting .svg, then cleans up both temp files.

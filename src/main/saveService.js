@@ -12,6 +12,16 @@ export function generateFilename(prefix, counter) {
 }
 
 /**
+ * Generates a filename from a prefix, counter, and file extension.
+ * Counter is zero-padded to 3 digits (e.g., prefix=BLDC_ counter=3 ext=png → BLDC_003.png).
+ * Counters above 999 are not padded.
+ */
+export function generateFilenameWithExt(prefix, counter, ext) {
+  const padded = String(counter).padStart(3, '0')
+  return `${prefix}${padded}.${ext}`
+}
+
+/**
  * Checks whether an output directory exists and is writable.
  * Uses W_OK so that read-only directories are treated as missing,
  * prompting the user to choose another folder rather than hitting EACCES.

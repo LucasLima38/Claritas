@@ -17,7 +17,7 @@ vi.mock('fs', async (importOriginal) => {
 
 vi.mock('electron', () => ({ app: { getPath: vi.fn() } }))
 
-const { convert, setShell, isValidSVG, getSVGMetadata } = await import(
+const { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat } = await import(
   '../../src/main/conversionService.js'
 )
 
@@ -123,5 +123,55 @@ describe('ConversionService', () => {
       expect(result).toContain('<svg')
       expect(result).toContain('viewBox="0 0 10 10"')
     })
+  })
+})
+
+describe('exportToFormat()', () => {
+  it('writes SVG content directly for format "svg" without calling shell', async () => {
+    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
+    setShell(mockShell)
+    const { promises: fsp } = await import('fs')
+
+    const content = '<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>'
+    await exportToFormat(content, 'svg', '/tmp/out.svg')
+
+    expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.svg', content, 'utf8')
+    expect(mockShell.execute).not.toHaveBeenCalled()
+  })
+
+  it('calls _shell.execute() with correct PNG action string', async () => {
+    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
+    setShell(mockShell)
+
+    await exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'png', '/tmp/out.png')
+
+    expect(mockShell.execute).toHaveBeenCalledOnce()
+    const [actionsArg] = mockShell.execute.mock.calls[0]
+    expect(actionsArg).toContain('export-type:png')
+    expect(actionsArg).toContain('export-dpi:300')
+    expect(actionsArg).toContain('export-filename:/tmp/out.png')
+  })
+
+  it('uses "jpeg" (not "jpg") and adds quality for JPG format', async () => {
+    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
+    setShell(mockShell)
+
+    await exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'jpg', '/tmp/out.jpg')
+
+    const [actionsArg] = mockShell.execute.mock.calls[0]
+    expect(actionsArg).toContain('export-type:jpeg')
+    expect(actionsArg).toContain('export-jpeg-quality:95')
+    expect(actionsArg).toContain('export-dpi:300')
+  })
+
+  it('omits DPI for PDF format', async () => {
+    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
+    setShell(mockShell)
+
+    await exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'pdf', '/tmp/out.pdf')
+
+    const [actionsArg] = mockShell.execute.mock.calls[0]
+    expect(actionsArg).toContain('export-type:pdf')
+    expect(actionsArg).not.toContain('export-dpi')
   })
 })

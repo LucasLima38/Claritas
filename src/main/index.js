@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, dialog } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
@@ -31,6 +31,7 @@ let mainWindow = null
 let tray = null
 // Holds the last converted SVG waiting for user confirmation
 let pendingSVG = null   // { svgContent: string, metadata: object }
+let _registeredShortcut = ''
 
 // ── Window ────────────────────────────────────────────────────────────────
 
@@ -53,6 +54,24 @@ function titleBarColors(theme, systemIsDark) {
 
 function updateTitleBarOverlay(theme, systemIsDark) {
   mainWindow?.setTitleBarOverlay(titleBarColors(theme, systemIsDark))
+}
+
+function applyGlobalShortcut(shortcut) {
+  if (_registeredShortcut) {
+    globalShortcut.unregister(_registeredShortcut)
+    _registeredShortcut = ''
+  }
+  if (!shortcut) return
+  const ok = globalShortcut.register(shortcut, () => {
+    mainWindow.show()
+    mainWindow.focus()
+    if (pendingSVG) mainWindow.webContents.send('preview-ready', pendingSVG)
+  })
+  if (ok) {
+    _registeredShortcut = shortcut
+  } else {
+    console.warn('Could not register global shortcut:', shortcut)
+  }
 }
 
 function createWindow() {
@@ -107,6 +126,8 @@ app.whenReady().then(() => {
     mainWindow.webContents.send('shell-status', { status: 'error', message: err.message })
   })
 
+  applyGlobalShortcut(store.getSettings().globalShortcut)
+
   // Show window unless startMinimized is set
   if (!store.getSettings().startMinimized) {
     mainWindow.show()
@@ -129,6 +150,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   inkscapeShell.stop()
+  if (_registeredShortcut) globalShortcut.unregister(_registeredShortcut)
 })
 
 nativeTheme.on('updated', () => {
@@ -279,6 +301,9 @@ ipcMain.handle('update-settings', (_event, updates) => {
   store.updateSettings(updates)
   if (updates.theme !== undefined) {
     updateTitleBarOverlay(updates.theme, nativeTheme.shouldUseDarkColors)
+  }
+  if (updates.globalShortcut !== undefined) {
+    applyGlobalShortcut(updates.globalShortcut)
   }
   return store.getSettings()
 })

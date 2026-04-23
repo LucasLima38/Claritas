@@ -30,6 +30,54 @@ function BehaviorRow({ label, description, checked, onCheckedChange }) {
   )
 }
 
+function ShortcutRecorder({ value, onChange }) {
+  const [recording, setRecording] = useState(false)
+
+  function handleKeyDown(e) {
+    e.preventDefault()
+    if (e.key === 'Escape') { setRecording(false); return }
+    const mods = []
+    if (e.ctrlKey)  mods.push('Ctrl')
+    if (e.altKey)   mods.push('Alt')
+    if (e.shiftKey) mods.push('Shift')
+    const key = e.key.length === 1 ? e.key.toUpperCase() : e.key
+    // Ignore bare modifier keys — wait for an additional non-modifier key
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) return
+    // Require at least one modifier
+    if (mods.length === 0) return
+    const combo = [...mods, key].join('+')
+    onChange(combo)
+    setRecording(false)
+  }
+
+  return (
+    <div className="flex gap-2 items-center">
+      <div
+        tabIndex={0}
+        onFocus={() => setRecording(true)}
+        onBlur={() => setRecording(false)}
+        onKeyDown={recording ? handleKeyDown : undefined}
+        className="h-7 px-2.5 rounded-md border border-border text-xs flex items-center min-w-[140px] cursor-pointer bg-background focus:ring-1 focus:ring-primary focus:outline-none"
+      >
+        {recording
+          ? <span className="text-muted-foreground italic">Pressione as teclas…</span>
+          : (value || <span className="text-muted-foreground">Nenhum</span>)
+        }
+      </div>
+      {value && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 px-2 text-xs text-muted-foreground"
+          onClick={() => onChange('')}
+        >
+          Limpar
+        </Button>
+      )}
+    </div>
+  )
+}
+
 export default function Settings({ onBack }) {
   const { state, actions } = useApp()
   const [editingId, setEditingId] = useState(null)
@@ -238,6 +286,23 @@ export default function Settings({ onBack }) {
               checked={state.settings.closeHides ?? true}
               onCheckedChange={(v) => actions.updateSettings({ closeHides: v })}
             />
+          </div>
+        </section>
+
+        <Separator />
+
+        {/* Atalho global */}
+        <section>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Atalho global</p>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[10.5px]">Abrir preview (funciona mesmo com o app minimizado)</Label>
+            <ShortcutRecorder
+              value={state.settings.globalShortcut ?? ''}
+              onChange={(v) => actions.updateSettings({ globalShortcut: v })}
+            />
+            <p className="text-[10.5px] text-muted-foreground mt-1">
+              Ex: Ctrl+Shift+S · Requer ao menos um modificador (Ctrl, Alt ou Shift)
+            </p>
           </div>
         </section>
 

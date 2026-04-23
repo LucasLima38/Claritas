@@ -13,6 +13,7 @@ const SETTINGS_DEFAULTS = {
   startMinimized: false,
   closeHides: true,
   theme: 'system',
+  globalShortcut: '',
 }
 
 export class ProjectStore {
@@ -79,6 +80,7 @@ export class ProjectStore {
       startMinimized: this._settings.get('startMinimized', false),
       closeHides: this._settings.get('closeHides', true),
       theme: this._settings.get('theme', 'system'),
+      globalShortcut: this._settings.get('globalShortcut', ''),
     }
   }
 

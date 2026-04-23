@@ -123,3 +123,27 @@ describe('ProjectStore', () => {
     expect(store.getSettings()).not.toHaveProperty('conversionTimeout')
   })
 })
+
+describe('globalShortcut setting', () => {
+  let store
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    store = new ProjectStore()
+  })
+
+  it('getSettings() includes globalShortcut defaulting to empty string', () => {
+    expect(store.getSettings().globalShortcut).toBe('')
+  })
+
+  it('updateSettings persists globalShortcut', () => {
+    store.updateSettings({ globalShortcut: 'Ctrl+Shift+S' })
+    expect(store.getSettings().globalShortcut).toBe('Ctrl+Shift+S')
+  })
+
+  it('globalShortcut can be cleared by setting to empty string', () => {
+    store.updateSettings({ globalShortcut: 'Ctrl+Shift+S' })
+    store.updateSettings({ globalShortcut: '' })
+    expect(store.getSettings().globalShortcut).toBe('')
+  })
+})

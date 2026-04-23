@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 let tray = null
+let _blinkInterval = null
+let _normalIcon = null
 
 /**
  * Creates the system tray icon and initial context menu.
@@ -14,12 +16,14 @@ let tray = null
 export function createTray(mainWindow, projectStore) {
   const iconPath = path.join(__dirname, '../../resources/icon.png')
   const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
+  _normalIcon = icon
 
   tray = new Tray(icon)
   tray.setToolTip('SchematicClip')
   updateTrayMenu(mainWindow, projectStore)
 
   tray.on('click', () => {
+    stopTrayBlink()
     if (mainWindow.isVisible()) {
       mainWindow.focus()
     } else {
@@ -29,6 +33,31 @@ export function createTray(mainWindow, projectStore) {
   })
 
   return tray
+}
+
+/**
+ * Starts blinking the tray icon to alert the user that a new schematic is ready.
+ * Alternates between the normal icon and an empty icon every 500 ms.
+ * Safe to call multiple times — will not create duplicate intervals.
+ */
+export function startTrayBlink() {
+  if (_blinkInterval || !tray) return
+  let showIcon = true
+  const emptyIcon = nativeImage.createEmpty()
+  _blinkInterval = setInterval(() => {
+    tray.setImage(showIcon ? _normalIcon : emptyIcon)
+    showIcon = !showIcon
+  }, 500)
+}
+
+/**
+ * Stops the tray icon blink and restores the normal icon.
+ */
+export function stopTrayBlink() {
+  if (!_blinkInterval) return
+  clearInterval(_blinkInterval)
+  _blinkInterval = null
+  if (tray && _normalIcon) tray.setImage(_normalIcon)
 }
 
 /**

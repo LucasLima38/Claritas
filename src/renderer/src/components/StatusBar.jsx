@@ -8,7 +8,7 @@ export default function StatusBar() {
   const isPreview = state.status === 'preview' || state.status === 'saving'
 
   const nextName = activeProject
-    ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.svg`
+    ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.${state.exportFormat ?? 'svg'}`
     : null
 
   return (

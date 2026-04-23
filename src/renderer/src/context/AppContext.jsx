@@ -14,6 +14,7 @@ const initialState = {
   settings: {},
   dirMissing: false,
   dirMissingPath: null,
+  exportFormat: 'svg',
 }
 
 function reducer(state, action) {
@@ -98,6 +99,9 @@ function reducer(state, action) {
     case 'SETTINGS_UPDATED':
       return { ...state, settings: action.settings }
 
+    case 'SET_EXPORT_FORMAT':
+      return { ...state, exportFormat: action.format }
+
     case 'CLEAR_ERROR':
       return { ...state, status: 'idle', error: null }
 
@@ -170,7 +174,7 @@ export function AppProvider({ children }) {
       dispatch({ type: 'SAVE_START' })
       let result
       try {
-        result = await window.electronAPI.saveSVG({ projectId: state.activeProjectId })
+        result = await window.electronAPI.saveSVG({ projectId: state.activeProjectId, format: state.exportFormat })
       } catch (err) {
         toast.error(`Erro de comunicação: ${err.message}`)
         dispatch({ type: 'SAVE_ERROR' })
@@ -232,6 +236,10 @@ export function AppProvider({ children }) {
 
     clearDirMissing() {
       dispatch({ type: 'CLEAR_DIR_MISSING' })
+    },
+
+    setExportFormat(format) {
+      dispatch({ type: 'SET_EXPORT_FORMAT', format })
     },
 
     clearError() {

@@ -4,9 +4,9 @@ import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
-import { convert, setShell, isValidSVG, getSVGMetadata } from './conversionService.js'
+import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat } from './conversionService.js'
 import { InkscapeShell } from './inkscapeShell.js'
-import { generateFilename, saveSVG, checkOutputDir } from './saveService.js'
+import { generateFilenameWithExt, checkOutputDir } from './saveService.js'
 import { createTray, updateTrayMenu } from './tray.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -174,24 +174,23 @@ ipcMain.handle('paste-schematic', async () => {
   }
 })
 
-ipcMain.handle('save-svg', async (_event, { projectId }) => {
+ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
   if (!pendingSVG) return { error: 'NO_PENDING', message: 'Nenhum SVG aguardando confirmação.' }
 
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
 
-  // Check if output directory exists — if not, signal renderer to show dialog
   const dirCheck = await checkOutputDir(project.outputDir)
   if (!dirCheck.exists) {
     return { dirMissing: true, outputDir: project.outputDir }
   }
 
-  const filename = generateFilename(project.prefix, project.counter + 1)
+  const filename = generateFilenameWithExt(project.prefix, project.counter + 1, format)
+  const fullPath = path.join(project.outputDir, filename)
 
   try {
-    const fullPath = await saveSVG(pendingSVG.svgContent, project.outputDir, filename)
+    await exportToFormat(pendingSVG.svgContent, format, fullPath)
     const newCounter = store.incrementCounter(projectId)
-
     const entry = {
       id: crypto.randomUUID(),
       filename,
@@ -202,12 +201,14 @@ ipcMain.handle('save-svg', async (_event, { projectId }) => {
     }
     store.addHistoryEntry(entry)
     pendingSVG = null
-
     updateTrayMenu(mainWindow, store)
     return { ok: true, filename, fullPath, entry, newCounter }
   } catch (err) {
     if (err.code === 'EACCES' || err.message?.startsWith('EACCES')) {
       return { error: 'EACCES', message: 'Sem permissão de escrita na pasta de destino.' }
+    }
+    if (err.message === 'TIMEOUT') {
+      return { error: 'TIMEOUT', message: 'O Inkscape demorou mais de 30s ao exportar. Tente novamente.' }
     }
     return { error: 'ERROR', message: err.message }
   }

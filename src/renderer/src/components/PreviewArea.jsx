@@ -3,6 +3,13 @@ import { useApp } from '../context/AppContext.jsx'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -62,8 +69,8 @@ export default function PreviewArea() {
 
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
   const nextFilename = activeProject
-    ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.svg`
-    : 'output.svg'
+    ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.${state.exportFormat}`
+    : `output.${state.exportFormat}`
 
   if (!svgContent) return null
 
@@ -99,7 +106,7 @@ export default function PreviewArea() {
             <Eye size={13} />
             Prévia — {nextFilename}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 items-center">
             <Button
               size="sm"
               variant="outline"
@@ -109,6 +116,20 @@ export default function PreviewArea() {
             >
               Descartar
             </Button>
+            <Select
+              value={state.exportFormat}
+              onValueChange={actions.setExportFormat}
+            >
+              <SelectTrigger className="h-6 w-[62px] text-[11px] px-2 app-region-no-drag">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="svg">SVG</SelectItem>
+                <SelectItem value="png">PNG</SelectItem>
+                <SelectItem value="jpg">JPG</SelectItem>
+                <SelectItem value="pdf">PDF</SelectItem>
+              </SelectContent>
+            </Select>
             <Button
               size="sm"
               onClick={actions.save}

@@ -174,4 +174,11 @@ describe('exportToFormat()', () => {
     expect(actionsArg).toContain('export-type:pdf')
     expect(actionsArg).not.toContain('export-dpi')
   })
+
+  it('throws SHELL_NOT_INITIALIZED when shell is not set and format is png', async () => {
+    setShell(null)
+    await expect(
+      exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'png', '/tmp/out.png')
+    ).rejects.toThrow('SHELL_NOT_INITIALIZED')
+  })
 })

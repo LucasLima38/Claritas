@@ -95,15 +95,14 @@ export async function exportToFormat(svgContent, format, outputPath, timeout = 3
   try {
     // Inkscape uses 'jpeg' not 'jpg'
     const inkFormat = format === 'jpg' ? 'jpeg' : format
-    const dpiPart = format !== 'pdf' ? 'export-dpi:300; ' : ''
-    const qualityPart = format === 'jpg' ? 'export-jpeg-quality:95; ' : ''
-    const actions =
-      `file-open:${tmpSvg}; ` +
-      `export-type:${inkFormat}; ` +
-      `${dpiPart}` +
-      `${qualityPart}` +
-      `export-filename:${outputPath}; ` +
-      `export-do; file-close`
+    const parts = [
+      `file-open:${tmpSvg}`,
+      `export-type:${inkFormat}`,
+    ]
+    if (format !== 'pdf') parts.push('export-dpi:300')
+    if (format === 'jpg')  parts.push('export-jpeg-quality:95')
+    parts.push(`export-filename:${outputPath}`, 'export-do', 'file-close')
+    const actions = parts.join('; ')
     await _shell.execute(actions, timeout)
   } finally {
     await fsp.unlink(tmpSvg).catch(() => {})

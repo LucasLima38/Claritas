@@ -15,6 +15,8 @@ import {
 import { toast } from 'sonner'
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch'
 
+const PREVIEW_MIN_HEIGHT = 160
+
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -29,7 +31,7 @@ function ZoomControls() {
         variant="ghost"
         size="icon"
         className="h-6 w-6 bg-background/80 hover:bg-background"
-        onClick={() => zoomIn()}
+        onClick={zoomIn}
       >
         <ZoomIn size={13} />
       </Button>
@@ -37,7 +39,7 @@ function ZoomControls() {
         variant="ghost"
         size="icon"
         className="h-6 w-6 bg-background/80 hover:bg-background"
-        onClick={() => zoomOut()}
+        onClick={zoomOut}
       >
         <ZoomOut size={13} />
       </Button>
@@ -45,7 +47,7 @@ function ZoomControls() {
         variant="ghost"
         size="icon"
         className="h-6 w-6 bg-background/80 hover:bg-background"
-        onClick={() => resetTransform()}
+        onClick={resetTransform}
       >
         <RotateCcw size={13} />
       </Button>
@@ -119,7 +121,7 @@ export default function PreviewArea() {
         </div>
 
         {/* SVG Preview — zoom+pan with fixed cream-white background */}
-        <div className="relative overflow-hidden min-h-[160px]" style={{ background: '#f5f4ef' }}>
+        <div className="relative overflow-hidden" style={{ background: '#f5f4ef', minHeight: PREVIEW_MIN_HEIGHT }}>
           <TransformWrapper
             minScale={0.3}
             maxScale={8}
@@ -130,7 +132,7 @@ export default function PreviewArea() {
             <TransformComponent
               wrapperStyle={{
                 width: '100%',
-                minHeight: '160px',
+                minHeight: PREVIEW_MIN_HEIGHT,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

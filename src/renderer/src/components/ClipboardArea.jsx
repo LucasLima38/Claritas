@@ -30,6 +30,15 @@ export default function ClipboardArea() {
     )
   }
 
+  if (state.status === 'idle' && state.shellStatus === 'error') {
+    return (
+      <div className="border-2 border-dashed border-destructive/50 rounded-lg bg-destructive/5 p-7 text-center">
+        <p className="text-sm font-medium text-destructive">Inkscape não iniciou</p>
+        <p className="text-xs text-muted-foreground mt-1">Verifique a instalação do Inkscape e reinicie o app</p>
+      </div>
+    )
+  }
+
   if (state.status === 'converting') {
     return (
       <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">

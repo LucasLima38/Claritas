@@ -13,7 +13,7 @@ vi.mock('fs', async (importOriginal) => {
   }
 })
 
-const { generateFilename, saveSVG, checkOutputDir } = await import('../../src/main/saveService.js')
+const { generateFilename, generateFilenameWithExt, saveSVG, checkOutputDir } = await import('../../src/main/saveService.js')
 
 describe('SaveService', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -76,6 +76,24 @@ describe('SaveService', () => {
       const result = await checkOutputDir('D:\\nonexistent')
       expect(result.exists).toBe(false)
     })
+  })
+})
+
+describe('generateFilenameWithExt()', () => {
+  it('generates filename with given extension', () => {
+    expect(generateFilenameWithExt('BLDC_', 1, 'svg')).toBe('BLDC_001.svg')
+    expect(generateFilenameWithExt('BLDC_', 1, 'png')).toBe('BLDC_001.png')
+    expect(generateFilenameWithExt('BLDC_', 1, 'jpg')).toBe('BLDC_001.jpg')
+    expect(generateFilenameWithExt('BLDC_', 1, 'pdf')).toBe('BLDC_001.pdf')
+  })
+
+  it('pads counter to 3 digits', () => {
+    expect(generateFilenameWithExt('X_', 7, 'png')).toBe('X_007.png')
+    expect(generateFilenameWithExt('X_', 42, 'png')).toBe('X_042.png')
+  })
+
+  it('does not pad counter above 999', () => {
+    expect(generateFilenameWithExt('X_', 1000, 'png')).toBe('X_1000.png')
   })
 })
 

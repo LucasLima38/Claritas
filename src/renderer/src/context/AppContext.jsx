@@ -154,6 +154,9 @@ export function AppProvider({ children }) {
       window.electronAPI.onShellStatus(({ status }) => {
         dispatch({ type: 'SHELL_STATUS', status })
       }),
+      window.electronAPI.onPreviewReady(({ svgContent, metadata }) => {
+        dispatch({ type: 'SVG_READY', svgContent, metadata })
+      }),
       // onNavigateTo is handled in App.jsx — no listener needed here
     ]
     return () => cleanups.forEach((fn) => fn?.())

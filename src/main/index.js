@@ -7,7 +7,8 @@ import { readEMF } from './clipboardService.js'
 import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat } from './conversionService.js'
 import { InkscapeShell } from './inkscapeShell.js'
 import { generateFilenameWithExt, checkOutputDir } from './saveService.js'
-import { createTray, updateTrayMenu } from './tray.js'
+import { ClipboardMonitor } from './clipboardMonitor.js'
+import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -32,6 +33,27 @@ let tray = null
 // Holds the last converted SVG waiting for user confirmation
 let pendingSVG = null   // { svgContent: string, metadata: object }
 let _registeredShortcut = ''
+
+const clipboardMonitor = new ClipboardMonitor(async (emfBuffer) => {
+  // Only auto-convert when shell is ready and not already busy
+  if (!inkscapeShell.ready || inkscapeShell.busy) return
+  try {
+    const svgContent = await convert(emfBuffer)
+    if (!isValidSVG(svgContent)) return
+    const metadata = getSVGMetadata(svgContent, 0)
+    pendingSVG = { svgContent, metadata }
+
+    if (mainWindow.isVisible() && !mainWindow.isMinimized()) {
+      // Window is in the foreground — push preview immediately
+      mainWindow.webContents.send('preview-ready', { svgContent, metadata })
+    } else {
+      // Window is hidden/minimized — blink the tray icon
+      startTrayBlink()
+    }
+  } catch {
+    // Silently ignore auto-conversion errors — user can still paste manually
+  }
+})
 
 // ── Window ────────────────────────────────────────────────────────────────
 
@@ -63,6 +85,7 @@ function applyGlobalShortcut(shortcut) {
   }
   if (!shortcut) return
   const ok = globalShortcut.register(shortcut, () => {
+    stopTrayBlink()
     mainWindow.show()
     mainWindow.focus()
     if (pendingSVG) mainWindow.webContents.send('preview-ready', pendingSVG)
@@ -127,6 +150,14 @@ app.whenReady().then(() => {
   })
 
   applyGlobalShortcut(store.getSettings().globalShortcut)
+  clipboardMonitor.start()
+
+  mainWindow.on('show', () => {
+    stopTrayBlink()
+    if (pendingSVG) {
+      mainWindow.webContents.send('preview-ready', pendingSVG)
+    }
+  })
 
   // Show window unless startMinimized is set
   if (!store.getSettings().startMinimized) {
@@ -149,6 +180,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  clipboardMonitor.stop()
   inkscapeShell.stop()
   if (_registeredShortcut) globalShortcut.unregister(_registeredShortcut)
 })

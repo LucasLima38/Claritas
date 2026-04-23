@@ -1,4 +1,4 @@
-import { Eye, Clock, FileText, Maximize2, FolderOpen } from 'lucide-react'
+import { Eye, Clock, FileText, Maximize2, FolderOpen, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -13,11 +13,44 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { toast } from 'sonner'
+import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch'
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
+function ZoomControls() {
+  const { zoomIn, zoomOut, resetTransform } = useControls()
+  return (
+    <div className="absolute bottom-2 right-2 flex gap-1 z-10">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 bg-background/80 hover:bg-background"
+        onClick={() => zoomIn()}
+      >
+        <ZoomIn size={13} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 bg-background/80 hover:bg-background"
+        onClick={() => zoomOut()}
+      >
+        <ZoomOut size={13} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6 bg-background/80 hover:bg-background"
+        onClick={() => resetTransform()}
+      >
+        <RotateCcw size={13} />
+      </Button>
+    </div>
+  )
 }
 
 export default function PreviewArea() {
@@ -85,14 +118,33 @@ export default function PreviewArea() {
           </div>
         </div>
 
-        {/* SVG Preview */}
-        <div className="flex items-center justify-center p-4 min-h-[140px] bg-card">
-          <img
-            src={svgDataUrl}
-            alt="Prévia do esquemático"
-            className="max-h-48 max-w-full object-contain drop-shadow-sm"
-            style={{ imageRendering: 'crisp-edges' }}
-          />
+        {/* SVG Preview — zoom+pan with fixed cream-white background */}
+        <div className="relative overflow-hidden min-h-[160px]" style={{ background: '#f5f4ef' }}>
+          <TransformWrapper
+            minScale={0.3}
+            maxScale={8}
+            doubleClick={{ mode: 'reset' }}
+            wheel={{ step: 0.1 }}
+          >
+            <ZoomControls />
+            <TransformComponent
+              wrapperStyle={{
+                width: '100%',
+                minHeight: '160px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <img
+                src={svgDataUrl}
+                alt="Prévia do esquemático"
+                className="max-h-48 max-w-full object-contain"
+                style={{ imageRendering: 'crisp-edges' }}
+                draggable={false}
+              />
+            </TransformComponent>
+          </TransformWrapper>
         </div>
 
         {/* Metadata footer */}

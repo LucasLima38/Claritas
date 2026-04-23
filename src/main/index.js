@@ -15,6 +15,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new ProjectStore()
 
+const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
+
 // ── Inkscape shell ────────────────────────────────────────────────────────
 
 function resolveInkExe() {
@@ -176,6 +178,10 @@ ipcMain.handle('paste-schematic', async () => {
 
 ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
   if (!pendingSVG) return { error: 'NO_PENDING', message: 'Nenhum SVG aguardando confirmação.' }
+
+  if (!VALID_EXPORT_FORMATS.includes(format)) {
+    return { error: 'INVALID_FORMAT', message: `Formato inválido: ${format}` }
+  }
 
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }

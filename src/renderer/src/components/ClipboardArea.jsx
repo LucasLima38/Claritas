@@ -10,6 +10,7 @@ export default function ClipboardArea() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.ctrlKey && e.key === 'v' && state.status === 'idle') {
+        if (state.shellStatus !== 'ready') return
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return
         e.preventDefault()
         actions.paste()
@@ -17,7 +18,17 @@ export default function ClipboardArea() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [state.status, actions])
+  }, [state.status, state.shellStatus, actions])
+
+  if (state.status === 'idle' && state.shellStatus === 'starting') {
+    return (
+      <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
+        <Loader2 size={28} className="mx-auto mb-2 text-amber-400 animate-spin" />
+        <p className="text-sm font-medium">Iniciando Inkscape…</p>
+        <p className="text-xs text-muted-foreground mt-1">Pronto em alguns segundos</p>
+      </div>
+    )
+  }
 
   if (state.status === 'converting') {
     return (

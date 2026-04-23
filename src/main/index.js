@@ -101,8 +101,10 @@ app.whenReady().then(() => {
   // Start the bundled Inkscape shell (non-blocking for window show)
   inkscapeShell.start().then(() => {
     setShell(inkscapeShell)
+    mainWindow.webContents.send('shell-status', { status: 'ready' })
   }).catch((err) => {
     console.error('Inkscape shell failed to start:', err.message)
+    mainWindow.webContents.send('shell-status', { status: 'error', message: err.message })
   })
 
   // Show window unless startMinimized is set
@@ -114,6 +116,9 @@ app.whenReady().then(() => {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send('theme-changed', {
       isDark: nativeTheme.shouldUseDarkColors,
+    })
+    mainWindow.webContents.send('shell-status', {
+      status: inkscapeShell.ready ? 'ready' : 'starting',
     })
   })
 })

@@ -16,6 +16,7 @@ const initialState = {
   dirMissing: false,
   dirMissingPath: null,
   exportFormat: 'svg',
+  updateInfo: null,
 }
 
 function reducer(state, action) {
@@ -109,6 +110,9 @@ function reducer(state, action) {
     case 'CLEAR_ERROR':
       return { ...state, status: 'idle', error: null }
 
+    case 'UPDATE_AVAILABLE':
+      return { ...state, updateInfo: { version: action.version, releaseDate: action.releaseDate } }
+
     default:
       return state
   }
@@ -156,6 +160,9 @@ export function AppProvider({ children }) {
       }),
       window.electronAPI.onPreviewReady(({ svgContent, metadata }) => {
         dispatch({ type: 'SVG_READY', svgContent, metadata })
+      }),
+      window.electronAPI.onUpdateAvailable(({ version, releaseDate }) => {
+        dispatch({ type: 'UPDATE_AVAILABLE', version, releaseDate })
       }),
       // onNavigateTo is handled in App.jsx — no listener needed here
     ]
@@ -254,6 +261,10 @@ export function AppProvider({ children }) {
 
     clearError() {
       dispatch({ type: 'CLEAR_ERROR' })
+    },
+
+    async installUpdate() {
+      await window.electronAPI.installUpdate()
     },
   }
 

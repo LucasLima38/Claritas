@@ -32,4 +32,7 @@ nsis:
   shortcutName: SchematicClip
 
 npmRebuild: false
-publish: null
+publish:
+  provider: github
+  owner: LucasLima38
+  repo: SchematicClip

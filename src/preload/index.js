@@ -28,11 +28,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getInitData: () => ipcRenderer.invoke('get-init-data'),
 
   // Event listeners (return cleanup function)
-  onInit: (cb) => {
-    const handler = (_e, data) => cb(data)
-    ipcRenderer.on('init', handler)
-    return () => ipcRenderer.removeListener('init', handler)
-  },
   onThemeChanged: (cb) => {
     const handler = (_e, data) => cb(data)
     ipcRenderer.on('theme-changed', handler)

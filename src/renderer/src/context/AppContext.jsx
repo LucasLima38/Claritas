@@ -28,12 +28,14 @@ function reducer(state, action) {
         activeProjectId: action.activeProjectId,
         settings: action.settings,
         history: action.history,
+        shellStatus: action.shellStatus ?? state.shellStatus,
       }
 
     case 'PASTE_START':
       return { ...state, status: 'converting', error: null }
 
     case 'SVG_READY':
+      if (state.status === 'saving') return state
       return {
         ...state,
         status: 'preview',

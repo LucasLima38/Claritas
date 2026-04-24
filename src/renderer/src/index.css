@@ -118,26 +118,49 @@
     --ring: 0 0% 55%;
   }
 
-  /* ── Claritas ────────────────────────────── warm cream + teal accent */
-  .theme-claritas {
-    --background: 45 100% 88%;
-    --foreground: 31 58% 15%;
-    --card: 45 100% 88%;
-    --card-foreground: 31 58% 15%;
-    --popover: 44 80% 91%;
-    --popover-foreground: 31 58% 15%;
+  /* ── Claritas 1 ──────────────────────────── off-white suave + teal */
+  .theme-claritas-1 {
+    --background: 42 55% 96%;
+    --foreground: 31 45% 18%;
+    --card: 42 55% 96%;
+    --card-foreground: 31 45% 18%;
+    --popover: 42 55% 96%;
+    --popover-foreground: 31 45% 18%;
     --primary: 188 100% 35%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 45 70% 80%;
-    --secondary-foreground: 31 40% 20%;
-    --muted: 45 70% 80%;
-    --muted-foreground: 31 30% 42%;
-    --accent: 188 45% 85%;
+    --secondary: 45 80% 85%;
+    --secondary-foreground: 31 40% 22%;
+    --muted: 45 70% 88%;
+    --muted-foreground: 31 25% 45%;
+    --accent: 188 40% 88%;
     --accent-foreground: 188 100% 22%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 44 55% 72%;
-    --input: 44 55% 72%;
+    --border: 44 35% 83%;
+    --input: 44 35% 83%;
+    --ring: 188 100% 35%;
+  }
+
+  /* ── Claritas 2 ──────────────────────────── branco neutro + creme + teal */
+  .theme-claritas-2 {
+    --background: 0 0% 98%;
+    --foreground: 220 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 10% 10%;
+    --primary: 188 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 55% 92%;
+    --secondary-foreground: 220 10% 15%;
+    --muted: 45 40% 94%;
+    --muted-foreground: 220 5% 48%;
+    --accent: 45 100% 88%;
+    --accent-foreground: 31 58% 18%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 5% 88%;
+    --input: 220 5% 88%;
     --ring: 188 100% 35%;
   }
 

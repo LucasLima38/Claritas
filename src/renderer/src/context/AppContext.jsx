@@ -130,6 +130,9 @@ function reducer(state, action) {
     case 'DELETE_HISTORY_ENTRY':
       return { ...state, history: state.history.filter((e) => e.id !== action.entryId) }
 
+    case 'SYNC_HISTORY':
+      return { ...state, history: action.history }
+
     default:
       return state
   }
@@ -287,6 +290,11 @@ export function AppProvider({ children }) {
     async deleteHistoryEntry(entry) {
       const result = await window.electronAPI.deleteHistoryFile({ entryId: entry.id, fullPath: entry.fullPath })
       if (result.ok) dispatch({ type: 'DELETE_HISTORY_ENTRY', entryId: entry.id })
+    },
+
+    async syncHistory() {
+      const result = await window.electronAPI.syncHistory()
+      dispatch({ type: 'SYNC_HISTORY', history: result.history })
     },
   }
 

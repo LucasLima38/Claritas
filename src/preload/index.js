@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // History
   getHistory: () => ipcRenderer.invoke('get-history'),
+  syncHistory: () => ipcRenderer.invoke('sync-history'),
 
   // Initial data fetch (called by renderer on mount — avoids did-finish-load race)
   getInitData: () => ipcRenderer.invoke('get-init-data'),

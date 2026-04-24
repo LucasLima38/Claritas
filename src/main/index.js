@@ -32,9 +32,19 @@ const inkscapeShell = new InkscapeShell(resolveInkExe())
 
 let mainWindow = null
 let tray = null
-// Holds the last converted SVG waiting for user confirmation
-let pendingSVG = null   // { svgContent: string, metadata: object }
+// Queue of converted SVGs waiting for user action — each item: { svgContent, metadata, sent }
+// 'sent' = already delivered to renderer via preview-ready (items captured while window hidden are not yet sent)
+let pendingQueue = []
 let _registeredShortcut = ''
+
+function flushUnsentToRenderer() {
+  for (const item of pendingQueue) {
+    if (!item.sent) {
+      item.sent = true
+      mainWindow.webContents.send('preview-ready', { svgContent: item.svgContent, metadata: item.metadata })
+    }
+  }
+}
 
 const clipboardMonitor = new ClipboardMonitor(async (emfBuffer) => {
   // Only auto-convert when shell is ready and not already busy
@@ -43,12 +53,13 @@ const clipboardMonitor = new ClipboardMonitor(async (emfBuffer) => {
     const svgContent = await convert(emfBuffer)
     if (!isValidSVG(svgContent)) return
     const metadata = getSVGMetadata(svgContent, 0)
-    pendingSVG = { svgContent, metadata }
 
     if (mainWindow.isVisible() && !mainWindow.isMinimized()) {
       stopTrayBlink()
+      pendingQueue.push({ svgContent, metadata, sent: true })
       mainWindow.webContents.send('preview-ready', { svgContent, metadata })
     } else {
+      pendingQueue.push({ svgContent, metadata, sent: false })
       startTrayBlink()
     }
   } catch {
@@ -90,7 +101,7 @@ function applyGlobalShortcut(shortcut) {
     stopTrayBlink()
     mainWindow.show()
     mainWindow.focus()
-    if (pendingSVG) mainWindow.webContents.send('preview-ready', pendingSVG)
+    flushUnsentToRenderer()
   })
   if (ok) {
     _registeredShortcut = shortcut
@@ -165,9 +176,7 @@ app.whenReady().then(() => {
 
   mainWindow.on('show', () => {
     stopTrayBlink()
-    if (pendingSVG) {
-      mainWindow.webContents.send('preview-ready', pendingSVG)
-    }
+    flushUnsentToRenderer()
   })
 
   initAutoUpdater(mainWindow, ipcMain)
@@ -236,11 +245,10 @@ ipcMain.handle('paste-schematic', async () => {
     }
 
     const metadata = getSVGMetadata(svgContent, Date.now() - startTime)
-    pendingSVG = { svgContent, metadata }
+    pendingQueue.push({ svgContent, metadata, sent: true })
 
     return { ok: true, svgContent, metadata }
   } catch (err) {
-    pendingSVG = null
     if (err.message === 'TIMEOUT') {
       return { error: 'TIMEOUT', message: 'O Inkscape demorou mais de 15s. Tente novamente.' }
     }
@@ -249,6 +257,7 @@ ipcMain.handle('paste-schematic', async () => {
 })
 
 ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
+  const pendingSVG = pendingQueue[0]
   if (!pendingSVG) return { error: 'NO_PENDING', message: 'Nenhum SVG aguardando confirmação.' }
 
   if (!VALID_EXPORT_FORMATS.includes(format)) {
@@ -283,7 +292,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
       sizeBytes,
     }
     store.addHistoryEntry(entry)
-    pendingSVG = null
+    pendingQueue.shift()
     updateTrayMenu(mainWindow, store)
     return { ok: true, filename, fullPath, entry, newCounter }
   } catch (err) {
@@ -298,7 +307,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
 })
 
 ipcMain.handle('discard-svg', async () => {
-  pendingSVG = null
+  pendingQueue.shift()
   return { ok: true }
 })
 

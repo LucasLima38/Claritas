@@ -68,7 +68,7 @@ export default function Sidebar({ screen, onNavigate, open }) {
           icon={<Clipboard size={14} />}
           active={screen === 'main'}
           onClick={() => onNavigate('main')}
-          badge={state.history.length || null}
+          badge={(state.previewQueue.length + (state.status === 'preview' ? 1 : 0)) || null}
           collapsed={!open}
           tooltip="Clipboard"
         >

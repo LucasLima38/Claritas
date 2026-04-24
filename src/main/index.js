@@ -416,6 +416,21 @@ ipcMain.handle('show-in-folder', (_event, { fullPath }) => {
   return { ok: true }
 })
 
+ipcMain.handle('sync-history', async () => {
+  const entries = store.getHistory()
+  const surviving = []
+  for (const entry of entries) {
+    try {
+      await fsp.access(entry.fullPath)
+      surviving.push(entry)
+    } catch {
+      store.deleteHistoryEntry(entry.id)
+    }
+  }
+  updateTrayMenu(mainWindow, store)
+  return { history: surviving }
+})
+
 ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath }) => {
   try {
     await fsp.unlink(fullPath)

@@ -1,7 +1,9 @@
-import { FileText } from 'lucide-react'
+import { FileText, RefreshCw } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -25,7 +27,8 @@ function toFileUrl(fullPath) {
 }
 
 export default function ClipGrid() {
-  const { state } = useApp()
+  const { state, actions } = useApp()
+  const [syncing, setSyncing] = useState(false)
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
   const nextName = activeProject
     ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.svg`
@@ -39,11 +42,27 @@ export default function ClipGrid() {
         <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
           Recentes
         </p>
-        {state.history.length > 0 && (
-          <p className="text-[10.5px] text-muted-foreground">
-            {state.history.length} arquivo{state.history.length !== 1 ? 's' : ''} nesta sessão
-          </p>
-        )}
+        <div className="flex items-center gap-2">
+          {state.history.length > 0 && (
+            <p className="text-[10.5px] text-muted-foreground">
+              {state.history.length} arquivo{state.history.length !== 1 ? 's' : ''} nesta sessão
+            </p>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 text-muted-foreground"
+            title="Sincronizar com pasta"
+            disabled={syncing}
+            onClick={async () => {
+              setSyncing(true)
+              await actions.syncHistory()
+              setSyncing(false)
+            }}
+          >
+            <RefreshCw size={11} className={syncing ? 'animate-spin' : ''} />
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-2.5">

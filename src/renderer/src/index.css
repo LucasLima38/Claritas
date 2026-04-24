@@ -144,24 +144,24 @@
 
   /* ── Blue Moon ────────────────────────────── deep navy + gold accent */
   .theme-blue-moon {
-    --background: 225 20% 5%;
+    --background: 225 35% 13%;
     --foreground: 220 5% 93%;
-    --card: 225 18% 9%;
+    --card: 225 30% 18%;
     --card-foreground: 220 5% 93%;
-    --popover: 225 18% 9%;
+    --popover: 225 30% 18%;
     --popover-foreground: 220 5% 93%;
     --primary: 45 80% 58%;
-    --primary-foreground: 225 20% 5%;
-    --secondary: 225 15% 13%;
+    --primary-foreground: 225 35% 10%;
+    --secondary: 225 25% 22%;
     --secondary-foreground: 220 5% 93%;
-    --muted: 225 15% 13%;
-    --muted-foreground: 220 6% 46%;
+    --muted: 225 25% 22%;
+    --muted-foreground: 220 10% 55%;
     --accent: 45 80% 58%;
-    --accent-foreground: 225 20% 5%;
+    --accent-foreground: 225 35% 10%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 225 12% 18%;
-    --input: 225 12% 18%;
+    --border: 225 22% 28%;
+    --input: 225 22% 28%;
     --ring: 45 80% 58%;
   }
 }

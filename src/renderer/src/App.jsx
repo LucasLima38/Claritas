@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { Toaster } from '@/components/ui/sonner'
 import { useApp } from './context/AppContext.jsx'
 import Sidebar from './components/Sidebar.jsx'
-import Toolbar from './components/Toolbar.jsx'
 import ClipboardArea from './components/ClipboardArea.jsx'
 import ClipGrid from './components/ClipGrid.jsx'
 import StatusBar from './components/StatusBar.jsx'
@@ -33,7 +32,6 @@ export default function App() {
         <div className="flex flex-col flex-1 overflow-hidden">
           {screen === 'main' ? (
             <>
-              <Toolbar />
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                 <ClipboardArea />
                 <ClipGrid />

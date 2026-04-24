@@ -105,9 +105,9 @@ export default function PreviewArea() {
 
   return (
     <>
-      <div className="border-2 border-primary/30 rounded-lg bg-card overflow-hidden">
+      <div className="border-2 border-primary/30 rounded-lg bg-card">
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2 bg-muted border-b border-border">
+        <div className="flex items-center justify-between px-3 py-2 bg-muted border-b border-border rounded-t-lg">
           <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
             <Eye size={13} />
             Prévia — {nextFilename}

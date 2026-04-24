@@ -325,13 +325,13 @@ export default function Settings({ onBack }) {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="system">Sistema (padrão)</SelectItem>
+                <SelectItem value="black-moon">Black Moon</SelectItem>
+                <SelectItem value="blue-moon">Blue Moon</SelectItem>
+                <SelectItem value="charcoal">Charcoal</SelectItem>
+                <SelectItem value="claritas">Claritas</SelectItem>
                 <SelectItem value="light">Claro</SelectItem>
                 <SelectItem value="dark">Escuro</SelectItem>
                 <SelectItem value="snnabb">Snnabb</SelectItem>
-                <SelectItem value="charcoal">Charcoal</SelectItem>
-                <SelectItem value="black-moon">Black Moon</SelectItem>
-                <SelectItem value="blue-moon">Blue Moon</SelectItem>
-                <SelectItem value="claritas">Claritas</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[10.5px] text-muted-foreground mt-1">

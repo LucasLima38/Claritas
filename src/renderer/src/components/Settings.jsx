@@ -149,9 +149,10 @@ export default function Settings({ onBack }) {
               <Card
                 key={p.id}
                 className={cn(
-                  'flex items-center gap-3 p-2.5',
+                  'flex items-center gap-3 p-2.5 cursor-pointer transition-colors hover:bg-accent/60',
                   p.id === state.activeProjectId && 'bg-accent border-primary/30'
                 )}
+                onClick={() => actions.setActiveProject(p.id)}
               >
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.color }} />
                 <div className="flex-1 min-w-0">
@@ -163,20 +164,9 @@ export default function Settings({ onBack }) {
                   </div>
                   <p className="text-[10.5px] text-muted-foreground truncate">{p.outputDir || 'Sem pasta'}</p>
                 </div>
-                <div className="flex gap-1.5 shrink-0 items-center">
-                  {p.id === state.activeProjectId ? (
-                    <Badge variant="secondary" className="text-[10px] gap-1 px-1.5 h-5 font-normal text-emerald-600">
-                      <Check size={9} /> Ativo
-                    </Badge>
-                  ) : (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2 text-[10px]"
-                      onClick={() => actions.setActiveProject(p.id)}
-                    >
-                      Ativar
-                    </Button>
+                <div className="flex gap-1.5 shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
+                  {p.id === state.activeProjectId && (
+                    <Check size={13} className="text-emerald-600 shrink-0" />
                   )}
                   <Button
                     variant="ghost"

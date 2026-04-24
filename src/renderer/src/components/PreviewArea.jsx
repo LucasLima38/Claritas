@@ -154,7 +154,6 @@ export default function PreviewArea() {
             maxScale={10}
             doubleClick={{ mode: 'reset' }}
             wheel={{ step: WHEEL_STEP }}
-            centerOnInit={true}
           >
             <ZoomControls />
             <TransformComponent
@@ -164,9 +163,16 @@ export default function PreviewArea() {
               <img
                 src={svgDataUrl}
                 alt="Prévia do esquemático"
-                className="max-h-44 max-w-full object-contain p-4"
-                style={{ imageRendering: 'crisp-edges', display: 'block' }}
                 draggable={false}
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  height: `${PREVIEW_MIN_HEIGHT}px`,
+                  objectFit: 'contain',
+                  padding: '16px',
+                  boxSizing: 'border-box',
+                  imageRendering: 'crisp-edges',
+                }}
               />
             </TransformComponent>
           </TransformWrapper>

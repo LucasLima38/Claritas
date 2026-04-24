@@ -164,11 +164,12 @@ export default function PreviewArea() {
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
+              contentStyle={{ padding: '20px' }}
             >
               <img
                 src={svgDataUrl}
                 alt="Prévia do esquemático"
-                className="max-h-48 max-w-full object-contain p-3"
+                className="max-h-44 max-w-full object-contain"
                 style={{ imageRendering: 'crisp-edges' }}
                 draggable={false}
               />

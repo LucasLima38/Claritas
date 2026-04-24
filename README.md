@@ -7,15 +7,16 @@ Claritas is a Windows desktop app that sits in the system tray and monitors the 
 ## Features
 
 - **Auto-monitoring** — Claritas detects schematics on the clipboard automatically; no button needed
+- **Preview queue** — copy multiple schematics in sequence; each capture queues up and is shown one at a time after save or discard
 - **Global shortcut** — bring the window to the foreground from anywhere with `Ctrl+Shift+V` (configurable)
 - **Multiple export formats** — save as SVG, PNG, JPG or PDF
-- **Project organisation** — group exports by project with a custom prefix and auto-incrementing counter (`BLDC_001.svg`, `BLDC_002.svg`, …)
+- **Project organisation** — group exports by project with a custom prefix and auto-incrementing counter (`BLDC_001.svg`, `BLDC_002.svg`, …); switch active project from the sidebar or Settings
 - **Zoomable preview** — pan and zoom the schematic before saving; fit-to-view with one click
-- **Recent files** — thumbnail gallery of files saved in the current session, with right-click menu to copy, open in folder or delete
+- **Recent files** — thumbnail gallery of files saved in the current session, with right-click menu to copy, open in folder or delete; refresh button syncs the list with the actual files on disk
 - **Auto-update** — notifies you when a new version is available and installs it on restart
 - **EMF → SVG via Inkscape** — uses Inkscape's rendering engine for accurate vector output
 - **System tray** — stays out of your way; blinks when a new schematic is ready
-- **7 themes** — System, Light, Dark, Snnabb, Charcoal, Black Moon, Blue Moon
+- **8 themes** — System, Black Moon, Blue Moon, Charcoal, Claritas, Light, Dark, Snnabb
 - **Behaviour settings** — launch on startup, start minimised, configure whether the close button hides or exits
 
 ## Requirements

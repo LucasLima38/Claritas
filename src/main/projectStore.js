@@ -13,7 +13,7 @@ const SETTINGS_DEFAULTS = {
   startMinimized: false,
   closeHides: true,
   theme: 'system',
-  globalShortcut: '',
+  globalShortcut: 'Ctrl+Shift+V',
 }
 
 export class ProjectStore {

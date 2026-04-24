@@ -22,7 +22,7 @@ import {
 import { toast } from 'sonner'
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch'
 
-const PREVIEW_MIN_HEIGHT = 160
+const PREVIEW_MIN_HEIGHT = 240
 const ZOOM_STEP = 0.25
 const WHEEL_STEP = 0.005
 

@@ -1,5 +1,5 @@
-appId: com.schematicclip.app
-productName: SchematicClip
+appId: com.claritas.app
+productName: Claritas
 copyright: Copyright © 2026
 
 directories:
@@ -29,10 +29,10 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: SchematicClip
+  shortcutName: Claritas
 
 npmRebuild: false
 publish:
   provider: github
   owner: LucasLima38
-  repo: SchematicClip
+  repo: Claritas

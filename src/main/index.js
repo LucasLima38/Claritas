@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut, shell, clipboard } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut, shell, clipboard, protocol, net } from 'electron'
 import { promises as fsp } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -138,7 +138,16 @@ function createWindow() {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────
 
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'localfile', privileges: { secure: true, standard: true, supportFetchAPI: true } },
+])
+
 app.whenReady().then(() => {
+  protocol.handle('localfile', (request) => {
+    const url = request.url.replace('localfile://', 'file://')
+    return net.fetch(url)
+  })
+
   mainWindow = createWindow()
   tray = createTray(mainWindow, store)
 

@@ -24,7 +24,7 @@ import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pa
 
 const PREVIEW_MIN_HEIGHT = 160
 const ZOOM_STEP = 0.25
-const WHEEL_STEP = 0.05
+const WHEEL_STEP = 0.005
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -32,16 +32,11 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function ZoomControls({ svgMetadata }) {
-  const { zoomIn, zoomOut, centerView, instance } = useControls()
+function ZoomControls() {
+  const { zoomIn, zoomOut, resetTransform } = useControls()
 
   function fitToView() {
-    if (!instance.wrapperComponent) return
-    const { clientWidth, clientHeight } = instance.wrapperComponent
-    const svgW = parseFloat(svgMetadata?.width) || clientWidth
-    const svgH = parseFloat(svgMetadata?.height) || clientHeight
-    const scale = Math.min(clientWidth / svgW, clientHeight / svgH) * 0.85
-    centerView(scale, 200)
+    resetTransform(200)
   }
 
   return (
@@ -160,7 +155,7 @@ export default function PreviewArea() {
             doubleClick={{ mode: 'reset' }}
             wheel={{ step: WHEEL_STEP }}
           >
-            <ZoomControls svgMetadata={svgMetadata} />
+            <ZoomControls />
             <TransformComponent
               wrapperStyle={{
                 width: '100%',
@@ -173,7 +168,7 @@ export default function PreviewArea() {
               <img
                 src={svgDataUrl}
                 alt="Prévia do esquemático"
-                className="max-h-48 max-w-full object-contain"
+                className="max-h-48 max-w-full object-contain p-3"
                 style={{ imageRendering: 'crisp-edges' }}
                 draggable={false}
               />

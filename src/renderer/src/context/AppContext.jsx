@@ -140,7 +140,7 @@ function reducer(state, action) {
 
 const AppContext = createContext(null)
 
-const THEME_CLASSES = ['dark', 'theme-snnabb', 'theme-charcoal', 'theme-black-moon', 'theme-blue-moon']
+const THEME_CLASSES = ['dark', 'theme-snnabb', 'theme-charcoal', 'theme-black-moon', 'theme-blue-moon', 'theme-claritas']
 
 function applyTheme(theme, systemIsDark) {
   const root = document.documentElement
@@ -153,6 +153,7 @@ function applyTheme(theme, systemIsDark) {
   else if (theme === 'charcoal')   root.classList.add('theme-charcoal')
   else if (theme === 'black-moon') root.classList.add('theme-black-moon')
   else if (theme === 'blue-moon')  root.classList.add('theme-blue-moon')
+  else if (theme === 'claritas')   root.classList.add('theme-claritas')
 }
 
 export function AppProvider({ children }) {

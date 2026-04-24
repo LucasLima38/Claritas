@@ -77,7 +77,7 @@ const TITLE_BAR_PALETTE = {
   snnabb:         { color: '#f8f6f2',  symbolColor: '#332619' },
   charcoal:       { color: '#1a1a1a',  symbolColor: '#e5e5e5' },
   'black-moon':   { color: '#121212',  symbolColor: '#f7f7f7' },
-  'blue-moon':    { color: '#192035',  symbolColor: '#ecedee' },
+  'blue-moon':    { color: '#0c0f18',  symbolColor: '#ecedee' },
   claritas:       { color: '#faf6ee',  symbolColor: '#3d2510' },
 }
 

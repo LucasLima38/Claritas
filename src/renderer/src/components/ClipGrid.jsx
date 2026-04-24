@@ -20,7 +20,7 @@ function formatTime(isoString) {
 }
 
 function toFileUrl(fullPath) {
-  return `file:///${fullPath.replace(/\\/g, '/')}`
+  return `localfile:///${fullPath.replace(/\\/g, '/')}`
 }
 
 export default function ClipGrid() {

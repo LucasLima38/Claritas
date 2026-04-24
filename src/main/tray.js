@@ -19,7 +19,7 @@ export function createTray(mainWindow, projectStore) {
   _normalIcon = icon
 
   tray = new Tray(icon)
-  tray.setToolTip('SchematicClip')
+  tray.setToolTip('Claritas')
   updateTrayMenu(mainWindow, projectStore)
 
   tray.on('click', () => {
@@ -86,7 +86,7 @@ export function updateTrayMenu(mainWindow, projectStore) {
 
   const menu = Menu.buildFromTemplate([
     {
-      label: 'SchematicClip',
+      label: 'Claritas',
       enabled: false,
     },
     { type: 'separator' },

@@ -1,6 +1,6 @@
 {
-  "name": "schematicclip",
-  "version": "1.1.1",
+  "name": "claritas",
+  "version": "1.2.0",
   "description": "An Electron application with React",
   "main": "./out/main/index.js",
   "author": "example.com",

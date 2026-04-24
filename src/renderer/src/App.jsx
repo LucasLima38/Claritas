@@ -22,7 +22,7 @@ export default function App() {
       {/* Title bar */}
       <div className="h-10 flex items-center justify-center border-b border-border app-region-drag shrink-0">
         <span className="text-xs font-medium text-muted-foreground app-region-no-drag">
-          SchematicClip
+          Claritas
         </span>
       </div>
 

@@ -180,7 +180,7 @@ export default function PreviewArea() {
 
         {/* Metadata footer */}
         {svgMetadata && (
-          <div className="flex items-center gap-4 px-3 py-2 bg-muted border-t border-border">
+          <div className="flex items-center gap-4 px-3 py-1 bg-muted border-t border-border">
             <Badge variant="secondary" className="text-[10px] gap-1 font-normal">
               <Maximize2 size={9} /> {parseFloat(svgMetadata.width).toFixed(0)} × {parseFloat(svgMetadata.height).toFixed(0)}
             </Badge>

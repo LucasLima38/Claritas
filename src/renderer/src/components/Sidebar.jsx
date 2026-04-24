@@ -13,6 +13,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useApp } from '../context/AppContext.jsx'
 import logoUrl from '../assets/logo.png'
@@ -92,15 +100,32 @@ export default function Sidebar({ screen, onNavigate, open }) {
 
         <div className="mt-auto">
           <Separator className="mx-3 mb-1.5 w-auto" />
-          <SidebarItem
-            icon={<Settings size={14} />}
-            active={screen === 'settings'}
-            onClick={() => onNavigate('settings')}
-            collapsed={!open}
-            tooltip="Configurações"
-          >
-            Configurações
-          </SidebarItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                title={!open ? 'Configurações' : undefined}
+                className={cn(
+                  'app-region-no-drag justify-start gap-2 mx-1.5 px-2.5 h-7 text-[12.5px] w-[calc(100%-12px)] font-normal',
+                  screen === 'settings' && 'bg-accent font-medium text-accent-foreground',
+                  !open && 'justify-center px-0'
+                )}
+              >
+                <span className="flex items-center justify-center w-4 shrink-0">
+                  <Settings size={14} />
+                </span>
+                {open && <span className="flex-1 truncate text-left">Configurações</span>}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="top" align="start" className="w-48">
+              <DropdownMenuLabel>Configurações Gerais</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onNavigate('settings')}>
+                <Settings size={13} />
+                Configurações
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -163,7 +163,21 @@ export default function Settings({ onBack }) {
                   </div>
                   <p className="text-[10.5px] text-muted-foreground truncate">{p.outputDir || 'Sem pasta'}</p>
                 </div>
-                <div className="flex gap-1.5 shrink-0">
+                <div className="flex gap-1.5 shrink-0 items-center">
+                  {p.id === state.activeProjectId ? (
+                    <Badge variant="secondary" className="text-[10px] gap-1 px-1.5 h-5 font-normal text-emerald-600">
+                      <Check size={9} /> Ativo
+                    </Badge>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-6 px-2 text-[10px]"
+                      onClick={() => actions.setActiveProject(p.id)}
+                    >
+                      Ativar
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -327,8 +341,7 @@ export default function Settings({ onBack }) {
                 <SelectItem value="charcoal">Charcoal</SelectItem>
                 <SelectItem value="black-moon">Black Moon</SelectItem>
                 <SelectItem value="blue-moon">Blue Moon</SelectItem>
-                <SelectItem value="claritas-1">Claritas 1</SelectItem>
-                <SelectItem value="claritas-2">Claritas 2</SelectItem>
+                <SelectItem value="claritas">Claritas</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[10.5px] text-muted-foreground mt-1">

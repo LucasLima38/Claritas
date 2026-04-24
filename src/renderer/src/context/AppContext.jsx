@@ -140,21 +140,20 @@ function reducer(state, action) {
 
 const AppContext = createContext(null)
 
-const THEME_CLASSES = ['dark', 'theme-snnabb', 'theme-charcoal', 'theme-black-moon', 'theme-blue-moon', 'theme-claritas-1', 'theme-claritas-2']
+const THEME_CLASSES = ['dark', 'theme-snnabb', 'theme-charcoal', 'theme-black-moon', 'theme-blue-moon', 'theme-claritas']
 
 function applyTheme(theme, systemIsDark) {
   const root = document.documentElement
   root.classList.remove(...THEME_CLASSES)
 
-  if (theme === 'dark')              root.classList.add('dark')
-  else if (theme === 'light')        { /* :root light vars — no class needed */ }
-  else if (theme === 'system')       { if (systemIsDark) root.classList.add('dark') }
-  else if (theme === 'snnabb')       root.classList.add('theme-snnabb')
-  else if (theme === 'charcoal')     root.classList.add('theme-charcoal')
-  else if (theme === 'black-moon')   root.classList.add('theme-black-moon')
-  else if (theme === 'blue-moon')    root.classList.add('theme-blue-moon')
-  else if (theme === 'claritas-1')   root.classList.add('theme-claritas-1')
-  else if (theme === 'claritas-2')   root.classList.add('theme-claritas-2')
+  if (theme === 'dark')            root.classList.add('dark')
+  else if (theme === 'light')      { /* :root light vars — no class needed */ }
+  else if (theme === 'system')     { if (systemIsDark) root.classList.add('dark') }
+  else if (theme === 'snnabb')     root.classList.add('theme-snnabb')
+  else if (theme === 'charcoal')   root.classList.add('theme-charcoal')
+  else if (theme === 'black-moon') root.classList.add('theme-black-moon')
+  else if (theme === 'blue-moon')  root.classList.add('theme-blue-moon')
+  else if (theme === 'claritas')   root.classList.add('theme-claritas')
 }
 
 export function AppProvider({ children }) {

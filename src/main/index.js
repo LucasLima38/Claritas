@@ -78,8 +78,7 @@ const TITLE_BAR_PALETTE = {
   charcoal:       { color: '#1a1a1a',  symbolColor: '#e5e5e5' },
   'black-moon':   { color: '#121416',  symbolColor: '#e4e4e8' },
   'blue-moon':    { color: '#16181c',  symbolColor: '#e4e4e8' },
-  'claritas-1':   { color: '#faf6ee',  symbolColor: '#3d2510' },
-  'claritas-2':   { color: '#fafafa',  symbolColor: '#17191f' },
+  claritas:       { color: '#faf6ee',  symbolColor: '#3d2510' },
 }
 
 function titleBarColors(theme, systemIsDark) {

@@ -1,6 +1,7 @@
 import { FileText } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { toast } from 'sonner'
+import { Card } from '@/components/ui/card'
 import {
   ContextMenu,
   ContextMenuContent,
@@ -51,12 +52,12 @@ export default function ClipGrid() {
         ))}
 
         {nextName && (
-          <div className="border border-dashed border-border rounded-md bg-muted/30 flex items-center justify-center min-h-[80px]">
+          <Card className="border-dashed bg-muted/30 flex items-center justify-center min-h-[80px]">
             <div className="text-center px-2">
               <p className="text-[10px] text-muted-foreground">próximo</p>
               <p className="text-[11px] font-semibold text-muted-foreground truncate">{nextName}</p>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>
@@ -86,7 +87,7 @@ function ClipCard({ entry }) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <div className="border border-border rounded-md overflow-hidden bg-card hover:shadow-md transition-shadow cursor-default">
+        <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-default p-0">
           {/* Thumbnail */}
           <div className="h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
             {isPdf ? (
@@ -109,7 +110,7 @@ function ClipCard({ entry }) {
               {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
             </p>
           </div>
-        </div>
+        </Card>
       </ContextMenuTrigger>
 
       <ContextMenuContent>

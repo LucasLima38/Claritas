@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { Card } from '@/components/ui/card'
 import { useApp } from '../context/AppContext.jsx'
 
 const PROJECT_COLORS = ['#2f81f7', '#27c93f', '#ff9f43', '#e74c3c', '#9b59b6', '#1abc9c']
@@ -145,13 +146,11 @@ export default function Settings({ onBack }) {
 
           <div className="flex flex-col gap-2">
             {state.projects.map((p) => (
-              <div
+              <Card
                 key={p.id}
                 className={cn(
-                  'flex items-center gap-3 p-2.5 rounded-md border',
-                  p.id === state.activeProjectId
-                    ? 'bg-accent border-primary/30'
-                    : 'bg-card border-border'
+                  'flex items-center gap-3 p-2.5',
+                  p.id === state.activeProjectId && 'bg-accent border-primary/30'
                 )}
               >
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.color }} />
@@ -182,12 +181,12 @@ export default function Settings({ onBack }) {
                     <Trash2 size={11} />
                   </Button>
                 </div>
-              </div>
+              </Card>
             ))}
 
             {/* Add / Edit form */}
             {editingId ? (
-              <div className="border border-primary rounded-md p-3 bg-accent/30 flex flex-col gap-2.5">
+              <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
                     <Label className="text-[10.5px]">Nome do projeto</Label>
@@ -248,7 +247,7 @@ export default function Settings({ onBack }) {
                     Cancelar
                   </Button>
                 </div>
-              </div>
+              </Card>
             ) : (
               <Button
                 variant="outline"

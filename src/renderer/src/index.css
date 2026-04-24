@@ -95,50 +95,50 @@
     --ring: 213 80% 60%;
   }
 
-  /* ── Black Moon ───────────────────────────── dark neutral */
+  /* ── Black Moon ───────────────────────────── Tailwind Gray palette */
   .theme-black-moon {
-    --background: 220 10% 8%;
-    --foreground: 220 5% 90%;
-    --card: 220 10% 12%;
-    --card-foreground: 220 5% 90%;
-    --popover: 220 10% 12%;
-    --popover-foreground: 220 5% 90%;
-    --primary: 220 5% 80%;
-    --primary-foreground: 220 10% 8%;
-    --secondary: 220 8% 16%;
-    --secondary-foreground: 220 5% 85%;
-    --muted: 220 8% 16%;
-    --muted-foreground: 220 5% 50%;
-    --accent: 220 8% 20%;
-    --accent-foreground: 220 5% 90%;
-    --destructive: 0 62% 40%;
+    --background: 0 0% 7%;
+    --foreground: 0 0% 97%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 97%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 97%;
+    --primary: 0 0% 55%;
+    --primary-foreground: 0 0% 7%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 97%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 42%;
+    --accent: 0 0% 26%;
+    --accent-foreground: 0 0% 97%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 8% 18%;
-    --input: 220 8% 18%;
-    --ring: 220 5% 60%;
+    --border: 0 0% 22%;
+    --input: 0 0% 22%;
+    --ring: 0 0% 55%;
   }
 
-  /* ── Blue Moon ────────────────────────────── dark + amber accent */
+  /* ── Blue Moon ────────────────────────────── dark blue-gray + gold accent */
   .theme-blue-moon {
-    --background: 220 12% 10%;
-    --foreground: 220 5% 90%;
-    --card: 220 12% 14%;
-    --card-foreground: 220 5% 90%;
-    --popover: 220 12% 14%;
-    --popover-foreground: 220 5% 90%;
-    --primary: 35 90% 55%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 10% 18%;
-    --secondary-foreground: 220 5% 85%;
-    --muted: 220 10% 18%;
-    --muted-foreground: 220 5% 52%;
-    --accent: 220 10% 20%;
-    --accent-foreground: 220 5% 90%;
-    --destructive: 0 62% 40%;
+    --background: 220 8% 7%;
+    --foreground: 220 5% 93%;
+    --card: 220 9% 11%;
+    --card-foreground: 220 5% 93%;
+    --popover: 220 9% 11%;
+    --popover-foreground: 220 5% 93%;
+    --primary: 45 80% 58%;
+    --primary-foreground: 220 8% 7%;
+    --secondary: 220 10% 16%;
+    --secondary-foreground: 220 5% 93%;
+    --muted: 220 10% 16%;
+    --muted-foreground: 220 6% 46%;
+    --accent: 45 80% 58%;
+    --accent-foreground: 220 8% 7%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 20%;
-    --input: 220 10% 20%;
-    --ring: 35 90% 55%;
+    --border: 220 10% 23%;
+    --input: 220 10% 23%;
+    --ring: 45 80% 58%;
   }
 }
 

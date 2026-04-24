@@ -118,7 +118,7 @@
     --ring: 0 0% 55%;
   }
 
-  /* ── Blue Moon ────────────────────────────── dark blue-gray + gold accent */
+  /* ── Blue Moon ────────────────────────────── dark blue-gray + moonlight blue accent */
   .theme-blue-moon {
     --background: 220 8% 7%;
     --foreground: 220 5% 93%;
@@ -126,19 +126,19 @@
     --card-foreground: 220 5% 93%;
     --popover: 220 9% 11%;
     --popover-foreground: 220 5% 93%;
-    --primary: 45 80% 58%;
+    --primary: 210 75% 60%;
     --primary-foreground: 220 8% 7%;
     --secondary: 220 10% 16%;
     --secondary-foreground: 220 5% 93%;
     --muted: 220 10% 16%;
     --muted-foreground: 220 6% 46%;
-    --accent: 45 80% 58%;
+    --accent: 210 75% 60%;
     --accent-foreground: 220 8% 7%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     --border: 220 10% 23%;
     --input: 220 10% 23%;
-    --ring: 45 80% 58%;
+    --ring: 210 75% 60%;
   }
 }
 

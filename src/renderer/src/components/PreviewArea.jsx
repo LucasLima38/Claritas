@@ -72,8 +72,9 @@ function ZoomControls() {
 
 export default function PreviewArea() {
   const { state, actions } = useApp()
-  const { svgContent, svgMetadata } = state
+  const { svgContent, svgMetadata, previewQueue } = state
   const isSaving = state.status === 'saving'
+  const queueTotal = 1 + previewQueue.length
 
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
   const nextFilename = activeProject
@@ -111,6 +112,11 @@ export default function PreviewArea() {
           <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
             <Eye size={13} />
             Prévia — {nextFilename}
+            {queueTotal > 1 && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                {queueTotal} na fila
+              </Badge>
+            )}
           </div>
           <div className="flex gap-1.5 items-center">
             <Button

@@ -8,6 +8,7 @@ const initialState = {
   shellStatus: 'starting',
   svgContent: null,
   svgMetadata: null,
+  previewQueue: [],
   error: null,
   projects: [],
   activeProjectId: null,
@@ -35,7 +36,12 @@ function reducer(state, action) {
       return { ...state, status: 'converting', error: null }
 
     case 'SVG_READY':
-      if (state.status === 'saving') return state
+      if (state.status === 'preview' || state.status === 'saving') {
+        return {
+          ...state,
+          previewQueue: [...state.previewQueue, { svgContent: action.svgContent, metadata: action.metadata }],
+        }
+      }
       return {
         ...state,
         status: 'preview',
@@ -53,12 +59,14 @@ function reducer(state, action) {
     case 'SAVE_START':
       return { ...state, status: 'saving' }
 
-    case 'SAVE_SUCCESS':
+    case 'SAVE_SUCCESS': {
+      const [nextPreview, ...remainingQueue] = state.previewQueue
       return {
         ...state,
-        status: 'idle',
-        svgContent: null,
-        svgMetadata: null,
+        status: nextPreview ? 'preview' : 'idle',
+        svgContent: nextPreview ? nextPreview.svgContent : null,
+        svgMetadata: nextPreview ? nextPreview.metadata : null,
+        previewQueue: remainingQueue,
         history: [action.entry, ...state.history],
         projects: state.projects.map((p) =>
           p.id === action.entry.projectId
@@ -66,6 +74,7 @@ function reducer(state, action) {
             : p
         ),
       }
+    }
 
     case 'SAVE_ERROR':
       return { ...state, status: 'preview' }
@@ -81,14 +90,17 @@ function reducer(state, action) {
     case 'CLEAR_DIR_MISSING':
       return { ...state, dirMissing: false, dirMissingPath: null }
 
-    case 'DISCARD':
+    case 'DISCARD': {
+      const [nextPreview, ...remainingQueue] = state.previewQueue
       return {
         ...state,
-        status: 'idle',
-        svgContent: null,
-        svgMetadata: null,
+        status: nextPreview ? 'preview' : 'idle',
+        svgContent: nextPreview ? nextPreview.svgContent : null,
+        svgMetadata: nextPreview ? nextPreview.metadata : null,
+        previewQueue: remainingQueue,
         error: null,
       }
+    }
 
     case 'SET_ACTIVE_PROJECT':
       return { ...state, activeProjectId: action.id }

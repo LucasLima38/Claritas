@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut } from 'electron'
+import { promises as fsp } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
@@ -45,10 +46,9 @@ const clipboardMonitor = new ClipboardMonitor(async (emfBuffer) => {
     pendingSVG = { svgContent, metadata }
 
     if (mainWindow.isVisible() && !mainWindow.isMinimized()) {
-      // Window is in the foreground — push preview immediately
+      stopTrayBlink()
       mainWindow.webContents.send('preview-ready', { svgContent, metadata })
     } else {
-      // Window is hidden/minimized — blink the tray icon
       startTrayBlink()
     }
   } catch {
@@ -86,6 +86,7 @@ function applyGlobalShortcut(shortcut) {
   }
   if (!shortcut) return
   const ok = globalShortcut.register(shortcut, () => {
+    if (!mainWindow) return
     stopTrayBlink()
     mainWindow.show()
     mainWindow.focus()
@@ -253,11 +254,16 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
     return { dirMissing: true, outputDir: project.outputDir }
   }
 
+  if (format !== 'svg' && inkscapeShell.busy) {
+    return { error: 'BUSY', message: 'Inkscape está ocupado. Tente novamente em instantes.' }
+  }
+
   const filename = generateFilenameWithExt(project.prefix, project.counter + 1, format)
   const fullPath = path.join(project.outputDir, filename)
 
   try {
     await exportToFormat(pendingSVG.svgContent, format, fullPath)
+    const { size: sizeBytes } = await fsp.stat(fullPath)
     const newCounter = store.incrementCounter(projectId)
     const entry = {
       id: crypto.randomUUID(),
@@ -265,7 +271,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
       fullPath,
       projectId,
       timestamp: new Date().toISOString(),
-      sizeBytes: pendingSVG.metadata.sizeBytes,
+      sizeBytes,
     }
     store.addHistoryEntry(entry)
     pendingSVG = null
@@ -289,7 +295,6 @@ ipcMain.handle('discard-svg', async () => {
 
 ipcMain.handle('create-output-dir', async (_event, { dir }) => {
   try {
-    const { promises: fsp } = await import('fs')
     await fsp.mkdir(dir, { recursive: true })
     return { ok: true }
   } catch (err) {
@@ -384,5 +389,6 @@ ipcMain.handle('get-init-data', () => {
     activeProjectId,
     settings: store.getSettings(),
     history: store.getHistory(),
+    shellStatus: inkscapeShell.ready ? 'ready' : 'starting',
   }
 })

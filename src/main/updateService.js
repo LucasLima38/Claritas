@@ -4,7 +4,7 @@ export function initAutoUpdater(mainWindow, ipcMain) {
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = false
 
-  autoUpdater.on('update-available', (info) => {
+  autoUpdater.on('update-downloaded', (info) => {
     mainWindow.webContents.send('update-available', {
       version: info.version,
       releaseDate: info.releaseDate ?? null,
@@ -15,6 +15,7 @@ export function initAutoUpdater(mainWindow, ipcMain) {
     console.error('[auto-updater]', err.message)
   })
 
+  ipcMain.removeHandler('install-update')
   ipcMain.handle('install-update', () => {
     autoUpdater.quitAndInstall(false, true)
   })

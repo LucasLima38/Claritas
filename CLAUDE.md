@@ -1,4 +1,4 @@
-# SchematicClip
+# Claritas
 
 Electron app (Windows) que captura EMF do clipboard do Altium Designer, converte para SVG via Inkscape shell persistente, exibe prévia e salva com nome sequencial por projeto.
 

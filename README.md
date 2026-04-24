@@ -1,33 +1,37 @@
-# SchematicClip
+# Claritas
 
-> Paste a schematic from your EDA tool — get a clean SVG file.
+> Paste a schematic from your EDA tool — get a clean SVG, PNG, JPG or PDF file.
 
-SchematicClip is a Windows desktop app that sits in the system tray and converts schematic diagrams copied to the clipboard (as EMF) into high-quality SVG files, ready to embed in documentation, reports or presentations.
+Claritas is a Windows desktop app that sits in the system tray and monitors the clipboard for schematic diagrams (EMF format). When a schematic is detected, it converts it automatically to a high-quality vector file, shows a zoomable preview, and lets you save it with a sequential filename — ready to embed in documentation, reports or presentations.
 
 ## Features
 
-- **One-click conversion** — copy a schematic in your EDA tool, press the paste button, done
+- **Auto-monitoring** — Claritas detects schematics on the clipboard automatically; no button needed
+- **Global shortcut** — bring the window to the foreground from anywhere with `Ctrl+Shift+V` (configurable)
+- **Multiple export formats** — save as SVG, PNG, JPG or PDF
 - **Project organisation** — group exports by project with a custom prefix and auto-incrementing counter (`BLDC_001.svg`, `BLDC_002.svg`, …)
+- **Zoomable preview** — pan and zoom the schematic before saving; fit-to-view with one click
+- **Recent files** — thumbnail gallery of files saved in the current session, with right-click menu to copy, open in folder or delete
+- **Auto-update** — notifies you when a new version is available and installs it on restart
 - **EMF → SVG via Inkscape** — uses Inkscape's rendering engine for accurate vector output
-- **System tray** — stays out of your way; accessible from the notification area at all times
-- **7 themes** — Sistema, Claro, Escuro, Snnabb, Charcoal, Black Moon, Blue Moon
+- **System tray** — stays out of your way; blinks when a new schematic is ready
+- **7 themes** — System, Light, Dark, Snnabb, Charcoal, Black Moon, Blue Moon
 - **Behaviour settings** — launch on startup, start minimised, configure whether the close button hides or exits
 
 ## Requirements
 
 - Windows 10/11
-- [Inkscape](https://inkscape.org/) 1.x installed (the app will detect it automatically)
 
 ## Installation
 
-Download `SchematicClip-1.0.0-portable.zip` from the [latest release](../../releases/latest), extract it and run `SchematicClip.exe`. No installer required.
+Download `Claritas-Setup-1.2.0.exe` from the [latest release](../../releases/latest) and run the installer.
 
 ## Usage
 
-1. Open SchematicClip — it will appear in the system tray
-2. In your EDA tool (KiCad, Altium, Eagle…), copy a schematic to the clipboard
-3. Click the **Colar Esquemático** button in SchematicClip
-4. Preview the generated SVG and click **Salvar** to save it to your project folder
+1. Open Claritas — it will appear in the system tray
+2. In your EDA tool (Altium Designer, KiCad, Eagle…), select a portion of your schematic and copy it (`Ctrl+C`)
+3. Claritas detects the clipboard automatically and shows a preview
+4. Choose the export format (SVG, PNG, JPG or PDF), then click **Salvar**
 
 ## Development
 
@@ -43,11 +47,9 @@ npm run dev
 # Run tests
 npm test
 
-# Build for production
+# Build installer
 npm run dist
 ```
-
-> **Note:** `npm run dist` requires Windows Developer Mode enabled (for symlink support in electron-builder's code-signing toolchain). Without it, use the portable build from `dist/win-unpacked`.
 
 ## Tech Stack
 
@@ -56,6 +58,7 @@ npm run dist
 - [shadcn/ui](https://ui.shadcn.com/) + [Tailwind CSS](https://tailwindcss.com/) — UI components
 - [Inkscape CLI](https://inkscape.org/) — EMF → SVG conversion
 - [electron-store](https://github.com/sindresorhus/electron-store) — persistent settings
+- [electron-updater](https://www.electron.build/auto-update) — auto-update via GitHub Releases
 - [Vitest](https://vitest.dev/) — unit tests
 
 ## License

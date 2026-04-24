@@ -327,7 +327,8 @@ export default function Settings({ onBack }) {
                 <SelectItem value="charcoal">Charcoal</SelectItem>
                 <SelectItem value="black-moon">Black Moon</SelectItem>
                 <SelectItem value="blue-moon">Blue Moon</SelectItem>
-                <SelectItem value="claritas">Claritas</SelectItem>
+                <SelectItem value="claritas-1">Claritas 1</SelectItem>
+                <SelectItem value="claritas-2">Claritas 2</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-[10.5px] text-muted-foreground mt-1">

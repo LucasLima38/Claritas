@@ -9,6 +9,7 @@ import { InkscapeShell } from './inkscapeShell.js'
 import { generateFilenameWithExt, checkOutputDir } from './saveService.js'
 import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
+import { initAutoUpdater } from './updateService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -158,6 +159,8 @@ app.whenReady().then(() => {
       mainWindow.webContents.send('preview-ready', pendingSVG)
     }
   })
+
+  initAutoUpdater(mainWindow, ipcMain)
 
   // Show window unless startMinimized is set
   if (!store.getSettings().startMinimized) {

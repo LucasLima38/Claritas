@@ -1,15 +1,46 @@
-import { Settings, Clipboard } from 'lucide-react'
+import { useState } from 'react'
+import { Settings, Clipboard, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { useApp } from '../context/AppContext.jsx'
 
 export default function Sidebar({ screen, onNavigate }) {
   const { state, actions } = useApp()
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
 
   return (
     <div className="w-[200px] shrink-0 bg-muted/40 border-r border-border flex flex-col py-2 overflow-hidden">
+
+      {state.updateInfo && (
+        <div className="px-1.5 pb-1">
+          <Button
+            variant="ghost"
+            onClick={() => setUpdateDialogOpen(true)}
+            className="app-region-no-drag w-full justify-start gap-2 px-2.5 h-7 text-[12.5px] font-normal text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+          >
+            <span className="relative flex items-center justify-center w-4 shrink-0">
+              <Download size={14} />
+              <Badge className="absolute -top-2 -right-2 h-3.5 min-w-[14px] px-0.5 text-[8px] leading-none flex items-center justify-center bg-amber-500 text-white border-0 rounded-full">
+                1
+              </Badge>
+            </span>
+            <span className="flex-1 truncate text-left">Atualização</span>
+          </Button>
+        </div>
+      )}
+
       <SectionLabel>Workspace</SectionLabel>
       <SidebarItem
         icon={<Clipboard size={14} />}
@@ -51,6 +82,26 @@ export default function Sidebar({ screen, onNavigate }) {
           Configurações
         </SidebarItem>
       </div>
+
+      <AlertDialog open={updateDialogOpen} onOpenChange={setUpdateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Download size={16} /> Atualização disponível
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              A versão <strong>{state.updateInfo?.version}</strong> foi baixada e está pronta para instalar.
+              O app vai reiniciar automaticamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Agora não</AlertDialogCancel>
+            <AlertDialogAction onClick={actions.installUpdate}>
+              Reiniciar e instalar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

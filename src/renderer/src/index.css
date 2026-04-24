@@ -118,6 +118,29 @@
     --ring: 0 0% 55%;
   }
 
+  /* ── Claritas ────────────────────────────── warm cream + teal accent */
+  .theme-claritas {
+    --background: 45 100% 88%;
+    --foreground: 31 58% 15%;
+    --card: 45 100% 88%;
+    --card-foreground: 31 58% 15%;
+    --popover: 44 80% 91%;
+    --popover-foreground: 31 58% 15%;
+    --primary: 188 100% 35%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 45 70% 80%;
+    --secondary-foreground: 31 40% 20%;
+    --muted: 45 70% 80%;
+    --muted-foreground: 31 30% 42%;
+    --accent: 188 45% 85%;
+    --accent-foreground: 188 100% 22%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 44 55% 72%;
+    --input: 44 55% 72%;
+    --ring: 188 100% 35%;
+  }
+
   /* ── Blue Moon ────────────────────────────── deep navy + gold accent */
   .theme-blue-moon {
     --background: 225 20% 5%;

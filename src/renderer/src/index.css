@@ -118,27 +118,27 @@
     --ring: 0 0% 55%;
   }
 
-  /* ── Blue Moon ────────────────────────────── dark blue-gray + moonlight blue accent */
+  /* ── Blue Moon ────────────────────────────── deep navy + gold accent */
   .theme-blue-moon {
-    --background: 220 8% 7%;
+    --background: 225 20% 5%;
     --foreground: 220 5% 93%;
-    --card: 220 9% 11%;
+    --card: 225 18% 9%;
     --card-foreground: 220 5% 93%;
-    --popover: 220 9% 11%;
+    --popover: 225 18% 9%;
     --popover-foreground: 220 5% 93%;
-    --primary: 210 75% 60%;
-    --primary-foreground: 220 8% 7%;
-    --secondary: 220 10% 16%;
+    --primary: 45 80% 58%;
+    --primary-foreground: 225 20% 5%;
+    --secondary: 225 15% 13%;
     --secondary-foreground: 220 5% 93%;
-    --muted: 220 10% 16%;
+    --muted: 225 15% 13%;
     --muted-foreground: 220 6% 46%;
-    --accent: 210 75% 60%;
-    --accent-foreground: 220 8% 7%;
+    --accent: 45 80% 58%;
+    --accent-foreground: 225 20% 5%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 10% 23%;
-    --input: 220 10% 23%;
-    --ring: 210 75% 60%;
+    --border: 225 12% 18%;
+    --input: 225 12% 18%;
+    --ring: 45 80% 58%;
   }
 }
 

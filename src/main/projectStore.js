@@ -99,4 +99,9 @@ export class ProjectStore {
   getHistory() {
     return this._history.get('entries', [])
   }
+
+  deleteHistoryEntry(entryId) {
+    const entries = this._history.get('entries', []).filter((e) => e.id !== entryId)
+    this._history.set('entries', entries)
+  }
 }

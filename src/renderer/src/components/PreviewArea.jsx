@@ -1,4 +1,4 @@
-import { Eye, Clock, FileText, Maximize2, FolderOpen, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { Eye, Clock, FileText, Maximize2, FolderOpen, ZoomIn, ZoomOut, Scan, Save, X, Layers } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,8 @@ import { toast } from 'sonner'
 import { TransformWrapper, TransformComponent, useControls } from 'react-zoom-pan-pinch'
 
 const PREVIEW_MIN_HEIGHT = 160
+const ZOOM_STEP = 0.25
+const WHEEL_STEP = 0.05
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -30,15 +32,25 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function ZoomControls() {
-  const { zoomIn, zoomOut, resetTransform } = useControls()
+function ZoomControls({ svgMetadata }) {
+  const { zoomIn, zoomOut, centerView, instance } = useControls()
+
+  function fitToView() {
+    if (!instance.wrapperComponent) return
+    const { clientWidth, clientHeight } = instance.wrapperComponent
+    const svgW = parseFloat(svgMetadata?.width) || clientWidth
+    const svgH = parseFloat(svgMetadata?.height) || clientHeight
+    const scale = Math.min(clientWidth / svgW, clientHeight / svgH) * 0.85
+    centerView(scale, 200)
+  }
+
   return (
     <div className="absolute bottom-2 right-2 flex gap-1 z-10">
       <Button
         variant="ghost"
         size="icon"
         className="h-6 w-6 bg-background/80 hover:bg-background"
-        onClick={zoomIn}
+        onClick={() => zoomIn(ZOOM_STEP)}
       >
         <ZoomIn size={13} />
       </Button>
@@ -46,7 +58,7 @@ function ZoomControls() {
         variant="ghost"
         size="icon"
         className="h-6 w-6 bg-background/80 hover:bg-background"
-        onClick={zoomOut}
+        onClick={() => zoomOut(ZOOM_STEP)}
       >
         <ZoomOut size={13} />
       </Button>
@@ -54,9 +66,10 @@ function ZoomControls() {
         variant="ghost"
         size="icon"
         className="h-6 w-6 bg-background/80 hover:bg-background"
-        onClick={resetTransform}
+        title="Enquadrar tudo"
+        onClick={fitToView}
       >
-        <RotateCcw size={13} />
+        <Scan size={13} />
       </Button>
     </div>
   )
@@ -90,8 +103,6 @@ export default function PreviewArea() {
     const result = await window.electronAPI.chooseDirectory()
     actions.clearDirMissing()
     if (!result.canceled && activeProject) {
-      // updateProject IPC mutates the main-process store synchronously before resolving,
-      // so save() will use the updated outputDir when it calls save-svg.
       await actions.updateProject(activeProject.id, { outputDir: result.path })
       await actions.save()
     }
@@ -112,15 +123,14 @@ export default function PreviewArea() {
               variant="outline"
               onClick={actions.discard}
               disabled={isSaving}
-              className="h-6 px-2.5 text-[11px]"
+              className="h-6 px-2.5 text-[11px] gap-1.5"
             >
+              <X size={11} />
               Descartar
             </Button>
-            <Select
-              value={state.exportFormat}
-              onValueChange={actions.setExportFormat}
-            >
-              <SelectTrigger className="h-6 w-[62px] text-[11px] px-2 app-region-no-drag">
+            <Select value={state.exportFormat} onValueChange={actions.setExportFormat}>
+              <SelectTrigger className="h-6 w-[78px] text-[11px] px-2 app-region-no-drag gap-1.5">
+                <Layers size={11} className="shrink-0 text-muted-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -134,22 +144,23 @@ export default function PreviewArea() {
               size="sm"
               onClick={actions.save}
               disabled={isSaving}
-              className="h-6 px-2.5 text-[11px] bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-6 px-2.5 text-[11px] gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              {isSaving ? 'Salvando...' : 'Salvar →'}
+              <Save size={11} />
+              {isSaving ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </div>
 
-        {/* SVG Preview — zoom+pan with fixed cream-white background */}
+        {/* SVG Preview */}
         <div className="relative overflow-hidden" style={{ background: '#f5f4ef', minHeight: PREVIEW_MIN_HEIGHT }}>
           <TransformWrapper
-            minScale={0.3}
-            maxScale={8}
+            minScale={0.1}
+            maxScale={10}
             doubleClick={{ mode: 'reset' }}
-            wheel={{ step: 0.1 }}
+            wheel={{ step: WHEEL_STEP }}
           >
-            <ZoomControls />
+            <ZoomControls svgMetadata={svgMetadata} />
             <TransformComponent
               wrapperStyle={{
                 width: '100%',

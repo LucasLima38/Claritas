@@ -115,6 +115,9 @@ function reducer(state, action) {
     case 'UPDATE_AVAILABLE':
       return { ...state, updateInfo: { version: action.version, releaseDate: action.releaseDate } }
 
+    case 'DELETE_HISTORY_ENTRY':
+      return { ...state, history: state.history.filter((e) => e.id !== action.entryId) }
+
     default:
       return state
   }
@@ -267,6 +270,11 @@ export function AppProvider({ children }) {
 
     async installUpdate() {
       await window.electronAPI.installUpdate()
+    },
+
+    async deleteHistoryEntry(entry) {
+      const result = await window.electronAPI.deleteHistoryFile({ entryId: entry.id, fullPath: entry.fullPath })
+      if (result.ok) dispatch({ type: 'DELETE_HISTORY_ENTRY', entryId: entry.id })
     },
   }
 

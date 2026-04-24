@@ -138,7 +138,7 @@ export default function Settings({ onBack }) {
         <h2 className="text-sm font-semibold">Configurações</h2>
       </div>
 
-      <div className="p-5 flex flex-col gap-6 max-w-2xl">
+      <div className="p-5 flex flex-col gap-6 w-full max-w-2xl mx-auto">
 
         {/* Projects section */}
         <section>

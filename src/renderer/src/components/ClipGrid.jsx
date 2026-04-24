@@ -65,7 +65,7 @@ export default function ClipGrid() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-2.5">
+      <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
         {state.history.map((entry) => (
           <ClipCard key={entry.id} entry={entry} />
         ))}

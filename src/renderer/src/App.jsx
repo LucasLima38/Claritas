@@ -23,7 +23,7 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen bg-background text-foreground select-none overflow-hidden">
       {/* Title bar */}
-      <div className="h-10 flex items-center border-b border-border app-region-drag shrink-0 px-2 gap-2">
+      <div className="h-10 flex items-center app-region-drag shrink-0 px-2 gap-2">
         <Button
           variant="ghost"
           size="icon"
@@ -39,6 +39,7 @@ export default function App() {
         <div className="h-7 w-7 shrink-0" />
       </div>
 
+      <div className="h-px bg-border shrink-0" />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} />
 

@@ -76,8 +76,8 @@ const TITLE_BAR_PALETTE = {
   dark:           { color: '#09090b',  symbolColor: '#fafafa' },
   snnabb:         { color: '#f8f6f2',  symbolColor: '#332619' },
   charcoal:       { color: '#1a1a1a',  symbolColor: '#e5e5e5' },
-  'black-moon':   { color: '#121416',  symbolColor: '#e4e4e8' },
-  'blue-moon':    { color: '#16181c',  symbolColor: '#e4e4e8' },
+  'black-moon':   { color: '#121212',  symbolColor: '#f7f7f7' },
+  'blue-moon':    { color: '#0a0c0f',  symbolColor: '#ecedee' },
   claritas:       { color: '#faf6ee',  symbolColor: '#3d2510' },
 }
 

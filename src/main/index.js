@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut, shell, clipboard } from 'electron'
 import { promises as fsp } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -390,5 +390,30 @@ ipcMain.handle('get-init-data', () => {
     settings: store.getSettings(),
     history: store.getHistory(),
     shellStatus: inkscapeShell.ready ? 'ready' : 'starting',
+  }
+})
+
+ipcMain.handle('show-in-folder', (_event, { fullPath }) => {
+  shell.showItemInFolder(fullPath)
+  return { ok: true }
+})
+
+ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath }) => {
+  try {
+    await fsp.unlink(fullPath)
+  } catch (err) {
+    if (err.code !== 'ENOENT') return { error: err.message }
+  }
+  store.deleteHistoryEntry(entryId)
+  updateTrayMenu(mainWindow, store)
+  return { ok: true }
+})
+
+ipcMain.handle('copy-file-to-clipboard', (_event, { fullPath }) => {
+  try {
+    clipboard.writeBuffer('FileNameW', Buffer.from(fullPath + '\0', 'ucs2'))
+    return { ok: true }
+  } catch (err) {
+    return { error: err.message }
   }
 })

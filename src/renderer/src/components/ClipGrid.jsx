@@ -1,6 +1,13 @@
-import { CheckCircle2 } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
+import { FileText } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
+import { toast } from 'sonner'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu'
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -10,6 +17,10 @@ function formatBytes(bytes) {
 
 function formatTime(isoString) {
   return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+}
+
+function toFileUrl(fullPath) {
+  return `file:///${fullPath.replace(/\\/g, '/')}`
 }
 
 export default function ClipGrid() {
@@ -53,20 +64,66 @@ export default function ClipGrid() {
 }
 
 function ClipCard({ entry }) {
+  const { actions } = useApp()
+  const isPdf = entry.filename.endsWith('.pdf')
+  const fileUrl = toFileUrl(entry.fullPath)
+
+  async function handleCopy() {
+    const result = await window.electronAPI.copyFileToClipboard({ fullPath: entry.fullPath })
+    if (result.ok) toast.success('Arquivo copiado para o clipboard')
+    else toast.error('Não foi possível copiar o arquivo')
+  }
+
+  async function handleDelete() {
+    await actions.deleteHistoryEntry(entry)
+    toast.success(`${entry.filename} removido`)
+  }
+
+  async function handleShowInFolder() {
+    await window.electronAPI.showInFolder({ fullPath: entry.fullPath })
+  }
+
   return (
-    <div className="border border-border rounded-md overflow-hidden bg-card hover:shadow-md transition-shadow cursor-default">
-      <div className="h-[60px] bg-muted border-b border-border flex items-center justify-center relative">
-        <div className="w-8 h-8 bg-border rounded" />
-        <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-          <CheckCircle2 size={10} className="text-primary-foreground" />
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <div className="border border-border rounded-md overflow-hidden bg-card hover:shadow-md transition-shadow cursor-default">
+          {/* Thumbnail */}
+          <div className="h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
+            {isPdf ? (
+              <FileText size={28} className="text-muted-foreground/50" />
+            ) : (
+              <img
+                src={fileUrl}
+                alt={entry.filename}
+                className="w-full h-full object-contain p-1"
+                style={{ imageRendering: 'crisp-edges' }}
+                draggable={false}
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+              />
+            )}
+          </div>
+          {/* Info */}
+          <div className="px-2 py-1.5">
+            <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
+            </p>
+          </div>
         </div>
-      </div>
-      <div className="px-2 py-1.5">
-        <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
-        <p className="text-[10px] text-muted-foreground">
-          {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
-        </p>
-      </div>
-    </div>
+      </ContextMenuTrigger>
+
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleCopy}>
+          Copiar arquivo
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleShowInFolder}>
+          Ir para a pasta
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+          Deletar arquivo
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   )
 }

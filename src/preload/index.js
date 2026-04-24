@@ -59,4 +59,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('update-available', handler)
   },
   installUpdate: () => ipcRenderer.invoke('install-update'),
+
+  // File operations
+  showInFolder: (data) => ipcRenderer.invoke('show-in-folder', data),
+  deleteHistoryFile: (data) => ipcRenderer.invoke('delete-history-file', data),
+  copyFileToClipboard: (data) => ipcRenderer.invoke('copy-file-to-clipboard', data),
 })

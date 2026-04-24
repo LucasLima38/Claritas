@@ -137,7 +137,7 @@ export class InkscapeShell {
    * @returns {Promise<void>} Resolves when Inkscape signals completion with `> `
    */
   async convert(emfPath, svgPath, timeout = 15_000) {
-    const actions = `file-open:${emfPath}; export-type:svg; export-filename:${svgPath}; export-do; file-close`
+    const actions = `file-open:${emfPath}; export-type:svg; export-area-drawing; export-filename:${svgPath}; export-do; file-close`
     return this.execute(actions, timeout)
   }
 }

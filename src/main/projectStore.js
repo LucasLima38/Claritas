@@ -14,6 +14,7 @@ const SETTINGS_DEFAULTS = {
   closeHides: true,
   theme: 'system',
   globalShortcut: 'Ctrl+Shift+V',
+  sidebarWidth: 200,
 }
 
 export class ProjectStore {
@@ -88,6 +89,7 @@ export class ProjectStore {
       closeHides: this._settings.get('closeHides', true),
       theme: this._settings.get('theme', 'system'),
       globalShortcut: this._settings.get('globalShortcut', ''),
+      sidebarWidth: this._settings.get('sidebarWidth', 200),
     }
   }
 

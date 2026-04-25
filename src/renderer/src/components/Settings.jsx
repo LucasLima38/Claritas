@@ -144,7 +144,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
           </Button>
         </div>
       </Card>
-      {editingId === p.id && (
+      {editingId === p.id && form && (
         <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5 mt-1">
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
@@ -313,78 +313,78 @@ export default function Settings({ onBack }) {
             </DndContext>
 
             {editingId === 'new' ? (
-                  <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-[10.5px]">Nome do projeto</Label>
-                        <Input
-                          className="h-7 text-xs"
-                          placeholder="Motor BLDC"
-                          value={form.name}
-                          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-[10.5px]">Prefixo</Label>
-                        <Input
-                          className="h-7 text-xs"
-                          placeholder="BLDC_"
-                          value={form.prefix}
-                          onChange={(e) => setForm((f) => ({ ...f, prefix: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-[10.5px]">Pasta de saída</Label>
-                      <div className="flex gap-1.5">
-                        <Input
-                          className="h-7 text-xs flex-1"
-                          placeholder="D:\Projetos\..."
-                          value={form.outputDir}
-                          onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
-                        />
-                        <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                          <FolderOpen size={12} className="mr-1" /> Explorar
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <Label className="text-[10.5px]">Cor</Label>
-                      <div className="flex gap-2 mt-0.5">
-                        {PROJECT_COLORS.map((c) => (
-                          <button
-                            key={c}
-                            onClick={() => setForm((f) => ({ ...f, color: c }))}
-                            className="w-5 h-5 rounded-full border-2 transition-all"
-                            style={{ background: c, borderColor: form.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex gap-2 pt-1">
-                      <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
-                        Adicionar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="h-7 text-xs"
-                        onClick={() => { setEditingId(null); setForm(null) }}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                  </Card>
-                ) : (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={openAdd}
-                    className="border-dashed justify-start gap-2 text-xs text-muted-foreground h-9"
-                  >
-                    <Plus size={13} /> Adicionar projeto
+              <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10.5px]">Nome do projeto</Label>
+                    <Input
+                      className="h-7 text-xs"
+                      placeholder="Motor BLDC"
+                      value={form.name}
+                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10.5px]">Prefixo</Label>
+                    <Input
+                      className="h-7 text-xs"
+                      placeholder="BLDC_"
+                      value={form.prefix}
+                      onChange={(e) => setForm((f) => ({ ...f, prefix: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <Label className="text-[10.5px]">Pasta de saída</Label>
+                  <div className="flex gap-1.5">
+                    <Input
+                      className="h-7 text-xs flex-1"
+                      placeholder="D:\Projetos\..."
+                      value={form.outputDir}
+                      onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
+                    />
+                    <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
+                      <FolderOpen size={12} className="mr-1" /> Explorar
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label className="text-[10.5px]">Cor</Label>
+                  <div className="flex gap-2 mt-0.5">
+                    {PROJECT_COLORS.map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setForm((f) => ({ ...f, color: c }))}
+                        className="w-5 h-5 rounded-full border-2 transition-all"
+                        style={{ background: c, borderColor: form.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
+                      />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
+                    Adicionar
                   </Button>
-                )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => { setEditingId(null); setForm(null) }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </Card>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openAdd}
+                className="border-dashed justify-start gap-2 text-xs text-muted-foreground h-9"
+              >
+                <Plus size={13} /> Adicionar projeto
+              </Button>
+            )}
           </div>
         </section>
 

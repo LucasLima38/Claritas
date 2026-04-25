@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
@@ -10,15 +10,47 @@ import StatusBar from './components/StatusBar.jsx'
 import Settings from './components/Settings.jsx'
 
 export default function App() {
-  useApp()
+  const { state, actions } = useApp()
   const [screen, setScreen] = useState('main')
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarWidth, setSidebarWidth] = useState(200)
+  const isResizing = useRef(false)
+
+  // Load sidebarWidth from settings once settings arrive
+  useEffect(() => {
+    if (state.settings?.sidebarWidth) {
+      setSidebarWidth(state.settings.sidebarWidth)
+    }
+  }, [state.settings?.sidebarWidth])
 
   useEffect(() => {
     return window.electronAPI.onNavigateTo((s) => {
       if (s === 'settings') setScreen('settings')
     })
   }, [])
+
+  const handleResizeMouseDown = useCallback((e) => {
+    e.preventDefault()
+    isResizing.current = true
+
+    function onMouseMove(e) {
+      if (!isResizing.current) return
+      const newWidth = Math.min(400, Math.max(140, e.clientX))
+      setSidebarWidth(newWidth)
+    }
+
+    function onMouseUp(e) {
+      if (!isResizing.current) return
+      isResizing.current = false
+      const finalWidth = Math.min(400, Math.max(140, e.clientX))
+      document.removeEventListener('mousemove', onMouseMove)
+      document.removeEventListener('mouseup', onMouseUp)
+      actions.updateSettings({ sidebarWidth: finalWidth })
+    }
+
+    document.addEventListener('mousemove', onMouseMove)
+    document.addEventListener('mouseup', onMouseUp)
+  }, [actions])
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground select-none overflow-hidden">
@@ -41,7 +73,14 @@ export default function App() {
 
       <div className="h-px bg-border shrink-0" />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} />
+        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} width={sidebarWidth} />
+
+        {sidebarOpen && (
+          <div
+            className="w-1 shrink-0 cursor-col-resize hover:bg-primary/30 transition-colors"
+            onMouseDown={handleResizeMouseDown}
+          />
+        )}
 
         <div className="flex flex-col flex-1 overflow-hidden">
           {screen === 'main' ? (

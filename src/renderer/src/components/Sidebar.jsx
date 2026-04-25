@@ -51,7 +51,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
   )
 }
 
-export default function Sidebar({ screen, onNavigate, open }) {
+export default function Sidebar({ screen, onNavigate, open, width }) {
   const { state, actions } = useApp()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
@@ -69,8 +69,9 @@ export default function Sidebar({ screen, onNavigate, open }) {
     <div
       className={cn(
         'shrink-0 bg-muted/40 border-r border-border flex flex-col overflow-hidden transition-all duration-200',
-        open ? 'w-[200px]' : 'w-[48px]'
+        !open && 'w-[48px]'
       )}
+      style={open ? { width } : undefined}
     >
       {/* Logo header */}
       <div className="flex items-center gap-2 px-2.5 py-2 border-b border-border shrink-0">

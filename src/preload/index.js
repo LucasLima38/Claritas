@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addProject: (project) => ipcRenderer.invoke('add-project', project),
   updateProject: (data) => ipcRenderer.invoke('update-project', data),
   deleteProject: (data) => ipcRenderer.invoke('delete-project', data),
+  reorderProjects: (data) => ipcRenderer.invoke('reorder-projects', data),
 
   // Settings
   getSettings: () => ipcRenderer.invoke('get-settings'),

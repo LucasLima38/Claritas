@@ -67,6 +67,13 @@ export class ProjectStore {
     }
   }
 
+  reorderProjects(ids) {
+    const projects = this.getProjects()
+    const byId = Object.fromEntries(projects.map((p) => [p.id, p]))
+    const reordered = ids.map((id) => byId[id]).filter(Boolean)
+    this._projects.set('projects', reordered)
+  }
+
   incrementCounter(projectId) {
     const project = this.getProjects().find((p) => p.id === projectId)
     if (!project) throw new Error(`Project ${projectId} not found`)

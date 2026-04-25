@@ -147,3 +147,29 @@ describe('globalShortcut setting', () => {
     expect(store.getSettings().globalShortcut).toBe('')
   })
 })
+
+describe('reorderProjects', () => {
+  let store
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    store = new ProjectStore()
+  })
+
+  it('reorders projects by the given id array', () => {
+    store.addProject({ id: 'a', name: 'A', prefix: 'A_', outputDir: '/tmp', counter: 0, color: '#fff' })
+    store.addProject({ id: 'b', name: 'B', prefix: 'B_', outputDir: '/tmp', counter: 0, color: '#fff' })
+    store.addProject({ id: 'c', name: 'C', prefix: 'C_', outputDir: '/tmp', counter: 0, color: '#fff' })
+    store.reorderProjects(['c', 'a', 'b'])
+    const ids = store.getProjects().map((p) => p.id)
+    expect(ids).toEqual(['c', 'a', 'b'])
+  })
+
+  it('ignores ids that do not exist', () => {
+    store.addProject({ id: 'a', name: 'A', prefix: 'A_', outputDir: '/tmp', counter: 0, color: '#fff' })
+    store.addProject({ id: 'b', name: 'B', prefix: 'B_', outputDir: '/tmp', counter: 0, color: '#fff' })
+    store.reorderProjects(['b', 'a', 'nonexistent'])
+    const ids = store.getProjects().map((p) => p.id)
+    expect(ids).toEqual(['b', 'a'])
+  })
+})

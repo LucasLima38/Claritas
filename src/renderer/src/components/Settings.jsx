@@ -265,6 +265,7 @@ export default function Settings({ onBack }) {
     if (!over || active.id === over.id) return
     const oldIndex = state.projects.findIndex((p) => p.id === active.id)
     const newIndex = state.projects.findIndex((p) => p.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
     const newOrder = arrayMove(state.projects, oldIndex, newIndex)
     await actions.reorderProjects(newOrder.map((p) => p.id))
   }

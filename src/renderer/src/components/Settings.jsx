@@ -290,9 +290,9 @@ export default function Settings({ onBack }) {
         <section>
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Projetos</p>
 
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-              <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
                 {state.projects.map((p) => (
                   <SortableProjectCard
                     key={p.id}
@@ -309,8 +309,10 @@ export default function Settings({ onBack }) {
                     setEditingId={setEditingId}
                   />
                 ))}
+              </SortableContext>
+            </DndContext>
 
-                {editingId === 'new' ? (
+            {editingId === 'new' ? (
                   <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
@@ -383,9 +385,7 @@ export default function Settings({ onBack }) {
                     <Plus size={13} /> Adicionar projeto
                   </Button>
                 )}
-              </div>
-            </SortableContext>
-          </DndContext>
+          </div>
         </section>
 
         <Separator />

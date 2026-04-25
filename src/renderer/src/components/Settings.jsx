@@ -16,6 +16,20 @@ import {
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { useApp } from '../context/AppContext.jsx'
+import {
+  DndContext,
+  closestCenter,
+  MouseSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 const PROJECT_COLORS = ['#2f81f7', '#27c93f', '#ff9f43', '#e74c3c', '#9b59b6', '#1abc9c']
 
@@ -79,6 +93,125 @@ function ShortcutRecorder({ value, onChange }) {
   )
 }
 
+function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDelete, onSetActive, setForm, chooseDir, submitForm, setEditingId }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card
+        className={cn(
+          'flex items-center gap-3 p-2.5 cursor-pointer transition-colors hover:bg-accent/60',
+          p.id === activeProjectId && 'bg-accent border-primary/30'
+        )}
+        onClick={() => onSetActive(p.id)}
+        {...attributes}
+        {...listeners}
+      >
+        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.color }} />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-[12.5px] font-medium truncate">{p.name}</span>
+            <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0 h-4">
+              {p.prefix}
+            </Badge>
+          </div>
+          <p className="text-[10.5px] text-muted-foreground truncate">{p.outputDir || 'Sem pasta'}</p>
+        </div>
+        <div className="flex gap-1.5 shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
+          {p.id === activeProjectId && (
+            <Check size={13} className="text-emerald-600 shrink-0" />
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-6 h-6"
+            onClick={() => onEdit(p)}
+          >
+            <Pencil size={11} />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="w-6 h-6 text-destructive hover:text-destructive"
+            onClick={() => onDelete(p.id)}
+          >
+            <Trash2 size={11} />
+          </Button>
+        </div>
+      </Card>
+      {editingId === p.id && (
+        <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5 mt-1">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10.5px]">Nome do projeto</Label>
+              <Input
+                className="h-7 text-xs"
+                placeholder="Motor BLDC"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10.5px]">Prefixo</Label>
+              <Input
+                className="h-7 text-xs"
+                placeholder="BLDC_"
+                value={form.prefix}
+                onChange={(e) => setForm((f) => ({ ...f, prefix: e.target.value }))}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <Label className="text-[10.5px]">Pasta de saída</Label>
+            <div className="flex gap-1.5">
+              <Input
+                className="h-7 text-xs flex-1"
+                placeholder="D:\Projetos\..."
+                value={form.outputDir}
+                onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
+              />
+              <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
+                <FolderOpen size={12} className="mr-1" /> Explorar
+              </Button>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label className="text-[10.5px]">Cor</Label>
+            <div className="flex gap-2 mt-0.5">
+              {PROJECT_COLORS.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setForm((f) => ({ ...f, color: c }))}
+                  className="w-5 h-5 rounded-full border-2 transition-all"
+                  style={{ background: c, borderColor: form.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
+              Salvar
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={() => { setEditingId(null); setForm(null) }}
+            >
+              Cancelar
+            </Button>
+          </div>
+        </Card>
+      )}
+    </div>
+  )
+}
+
 export default function Settings({ onBack }) {
   const { state, actions } = useApp()
   const [editingId, setEditingId] = useState(null)
@@ -123,6 +256,19 @@ export default function Settings({ onBack }) {
     if (!result.canceled) setForm((f) => ({ ...f, outputDir: result.path }))
   }
 
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 8 } })
+  )
+
+  async function handleDragEnd(event) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = state.projects.findIndex((p) => p.id === active.id)
+    const newIndex = state.projects.findIndex((p) => p.id === over.id)
+    const newOrder = arrayMove(state.projects, oldIndex, newIndex)
+    await actions.reorderProjects(newOrder.map((p) => p.id))
+  }
+
   return (
     <div className="flex-1 overflow-y-auto">
       {/* Header */}
@@ -144,50 +290,28 @@ export default function Settings({ onBack }) {
         <section>
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Projetos</p>
 
-          <div className="flex flex-col gap-2">
-            {state.projects.map((p) => (
-              <div key={p.id}>
-                <Card
-                  className={cn(
-                    'flex items-center gap-3 p-2.5 cursor-pointer transition-colors hover:bg-accent/60',
-                    p.id === state.activeProjectId && 'bg-accent border-primary/30'
-                  )}
-                  onClick={() => actions.setActiveProject(p.id)}
-                >
-                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: p.color }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[12.5px] font-medium truncate">{p.name}</span>
-                      <Badge variant="secondary" className="text-[10px] font-mono px-1.5 py-0 h-4">
-                        {p.prefix}
-                      </Badge>
-                    </div>
-                    <p className="text-[10.5px] text-muted-foreground truncate">{p.outputDir || 'Sem pasta'}</p>
-                  </div>
-                  <div className="flex gap-1.5 shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
-                    {p.id === state.activeProjectId && (
-                      <Check size={13} className="text-emerald-600 shrink-0" />
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-6 h-6"
-                      onClick={() => openEdit(p)}
-                    >
-                      <Pencil size={11} />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-6 h-6 text-destructive hover:text-destructive"
-                      onClick={() => actions.deleteProject(p.id)}
-                    >
-                      <Trash2 size={11} />
-                    </Button>
-                  </div>
-                </Card>
-                {editingId === p.id && (
-                  <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5 mt-1">
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+              <div className="flex flex-col gap-2">
+                {state.projects.map((p) => (
+                  <SortableProjectCard
+                    key={p.id}
+                    p={p}
+                    activeProjectId={state.activeProjectId}
+                    editingId={editingId}
+                    form={form}
+                    onEdit={openEdit}
+                    onDelete={actions.deleteProject}
+                    onSetActive={actions.setActiveProject}
+                    setForm={setForm}
+                    chooseDir={chooseDir}
+                    submitForm={submitForm}
+                    setEditingId={setEditingId}
+                  />
+                ))}
+
+                {editingId === 'new' ? (
+                  <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="flex flex-col gap-1">
                         <Label className="text-[10.5px]">Nome do projeto</Label>
@@ -237,7 +361,7 @@ export default function Settings({ onBack }) {
                     </div>
                     <div className="flex gap-2 pt-1">
                       <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
-                        Salvar
+                        Adicionar
                       </Button>
                       <Button
                         size="sm"
@@ -249,84 +373,19 @@ export default function Settings({ onBack }) {
                       </Button>
                     </div>
                   </Card>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={openAdd}
+                    className="border-dashed justify-start gap-2 text-xs text-muted-foreground h-9"
+                  >
+                    <Plus size={13} /> Adicionar projeto
+                  </Button>
                 )}
               </div>
-            ))}
-
-            {editingId === 'new' ? (
-              <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-[10.5px]">Nome do projeto</Label>
-                    <Input
-                      className="h-7 text-xs"
-                      placeholder="Motor BLDC"
-                      value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label className="text-[10.5px]">Prefixo</Label>
-                    <Input
-                      className="h-7 text-xs"
-                      placeholder="BLDC_"
-                      value={form.prefix}
-                      onChange={(e) => setForm((f) => ({ ...f, prefix: e.target.value }))}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10.5px]">Pasta de saída</Label>
-                  <div className="flex gap-1.5">
-                    <Input
-                      className="h-7 text-xs flex-1"
-                      placeholder="D:\Projetos\..."
-                      value={form.outputDir}
-                      onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
-                    />
-                    <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                      <FolderOpen size={12} className="mr-1" /> Explorar
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10.5px]">Cor</Label>
-                  <div className="flex gap-2 mt-0.5">
-                    {PROJECT_COLORS.map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setForm((f) => ({ ...f, color: c }))}
-                        className="w-5 h-5 rounded-full border-2 transition-all"
-                        style={{ background: c, borderColor: form.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex gap-2 pt-1">
-                  <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
-                    Adicionar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-7 text-xs"
-                    onClick={() => { setEditingId(null); setForm(null) }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </Card>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openAdd}
-                className="border-dashed justify-start gap-2 text-xs text-muted-foreground h-9"
-              >
-                <Plus size={13} /> Adicionar projeto
-              </Button>
-            )}
-          </div>
+            </SortableContext>
+          </DndContext>
         </section>
 
         <Separator />

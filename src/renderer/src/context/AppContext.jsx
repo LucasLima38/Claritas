@@ -112,6 +112,9 @@ function reducer(state, action) {
         activeProjectId: action.activeProjectId ?? state.activeProjectId,
       }
 
+    case 'REORDER_PROJECTS':
+      return { ...state, projects: action.projects }
+
     case 'SETTINGS_UPDATED':
       return { ...state, settings: action.settings }
 
@@ -260,6 +263,11 @@ export function AppProvider({ children }) {
     async deleteProject(id) {
       const result = await window.electronAPI.deleteProject({ id })
       dispatch({ type: 'PROJECTS_UPDATED', projects: result.projects, activeProjectId: result.activeProjectId })
+    },
+
+    async reorderProjects(ids) {
+      const result = await window.electronAPI.reorderProjects({ ids })
+      dispatch({ type: 'REORDER_PROJECTS', projects: result.projects })
     },
 
     async updateSettings(updates) {

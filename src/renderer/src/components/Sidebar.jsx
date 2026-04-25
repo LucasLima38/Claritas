@@ -34,6 +34,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
   }
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
@@ -59,6 +60,7 @@ export default function Sidebar({ screen, onNavigate, open }) {
     if (!over || active.id === over.id) return
     const oldIndex = state.projects.findIndex((p) => p.id === active.id)
     const newIndex = state.projects.findIndex((p) => p.id === over.id)
+    if (oldIndex < 0 || newIndex < 0) return
     const newOrder = arrayMove(state.projects, oldIndex, newIndex)
     await actions.reorderProjects(newOrder.map((p) => p.id))
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
 import { useApp } from './context/AppContext.jsx'
@@ -26,6 +27,19 @@ export default function App() {
   useEffect(() => {
     return window.electronAPI.onNavigateTo((s) => {
       if (s === 'settings') setScreen('settings')
+    })
+  }, [])
+
+  useEffect(() => {
+    return window.electronAPI.onUpdateAvailable((info) => {
+      toast(`Nova versão ${info.version} disponível`, {
+        description: 'Reinicie o app para instalar a atualização.',
+        duration: Infinity,
+        action: {
+          label: 'Reiniciar agora',
+          onClick: () => window.electronAPI.installUpdate(),
+        },
+      })
     })
   }, [])
 

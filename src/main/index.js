@@ -354,6 +354,12 @@ ipcMain.handle('delete-project', (_event, { id }) => {
   return { projects: store.getProjects(), activeProjectId: store.getActiveProjectId() }
 })
 
+ipcMain.handle('reorder-projects', (_event, { ids }) => {
+  store.reorderProjects(ids)
+  updateTrayMenu(mainWindow, store)
+  return { projects: store.getProjects() }
+})
+
 ipcMain.handle('get-settings', () => store.getSettings())
 
 ipcMain.handle('update-settings', (_event, updates) => {

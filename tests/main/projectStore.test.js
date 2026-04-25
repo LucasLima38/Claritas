@@ -122,6 +122,10 @@ describe('ProjectStore', () => {
   it('getSettings does not include conversionTimeout', () => {
     expect(store.getSettings()).not.toHaveProperty('conversionTimeout')
   })
+
+  it('getSettings returns sidebarWidth defaulting to 200', () => {
+    expect(store.getSettings().sidebarWidth).toBe(200)
+  })
 })
 
 describe('globalShortcut setting', () => {

@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { Settings, Clipboard, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -25,9 +28,40 @@ import { cn } from '@/lib/utils'
 import { useApp } from '../context/AppContext.jsx'
 import logoUrl from '../assets/logo.png'
 
+function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, collapsed }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <SidebarItem
+        icon={<span className="w-2 h-2 rounded-full shrink-0 inline-block" style={{ background: p.color }} />}
+        active={p.id === activeProjectId && screen === 'main'}
+        onClick={() => { actions.setActiveProject(p.id); onNavigate('main') }}
+        collapsed={collapsed}
+        tooltip={p.name}
+      >
+        {p.name}
+      </SidebarItem>
+    </div>
+  )
+}
+
 export default function Sidebar({ screen, onNavigate, open }) {
   const { state, actions } = useApp()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
+  const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
+  async function handleDragEnd(event) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = state.projects.findIndex((p) => p.id === active.id)
+    const newIndex = state.projects.findIndex((p) => p.id === over.id)
+    const newOrder = arrayMove(state.projects, oldIndex, newIndex)
+    await actions.reorderProjects(newOrder.map((p) => p.id))
+  }
 
   return (
     <div
@@ -78,21 +112,21 @@ export default function Sidebar({ screen, onNavigate, open }) {
         <Separator className="mx-3 my-1.5 w-auto" />
         {open && <SectionLabel>Projetos</SectionLabel>}
 
-        {state.projects.map((p) => (
-          <SidebarItem
-            key={p.id}
-            icon={<span className="w-2 h-2 rounded-full shrink-0 inline-block" style={{ background: p.color }} />}
-            active={p.id === state.activeProjectId && screen === 'main'}
-            onClick={() => {
-              actions.setActiveProject(p.id)
-              onNavigate('main')
-            }}
-            collapsed={!open}
-            tooltip={p.name}
-          >
-            {p.name}
-          </SidebarItem>
-        ))}
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+            {state.projects.map((p) => (
+              <SortableSidebarItem
+                key={p.id}
+                p={p}
+                activeProjectId={state.activeProjectId}
+                screen={screen}
+                onNavigate={onNavigate}
+                actions={actions}
+                collapsed={!open}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
 
         {state.projects.length === 0 && open && (
           <p className="text-[11px] text-muted-foreground px-3 py-1 italic">Nenhum projeto</p>

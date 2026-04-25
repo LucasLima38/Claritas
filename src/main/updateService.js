@@ -2,7 +2,7 @@ import { autoUpdater } from 'electron-updater'
 
 export function initAutoUpdater(mainWindow, ipcMain) {
   autoUpdater.autoDownload = true
-  autoUpdater.autoInstallOnAppQuit = false
+  autoUpdater.autoInstallOnAppQuit = true
 
   autoUpdater.on('update-downloaded', (info) => {
     mainWindow.webContents.send('update-available', {

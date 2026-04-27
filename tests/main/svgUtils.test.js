@@ -49,3 +49,25 @@ describe('getSVGMetadata()', () => {
     expect(meta.conversionMs).toBe(1234)
   })
 })
+
+describe('optimizeSvg()', () => {
+  it('strips XML comments from SVG', () => {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><!-- comment --><rect width="50" height="50"/></svg>'
+    const result = optimizeSvg(svg)
+    expect(result).not.toContain('<!-- comment -->')
+  })
+
+  it('preserves viewBox attribute', () => {
+    const svg =
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 148"><rect width="50" height="50"/></svg>'
+    const result = optimizeSvg(svg)
+    expect(result).toContain('viewBox="0 0 210 148"')
+  })
+
+  it('returns original SVG string unchanged when SVGO throws', () => {
+    const malformed = 'not valid svg at all <<<'
+    const result = optimizeSvg(malformed)
+    expect(result).toBe(malformed)
+  })
+})

@@ -155,9 +155,18 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 app.whenReady().then(() => {
-  protocol.handle('localfile', (request) => {
-    const url = request.url.replace('localfile://', 'file://')
-    return net.fetch(url)
+  protocol.handle('localfile', async (request) => {
+    const MIME = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.pdf': 'application/pdf' }
+    try {
+      // Strip scheme: "localfile:///C:/path/..." → "C:/path/..."
+      const filePath = decodeURIComponent(request.url.slice('localfile:///'.length))
+      const data = await fsp.readFile(filePath)
+      const mime = MIME[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream'
+      return new Response(data, { headers: { 'Content-Type': mime } })
+    } catch (err) {
+      console.error('[localfile]', err.message)
+      return new Response(null, { status: 404 })
+    }
   })
 
   mainWindow = createWindow()

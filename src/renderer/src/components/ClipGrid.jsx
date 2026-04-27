@@ -108,18 +108,24 @@ function ClipCard({ entry }) {
       <ContextMenuTrigger asChild>
         <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-default p-0">
           {/* Thumbnail */}
-          <div className="h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
+          <div className="relative h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
             {isPdf ? (
               <FileText size={28} className="text-muted-foreground/50" />
             ) : (
-              <img
-                src={fileUrl}
-                alt={entry.filename}
-                className="w-full h-full object-contain p-1"
-                style={{ imageRendering: 'crisp-edges' }}
-                draggable={false}
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-              />
+              <>
+                <img
+                  src={fileUrl}
+                  alt={entry.filename}
+                  className="w-full h-full object-contain p-1"
+                  style={{ imageRendering: 'crisp-edges' }}
+                  draggable={false}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                    e.currentTarget.parentElement.querySelector('.fallback-icon')?.classList.remove('hidden')
+                  }}
+                />
+                <FileText size={28} className="fallback-icon hidden text-muted-foreground/50 absolute" />
+              </>
             )}
           </div>
           {/* Info */}

@@ -21,9 +21,6 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import { createRequire } from 'module'
 
-const require = createRequire(import.meta.url)
-const { path7za } = require('7zip-bin')
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const RESOURCES_DIR = path.join(ROOT, 'resources')
@@ -65,6 +62,8 @@ async function main() {
   console.log('  → Checksum OK.')
 
   console.log('Extracting (this may take a minute)...')
+  const require = createRequire(import.meta.url)
+  const { path7za } = require('7zip-bin')
   execFileSync(path7za, ['x', TMP_FILE, `-o${RESOURCES_DIR}`, '-y'], { stdio: 'inherit' })
 
   // The 7z archive extracts to a versioned subdirectory, e.g. inkscape-1.4.3_.../

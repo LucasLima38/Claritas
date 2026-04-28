@@ -6,7 +6,7 @@ import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
 import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat } from './conversionService.js'
-import { InkscapeShell } from './inkscapeShell.js'
+import { Libemf2svgShell } from './libemf2svgShell.js'
 import { generateFilenameWithExt, checkOutputDir } from './saveService.js'
 import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
@@ -28,7 +28,13 @@ function resolveInkExe() {
     : path.join(process.resourcesPath, 'inkscape/bin/inkscape.exe')
 }
 
-const inkscapeShell = new InkscapeShell(resolveInkExe())
+function resolveLibemf2svgDir() {
+  return is.dev
+    ? path.join(process.cwd(), 'resources/libemf2svg')
+    : path.join(process.resourcesPath, 'libemf2svg')
+}
+
+const inkscapeShell = new Libemf2svgShell(resolveLibemf2svgDir(), resolveInkExe())
 
 let mainWindow = null
 let tray = null

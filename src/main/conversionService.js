@@ -12,29 +12,42 @@ export function setShell(shell) {
   _shell = shell
 }
 
-export async function exportToFormat(svgContent, format, outputPath, timeout = 30_000) {
+export async function exportToFormat(svgContent, format, outputPath) {
   if (format === 'svg') {
     await fsp.writeFile(outputPath, svgContent, 'utf8')
     return
   }
-  if (!_shell) throw new Error('SHELL_NOT_INITIALIZED')
-
-  const tmpSvg = path.join(os.tmpdir(), `schclip_exp_${randomUUID()}.svg`)
-  await fsp.writeFile(tmpSvg, svgContent, 'utf8')
-  try {
-    const inkFormat = format === 'jpg' ? 'jpeg' : format
-    const parts = [
-      `file-open:${tmpSvg}`,
-      `export-type:${inkFormat}`,
-    ]
-    if (format !== 'pdf') parts.push('export-dpi:300')
-    if (format === 'jpg')  parts.push('export-jpeg-quality:95')
-    parts.push(`export-filename:${outputPath}`, 'export-do', 'file-close')
-    const actions = parts.join('; ')
-    await _shell.execute(actions, timeout)
-  } finally {
-    await fsp.unlink(tmpSvg).catch(() => {})
+  if (format === 'png') {
+    const { Resvg } = await import('@resvg/resvg-js')
+    const resvg = new Resvg(svgContent, { dpi: 300 })
+    await fsp.writeFile(outputPath, resvg.render().asPng())
+    return
   }
+  if (format === 'jpg') {
+    const { Resvg } = await import('@resvg/resvg-js')
+    const sharp = (await import('sharp')).default
+    const resvg = new Resvg(svgContent, { dpi: 300 })
+    const pngBuffer = resvg.render().asPng()
+    const jpgBuffer = await sharp(pngBuffer).jpeg({ quality: 95 }).toBuffer()
+    await fsp.writeFile(outputPath, jpgBuffer)
+    return
+  }
+  if (format === 'pdf') {
+    const PDFDocument = (await import('pdfkit')).default
+    const SVGtoPDF = (await import('svg-to-pdfkit')).default
+    await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({ autoFirstPage: false })
+      const chunks = []
+      doc.on('data', c => chunks.push(c))
+      doc.on('end', () => fsp.writeFile(outputPath, Buffer.concat(chunks)).then(resolve).catch(reject))
+      doc.on('error', reject)
+      doc.addPage()
+      SVGtoPDF(doc, svgContent, 0, 0)
+      doc.end()
+    })
+    return
+  }
+  throw new Error(`Formato não suportado: ${format}`)
 }
 
 export async function convert(emfBuffer, timeout = 15_000) {

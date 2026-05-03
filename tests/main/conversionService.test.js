@@ -17,6 +17,61 @@ vi.mock('fs', async (importOriginal) => {
 
 vi.mock('electron', () => ({ app: { getPath: vi.fn() } }))
 
+// ── Mocks for dynamic imports inside exportToFormat() ─────────────────────
+
+const {
+  mockResvgCtor,
+  mockAsPng,
+  mockSharp,
+  mockJpegFn,
+  mockToBuffer,
+  mockPDFDocCtor,
+  mockPDFDocInstance,
+  mockSVGtoPDF,
+} = vi.hoisted(() => {
+  const mockAsPng = vi.fn().mockReturnValue(Buffer.from('png-data'))
+  const mockRender = vi.fn().mockReturnValue({ asPng: mockAsPng })
+  const mockResvgCtor = vi.fn(function () { this.render = mockRender })
+
+  const mockToBuffer = vi.fn().mockResolvedValue(Buffer.from('jpg-data'))
+  const mockJpegFn = vi.fn().mockReturnValue({ toBuffer: mockToBuffer })
+  const mockSharp = vi.fn().mockReturnValue({ jpeg: mockJpegFn })
+
+  const mockSVGtoPDF = vi.fn()
+
+  // pdf doc that auto-fires data + end when doc.end() is called
+  const listeners = {}
+  const mockPDFDocInstance = {
+    on: vi.fn().mockImplementation((event, cb) => { listeners[event] = cb }),
+    addPage: vi.fn(),
+    end: vi.fn().mockImplementation(() => {
+      if (listeners.data) listeners.data(Buffer.from('pdf-chunk'))
+      if (listeners.end) listeners.end()
+    }),
+  }
+  const mockPDFDocCtor = vi.fn(function () {
+    this.on = mockPDFDocInstance.on
+    this.addPage = mockPDFDocInstance.addPage
+    this.end = mockPDFDocInstance.end
+  })
+
+  return {
+    mockResvgCtor,
+    mockAsPng,
+    mockSharp,
+    mockJpegFn,
+    mockToBuffer,
+    mockPDFDocCtor,
+    mockPDFDocInstance,
+    mockSVGtoPDF,
+  }
+})
+
+vi.mock('@resvg/resvg-js', () => ({ Resvg: mockResvgCtor }))
+vi.mock('sharp', () => ({ default: mockSharp }))
+vi.mock('pdfkit', () => ({ default: mockPDFDocCtor }))
+vi.mock('svg-to-pdfkit', () => ({ default: mockSVGtoPDF }))
+
 const { convert, setShell, exportToFormat } = await import(
   '../../src/main/conversionService.js'
 )
@@ -69,58 +124,52 @@ describe('ConversionService', () => {
 })
 
 describe('exportToFormat()', () => {
-  it('writes SVG content directly for format "svg" without calling shell', async () => {
-    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
-    setShell(mockShell)
+  const SVG = '<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>'
+
+  beforeEach(() => vi.clearAllMocks())
+
+  it('writes SVG content directly for format "svg"', async () => {
     const { promises: fsp } = await import('fs')
-
-    const content = '<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>'
-    await exportToFormat(content, 'svg', '/tmp/out.svg')
-
-    expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.svg', content, 'utf8')
-    expect(mockShell.execute).not.toHaveBeenCalled()
+    await exportToFormat(SVG, 'svg', '/tmp/out.svg')
+    expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.svg', SVG, 'utf8')
   })
 
-  it('calls _shell.execute() with correct PNG action string', async () => {
-    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
-    setShell(mockShell)
+  it('renders PNG via Resvg at 300 DPI and writes the buffer', async () => {
+    const { promises: fsp } = await import('fs')
+    await exportToFormat(SVG, 'png', '/tmp/out.png')
 
-    await exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'png', '/tmp/out.png')
-
-    expect(mockShell.execute).toHaveBeenCalledOnce()
-    const [actionsArg] = mockShell.execute.mock.calls[0]
-    expect(actionsArg).toContain('export-type:png')
-    expect(actionsArg).toContain('export-dpi:300')
-    expect(actionsArg).toContain('export-filename:/tmp/out.png')
+    expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { dpi: 300 })
+    expect(mockAsPng).toHaveBeenCalledOnce()
+    expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.png', Buffer.from('png-data'))
   })
 
-  it('uses "jpeg" (not "jpg") and adds quality for JPG format', async () => {
-    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
-    setShell(mockShell)
+  it('renders JPEG via Resvg→sharp at quality 95 and writes the buffer', async () => {
+    const { promises: fsp } = await import('fs')
+    await exportToFormat(SVG, 'jpg', '/tmp/out.jpg')
 
-    await exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'jpg', '/tmp/out.jpg')
-
-    const [actionsArg] = mockShell.execute.mock.calls[0]
-    expect(actionsArg).toContain('export-type:jpeg')
-    expect(actionsArg).toContain('export-jpeg-quality:95')
-    expect(actionsArg).toContain('export-dpi:300')
+    expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { dpi: 300 })
+    expect(mockSharp).toHaveBeenCalledWith(Buffer.from('png-data'))
+    expect(mockJpegFn).toHaveBeenCalledWith({ quality: 95 })
+    expect(mockToBuffer).toHaveBeenCalledOnce()
+    expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.jpg', Buffer.from('jpg-data'))
   })
 
-  it('omits DPI for PDF format', async () => {
-    const mockShell = { execute: vi.fn().mockResolvedValue(undefined) }
-    setShell(mockShell)
+  it('generates vector PDF via pdfkit+svg-to-pdfkit and writes the buffer', async () => {
+    const { promises: fsp } = await import('fs')
+    await exportToFormat(SVG, 'pdf', '/tmp/out.pdf')
 
-    await exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'pdf', '/tmp/out.pdf')
-
-    const [actionsArg] = mockShell.execute.mock.calls[0]
-    expect(actionsArg).toContain('export-type:pdf')
-    expect(actionsArg).not.toContain('export-dpi')
+    expect(mockPDFDocCtor).toHaveBeenCalledWith({ autoFirstPage: false })
+    const docInstance = mockPDFDocCtor.mock.instances[0]
+    expect(mockSVGtoPDF).toHaveBeenCalledWith(docInstance, SVG, 0, 0)
+    expect(fsp.writeFile).toHaveBeenCalledWith(
+      '/tmp/out.pdf',
+      Buffer.concat([Buffer.from('pdf-chunk')])
+    )
   })
 
-  it('throws SHELL_NOT_INITIALIZED when shell is not set and format is png', async () => {
-    setShell(null)
-    await expect(
-      exportToFormat('<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>', 'png', '/tmp/out.png')
-    ).rejects.toThrow('SHELL_NOT_INITIALIZED')
+  it('throws "Formato não suportado" for unknown format', async () => {
+    await expect(exportToFormat(SVG, 'xyz', '/tmp/out.xyz')).rejects.toThrow(
+      'Formato não suportado: xyz'
+    )
   })
 })

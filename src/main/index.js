@@ -22,19 +22,13 @@ const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
 
 // ── Inkscape shell ────────────────────────────────────────────────────────
 
-function resolveInkExe() {
-  return is.dev
-    ? path.join(process.cwd(), 'resources/inkscape/bin/inkscape.exe')
-    : path.join(process.resourcesPath, 'inkscape/bin/inkscape.exe')
-}
-
 function resolveLibemf2svgDir() {
   return is.dev
     ? path.join(process.cwd(), 'resources/libemf2svg')
     : path.join(process.resourcesPath, 'libemf2svg')
 }
 
-const inkscapeShell = new Libemf2svgShell(resolveLibemf2svgDir(), resolveInkExe())
+const inkscapeShell = new Libemf2svgShell(resolveLibemf2svgDir())
 
 let mainWindow = null
 let tray = null
@@ -53,8 +47,6 @@ function flushUnsentToRenderer() {
 }
 
 const clipboardMonitor = new ClipboardMonitor(async (emfBuffer) => {
-  // Only auto-convert when shell is ready and not already busy
-  if (!inkscapeShell.ready || inkscapeShell.busy) return
   try {
     const svgContent = await convert(emfBuffer)
     if (!isValidSVG(svgContent)) return
@@ -178,14 +170,7 @@ app.whenReady().then(() => {
   mainWindow = createWindow()
   tray = createTray(mainWindow, store)
 
-  // Start the bundled Inkscape shell (non-blocking for window show)
-  inkscapeShell.start().then(() => {
-    setShell(inkscapeShell)
-    mainWindow.webContents.send('shell-status', { status: 'ready' })
-  }).catch((err) => {
-    console.error('Inkscape shell failed to start:', err.message)
-    mainWindow.webContents.send('shell-status', { status: 'error', message: err.message })
-  })
+  setShell(inkscapeShell)
 
   applyGlobalShortcut(store.getSettings().globalShortcut)
   clipboardMonitor.start()
@@ -206,9 +191,6 @@ app.whenReady().then(() => {
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.send('theme-changed', {
       isDark: nativeTheme.shouldUseDarkColors,
-    })
-    mainWindow.webContents.send('shell-status', {
-      status: inkscapeShell.ready ? 'ready' : 'starting',
     })
   })
 })
@@ -240,14 +222,6 @@ ipcMain.handle('paste-schematic', async () => {
     return { error: 'NO_EMF', message: 'Nenhum esquemático vetorial encontrado no clipboard.' }
   }
 
-  if (!inkscapeShell.ready) {
-    return { error: 'NOT_READY', message: 'Inkscape ainda está iniciando. Tente novamente em alguns segundos.' }
-  }
-
-  if (inkscapeShell.busy) {
-    return { error: 'BUSY' }
-  }
-
   const startTime = Date.now()
 
   try {
@@ -266,7 +240,7 @@ ipcMain.handle('paste-schematic', async () => {
     return { ok: true, svgContent, metadata }
   } catch (err) {
     if (err.message === 'TIMEOUT') {
-      return { error: 'TIMEOUT', message: 'O Inkscape demorou mais de 15s. Tente novamente.' }
+      return { error: 'TIMEOUT', message: 'A conversão demorou mais de 15s. Tente novamente.' }
     }
     return { error: 'ERROR', message: `Erro de conversão: ${err.message}` }
   }
@@ -286,10 +260,6 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
   const dirCheck = await checkOutputDir(project.outputDir)
   if (!dirCheck.exists) {
     return { dirMissing: true, outputDir: project.outputDir }
-  }
-
-  if (format !== 'svg' && inkscapeShell.busy) {
-    return { error: 'BUSY', message: 'Inkscape está ocupado. Tente novamente em instantes.' }
   }
 
   const filename = generateFilenameWithExt(project.prefix, project.counter + 1, format)
@@ -316,7 +286,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
       return { error: 'EACCES', message: 'Sem permissão de escrita na pasta de destino.' }
     }
     if (err.message === 'TIMEOUT') {
-      return { error: 'TIMEOUT', message: 'O Inkscape demorou mais de 30s ao exportar. Tente novamente.' }
+      return { error: 'TIMEOUT', message: 'A exportação demorou mais de 30s. Tente novamente.' }
     }
     return { error: 'ERROR', message: err.message }
   }
@@ -429,7 +399,7 @@ ipcMain.handle('get-init-data', () => {
     activeProjectId,
     settings: store.getSettings(),
     history: store.getHistory(),
-    shellStatus: inkscapeShell.ready ? 'ready' : 'starting',
+    shellStatus: 'ready',
   }
 })
 

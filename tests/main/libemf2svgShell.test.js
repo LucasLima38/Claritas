@@ -18,31 +18,44 @@ function makeMockProc({ exitCode = 0 } = {}) {
 const { Libemf2svgShell } = await import('../../src/main/libemf2svgShell.js')
 
 const FAKE_DIR = 'C:\\resources\\libemf2svg'
-const FAKE_INK = 'C:\\resources\\inkscape\\bin\\inkscape.exe'
 
 describe('Libemf2svgShell', () => {
   let shell
-  let inkProc  // mock child_process for InkscapeShell internal
+  let emfProc
 
   beforeEach(() => {
     vi.clearAllMocks()
-    inkProc = makeMockProc()
-    mockSpawn.mockReturnValue(inkProc)
-    shell = new Libemf2svgShell(FAKE_DIR, FAKE_INK)
+    emfProc = makeMockProc()
+    mockSpawn.mockReturnValue(emfProc)
+    shell = new Libemf2svgShell(FAKE_DIR)
   })
 
   afterEach(() => {
     vi.useRealTimers()
   })
 
-  // ── start() / ready ───────────────────────────────────────────────────────
+  // ── ready / busy ──────────────────────────────────────────────────────────
+
+  it('ready is always true', () => {
+    expect(shell.ready).toBe(true)
+  })
+
+  it('busy is always false', () => {
+    expect(shell.busy).toBe(false)
+  })
+
+  // ── start() / stop() ──────────────────────────────────────────────────────
 
   describe('start()', () => {
-    it('delegates startup to the wrapped InkscapeShell', async () => {
-      const p = shell.start()
-      inkProc.stdout.emit('data', '> ')
-      await expect(p).resolves.toBeUndefined()
-      expect(shell.ready).toBe(true)
+    it('resolves immediately without spawning any process', async () => {
+      await expect(shell.start()).resolves.toBeUndefined()
+      expect(mockSpawn).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('stop()', () => {
+    it('is a no-op', () => {
+      expect(() => shell.stop()).not.toThrow()
     })
   })
 
@@ -50,17 +63,6 @@ describe('Libemf2svgShell', () => {
 
   describe('convert()', () => {
     it('spawns emf2svg-conv.exe with -i and -o flags and resolves on exit code 0', async () => {
-      const emfProc = makeMockProc()
-      // First spawn call goes to InkscapeShell startup; second is for emf2svg-conv
-      mockSpawn
-        .mockReturnValueOnce(inkProc)   // InkscapeShell internal
-        .mockReturnValueOnce(emfProc)   // emf2svg-conv
-
-      // Start the inkscape side
-      const startP = shell.start()
-      inkProc.stdout.emit('data', '> ')
-      await startP
-
       const p = shell.convert('C:\\tmp\\in.emf', 'C:\\tmp\\out.svg')
 
       expect(mockSpawn).toHaveBeenCalledWith(
@@ -74,15 +76,6 @@ describe('Libemf2svgShell', () => {
     })
 
     it('rejects when emf2svg-conv.exe exits with non-zero code', async () => {
-      const emfProc = makeMockProc()
-      mockSpawn
-        .mockReturnValueOnce(inkProc)
-        .mockReturnValueOnce(emfProc)
-
-      const startP = shell.start()
-      inkProc.stdout.emit('data', '> ')
-      await startP
-
       const p = shell.convert('in.emf', 'out.svg')
       emfProc.emit('close', 1)
       await expect(p).rejects.toThrow('emf2svg-conv exited with code 1')
@@ -90,40 +83,12 @@ describe('Libemf2svgShell', () => {
 
     it('rejects with TIMEOUT and kills the process when timeout expires', async () => {
       vi.useFakeTimers()
-      const emfProc = makeMockProc()
-      mockSpawn
-        .mockReturnValueOnce(inkProc)
-        .mockReturnValueOnce(emfProc)
-
-      const startP = shell.start()
-      inkProc.stdout.emit('data', '> ')
-      await startP
 
       const p = shell.convert('in.emf', 'out.svg', 200)
       p.catch(() => {})
       await vi.advanceTimersByTimeAsync(300)
       await expect(p).rejects.toThrow('TIMEOUT')
       expect(emfProc.kill).toHaveBeenCalled()
-    })
-  })
-
-  // ── execute() delegates to InkscapeShell ─────────────────────────────────
-
-  describe('execute()', () => {
-    async function startShell() {
-      const p = shell.start()
-      inkProc.stdout.emit('data', '> ')
-      await p
-    }
-
-    it('delegates execute() to the wrapped InkscapeShell', async () => {
-      await startShell()
-
-      const p = shell.execute('file-open:test.svg; export-do')
-      expect(inkProc.stdin.write).toHaveBeenCalledWith('file-open:test.svg; export-do\n')
-
-      inkProc.stdout.emit('data', '> ')
-      await expect(p).resolves.toBeUndefined()
     })
   })
 })

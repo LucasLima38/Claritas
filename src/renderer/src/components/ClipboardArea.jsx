@@ -20,30 +20,11 @@ export default function ClipboardArea() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [state.status, state.shellStatus, actions])
 
-  if (state.status === 'idle' && state.shellStatus === 'starting') {
-    return (
-      <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
-        <Loader2 size={28} className="mx-auto mb-2 text-amber-400 animate-spin" />
-        <p className="text-sm font-medium">Iniciando Inkscape…</p>
-        <p className="text-xs text-muted-foreground mt-1">Pronto em alguns segundos</p>
-      </div>
-    )
-  }
-
-  if (state.status === 'idle' && state.shellStatus === 'error') {
-    return (
-      <div className="border-2 border-dashed border-destructive/50 rounded-lg bg-destructive/5 p-7 text-center">
-        <p className="text-sm font-medium text-destructive">Inkscape não iniciou</p>
-        <p className="text-xs text-muted-foreground mt-1">Verifique a instalação do Inkscape e reinicie o app</p>
-      </div>
-    )
-  }
-
   if (state.status === 'converting') {
     return (
       <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
         <Loader2 size={28} className="mx-auto mb-2 text-primary animate-spin" />
-        <p className="text-sm font-medium">Convertendo com Inkscape...</p>
+        <p className="text-sm font-medium">Convertendo...</p>
         <p className="text-xs text-muted-foreground mt-1">Aguarde até 15 segundos</p>
       </div>
     )

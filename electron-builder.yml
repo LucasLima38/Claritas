@@ -35,7 +35,7 @@ nsis:
   createStartMenuShortcut: true
   shortcutName: Claritas
 
-npmRebuild: false
+npmRebuild: true
 publish:
   provider: github
   owner: LucasLima38

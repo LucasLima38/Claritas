@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 const initialState = {
   status: 'idle',
-  shellStatus: 'starting',
+  shellStatus: 'ready',
   svgContent: null,
   svgMetadata: null,
   previewQueue: [],

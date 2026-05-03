@@ -20,7 +20,7 @@ const store = new ProjectStore()
 
 const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
 
-// ── Inkscape shell ────────────────────────────────────────────────────────
+// ── Conversion shell ──────────────────────────────────────────────────────
 
 function resolveLibemf2svgDir() {
   return is.dev
@@ -28,7 +28,7 @@ function resolveLibemf2svgDir() {
     : path.join(process.resourcesPath, 'libemf2svg')
 }
 
-const inkscapeShell = new Libemf2svgShell(resolveLibemf2svgDir())
+const conversionShell = new Libemf2svgShell(resolveLibemf2svgDir())
 
 let mainWindow = null
 let tray = null
@@ -170,7 +170,7 @@ app.whenReady().then(() => {
   mainWindow = createWindow()
   tray = createTray(mainWindow, store)
 
-  setShell(inkscapeShell)
+  setShell(conversionShell)
 
   applyGlobalShortcut(store.getSettings().globalShortcut)
   clipboardMonitor.start()
@@ -201,7 +201,7 @@ app.on('window-all-closed', () => {
 
 app.on('before-quit', () => {
   clipboardMonitor.stop()
-  inkscapeShell.stop()
+  conversionShell.stop()
   if (_registeredShortcut) globalShortcut.unregister(_registeredShortcut)
 })
 

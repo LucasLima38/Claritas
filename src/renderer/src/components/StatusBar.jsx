@@ -4,8 +4,6 @@ export default function StatusBar() {
   const { state } = useApp()
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
 
-  const isStarting = state.shellStatus === 'starting'
-  const isError = state.shellStatus === 'error'
   const isConverting = state.status === 'converting'
   const isPreview = state.status === 'preview' || state.status === 'saving'
 
@@ -18,16 +16,13 @@ export default function StatusBar() {
       <div className="flex items-center gap-1.5">
         <span
           className={`w-1.5 h-1.5 rounded-full ${
-            isError      ? 'bg-red-500' :
-            (isStarting || isConverting) ? 'bg-amber-400 animate-pulse' :
+            isConverting ? 'bg-amber-400 animate-pulse' :
             isPreview    ? 'bg-blue-400 animate-pulse' :
                            'bg-emerald-400'
           }`}
         />
         <span>
-          {isError      ? 'Inkscape não iniciou' :
-           isStarting   ? 'Iniciando Inkscape…' :
-           isConverting ? 'Convertendo...' :
+          {isConverting ? 'Convertendo...' :
            isPreview    ? 'Aguardando confirmação' :
                           'Monitorando'}
         </span>

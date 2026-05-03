@@ -13,10 +13,6 @@ asarUnpack:
   - resources/**
 
 extraResources:
-  - from: resources/inkscape
-    to: inkscape
-    filter:
-      - "**/*"
   - from: resources/libemf2svg
     to: libemf2svg
     filter:

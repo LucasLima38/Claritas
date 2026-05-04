@@ -36,7 +36,8 @@ export default function ClipGrid() {
     const idx = state.history.findIndex((e) => e.id === entry.id)
     if (idx === -1) { setSelectedIndex(null); return }
     const lengthBefore = state.history.length
-    await actions.deleteHistoryEntry(entry)
+    const ok = await actions.deleteHistoryEntry(entry)
+    if (!ok) { toast.error('Não foi possível remover o arquivo'); return }
     toast.success(`${entry.filename} removido`)
     if (lengthBefore === 1) {
       setSelectedIndex(null)

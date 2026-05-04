@@ -47,7 +47,11 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
   }
 
   async function handleShowInFolder() {
-    await window.electronAPI.showInFolder({ fullPath: entry.fullPath })
+    try {
+      await window.electronAPI.showInFolder({ fullPath: entry.fullPath })
+    } catch {
+      toast.error('Não foi possível abrir a pasta')
+    }
   }
 
   return (

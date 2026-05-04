@@ -185,3 +185,12 @@
 .app-region-no-drag {
   -webkit-app-region: no-drag;
 }
+
+/* Lightbox image area: always light so dark-line schematics are visible */
+.lightbox-preview-bg { background-color: hsl(0 0% 97%); }
+.dark              .lightbox-preview-bg { background-color: hsl(0 0% 92%); }
+.theme-snnabb      .lightbox-preview-bg { background-color: hsl(40 20% 94%); }
+.theme-charcoal    .lightbox-preview-bg { background-color: hsl(0 0% 90%); }
+.theme-black-moon  .lightbox-preview-bg { background-color: hsl(0 0% 91%); }
+.theme-claritas    .lightbox-preview-bg { background-color: hsl(45 50% 94%); }
+.theme-blue-moon   .lightbox-preview-bg { background-color: hsl(220 15% 90%); }

@@ -34,6 +34,7 @@ export default function ClipGrid() {
 
   async function handleLightboxDelete(entry) {
     const idx = state.history.findIndex((e) => e.id === entry.id)
+    if (idx === -1) { setSelectedIndex(null); return }
     const lengthBefore = state.history.length
     await actions.deleteHistoryEntry(entry)
     toast.success(`${entry.filename} removido`)
@@ -42,7 +43,6 @@ export default function ClipGrid() {
     } else if (idx >= lengthBefore - 1) {
       setSelectedIndex(idx - 1)
     }
-    // else: selectedIndex stays the same — now points to the next entry
   }
 
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
@@ -83,7 +83,7 @@ export default function ClipGrid() {
 
       <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
         {state.history.map((entry, i) => (
-          <ClipCard key={entry.id} entry={entry} onOpen={() => setSelectedIndex(i)} />
+          <ClipCard key={entry.id} entry={entry} onOpen={() => setSelectedIndex(i)} onDelete={handleLightboxDelete} />
         ))}
 
         {nextName && (
@@ -107,8 +107,7 @@ export default function ClipGrid() {
   )
 }
 
-function ClipCard({ entry, onOpen }) {
-  const { actions } = useApp()
+function ClipCard({ entry, onOpen, onDelete }) {
   const isPdf = entry.filename.endsWith('.pdf')
   const fileUrl = toFileUrl(entry.fullPath)
   const thumbUrl = entry.thumbPath ? toFileUrl(entry.thumbPath) : null
@@ -117,11 +116,6 @@ function ClipCard({ entry, onOpen }) {
     const result = await window.electronAPI.copyFileToClipboard({ fullPath: entry.fullPath })
     if (result.ok) toast.success('Arquivo copiado para o clipboard')
     else toast.error('Não foi possível copiar o arquivo')
-  }
-
-  async function handleDelete() {
-    await actions.deleteHistoryEntry(entry)
-    toast.success(`${entry.filename} removido`)
   }
 
   async function handleShowInFolder() {
@@ -171,7 +165,7 @@ function ClipCard({ entry, onOpen }) {
           Ir para a pasta
         </ContextMenuItem>
         <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive">
+        <ContextMenuItem onClick={() => onDelete(entry)} className="text-destructive focus:text-destructive">
           Deletar arquivo
         </ContextMenuItem>
       </ContextMenuContent>

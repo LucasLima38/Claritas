@@ -134,11 +134,11 @@ describe('exportToFormat()', () => {
     expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.svg', SVG, 'utf8')
   })
 
-  it('renders PNG via Resvg at 300 DPI and writes the buffer', async () => {
+  it('renders PNG via Resvg at 300/96 zoom and writes the buffer', async () => {
     const { promises: fsp } = await import('fs')
     await exportToFormat(SVG, 'png', '/tmp/out.png')
 
-    expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { dpi: 300 })
+    expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { fitTo: { mode: 'zoom', value: 300 / 96 } })
     expect(mockAsPng).toHaveBeenCalledOnce()
     expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.png', Buffer.from('png-data'))
   })
@@ -147,7 +147,7 @@ describe('exportToFormat()', () => {
     const { promises: fsp } = await import('fs')
     await exportToFormat(SVG, 'jpg', '/tmp/out.jpg')
 
-    expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { dpi: 300 })
+    expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { fitTo: { mode: 'zoom', value: 300 / 96 } })
     expect(mockSharp).toHaveBeenCalledWith(Buffer.from('png-data'))
     expect(mockJpegFn).toHaveBeenCalledWith({ quality: 95 })
     expect(mockToBuffer).toHaveBeenCalledOnce()

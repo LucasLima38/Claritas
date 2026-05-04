@@ -19,14 +19,14 @@ export async function exportToFormat(svgContent, format, outputPath) {
   }
   if (format === 'png') {
     const { Resvg } = await import('@resvg/resvg-js')
-    const resvg = new Resvg(svgContent, { dpi: 300 })
+    const resvg = new Resvg(svgContent, { fitTo: { mode: 'zoom', value: 300 / 96 } })
     await fsp.writeFile(outputPath, resvg.render().asPng())
     return
   }
   if (format === 'jpg') {
     const { Resvg } = await import('@resvg/resvg-js')
     const sharp = (await import('sharp')).default
-    const resvg = new Resvg(svgContent, { dpi: 300 })
+    const resvg = new Resvg(svgContent, { fitTo: { mode: 'zoom', value: 300 / 96 } })
     const pngBuffer = resvg.render().asPng()
     const jpgBuffer = await sharp(pngBuffer).jpeg({ quality: 95 }).toBuffer()
     await fsp.writeFile(outputPath, jpgBuffer)

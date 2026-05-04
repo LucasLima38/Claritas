@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
-import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat } from './conversionService.js'
+import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat, generateThumbnail } from './conversionService.js'
 import { Libemf2svgShell } from './libemf2svgShell.js'
 import { generateFilenameWithExt, checkOutputDir } from './saveService.js'
 import { ClipboardMonitor } from './clipboardMonitor.js'
@@ -269,10 +269,22 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
     await exportToFormat(pendingSVG.svgContent, format, fullPath)
     const { size: sizeBytes } = await fsp.stat(fullPath)
     const newCounter = store.incrementCounter(projectId)
+    const entryId = crypto.randomUUID()
+
+    let thumbPath = null
+    if (format === 'pdf') {
+      const thumbsDir = path.join(app.getPath('userData'), 'thumbs')
+      await fsp.mkdir(thumbsDir, { recursive: true })
+      thumbPath = path.join(thumbsDir, `${entryId}.png`)
+      const thumbBuffer = await generateThumbnail(pendingSVG.svgContent)
+      await fsp.writeFile(thumbPath, thumbBuffer)
+    }
+
     const entry = {
-      id: crypto.randomUUID(),
+      id: entryId,
       filename,
       fullPath,
+      ...(thumbPath && { thumbPath }),
       projectId,
       timestamp: new Date().toISOString(),
       sizeBytes,
@@ -423,12 +435,13 @@ ipcMain.handle('sync-history', async () => {
   return { history: surviving }
 })
 
-ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath }) => {
+ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath, thumbPath }) => {
   try {
     await fsp.unlink(fullPath)
   } catch (err) {
     if (err.code !== 'ENOENT') return { error: err.message }
   }
+  if (thumbPath) await fsp.unlink(thumbPath).catch(() => {})
   store.deleteHistoryEntry(entryId)
   updateTrayMenu(mainWindow, store)
   return { ok: true }

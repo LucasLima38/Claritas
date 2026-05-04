@@ -63,6 +63,12 @@ export async function exportToFormat(svgContent, format, outputPath) {
   throw new Error(`Formato não suportado: ${format}`)
 }
 
+export async function generateThumbnail(svgContent) {
+  const { Resvg } = await import('@resvg/resvg-js')
+  const resvg = new Resvg(svgContent, { fitTo: { mode: 'width', value: 300 } })
+  return resvg.render().asPng()
+}
+
 export async function convert(emfBuffer, timeout = 15_000) {
   const id = randomUUID()
   const tmpDir = os.tmpdir()

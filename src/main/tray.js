@@ -1,6 +1,7 @@
 import { app, Tray, Menu, nativeImage } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { is } from '@electron-toolkit/utils'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -14,7 +15,9 @@ let _normalIcon = null
  * @param {ProjectStore} projectStore
  */
 export function createTray(mainWindow, projectStore) {
-  const iconPath = path.join(__dirname, '../../resources/icon.png')
+  const iconPath = is.dev
+    ? path.join(__dirname, '../../resources/icon.png')
+    : path.join(process.resourcesPath, 'icon.png')
   const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
   _normalIcon = icon
 
@@ -24,6 +27,7 @@ export function createTray(mainWindow, projectStore) {
 
   tray.on('click', () => {
     stopTrayBlink()
+    if (mainWindow.isDestroyed()) return
     if (mainWindow.isVisible()) {
       mainWindow.focus()
     } else {
@@ -77,10 +81,12 @@ export function updateTrayMenu(mainWindow, projectStore) {
     click: () => {
       projectStore.setActiveProject(p.id)
       updateTrayMenu(mainWindow, projectStore)
-      mainWindow.webContents.send('projects-updated', {
-        projects: projectStore.getProjects(),
-        activeProjectId: p.id,
-      })
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('projects-updated', {
+          projects: projectStore.getProjects(),
+          activeProjectId: p.id,
+        })
+      }
     },
   }))
 
@@ -94,11 +100,16 @@ export function updateTrayMenu(mainWindow, projectStore) {
     { type: 'separator' },
     {
       label: 'Abrir janela',
-      click: () => { mainWindow.show(); mainWindow.focus() },
+      click: () => {
+        if (mainWindow.isDestroyed()) return
+        mainWindow.show()
+        mainWindow.focus()
+      },
     },
     {
       label: 'Configurações',
       click: () => {
+        if (mainWindow.isDestroyed()) return
         mainWindow.show()
         mainWindow.focus()
         mainWindow.webContents.send('navigate-to', 'settings')

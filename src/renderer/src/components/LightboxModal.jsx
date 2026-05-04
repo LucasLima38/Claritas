@@ -37,9 +37,13 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
   }, [isOpen, index, entries.length, onNavigate])
 
   async function handleCopy() {
-    const result = await window.electronAPI.copyFileToClipboard({ fullPath: entry.fullPath })
-    if (result.ok) toast.success('Arquivo copiado para o clipboard')
-    else toast.error('Não foi possível copiar o arquivo')
+    try {
+      const result = await window.electronAPI.copyFileToClipboard({ fullPath: entry.fullPath })
+      if (result.ok) toast.success('Arquivo copiado para o clipboard')
+      else toast.error('Não foi possível copiar o arquivo')
+    } catch {
+      toast.error('Não foi possível copiar o arquivo')
+    }
   }
 
   async function handleShowInFolder() {
@@ -85,7 +89,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
             size="icon"
             className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 z-10"
             onClick={() => onNavigate(index - 1)}
-            disabled={index <= 0}
+            disabled={!isOpen || index <= 0}
           >
             <ChevronLeft size={18} />
           </Button>
@@ -94,7 +98,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
             size="icon"
             className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 z-10"
             onClick={() => onNavigate(index + 1)}
-            disabled={index >= entries.length - 1}
+            disabled={!isOpen || index >= entries.length - 1}
           >
             <ChevronRight size={18} />
           </Button>

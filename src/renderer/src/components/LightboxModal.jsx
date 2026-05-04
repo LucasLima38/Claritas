@@ -73,21 +73,19 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
         </div>
 
         {/* Image area */}
-        <div className="flex-1 min-h-0 relative bg-muted/30">
-          <div className="absolute inset-0 flex items-center justify-center px-12 py-4 overflow-hidden">
-            {isPdf && !src ? (
-              <FileText size={64} className="text-muted-foreground/40" />
-            ) : (
-              <img
-                key={entry?.id}
-                src={src}
-                alt={entry?.filename}
-                className="max-w-full max-h-full object-contain"
-                style={{ imageRendering: 'crisp-edges' }}
-                draggable={false}
-              />
-            )}
-          </div>
+        <div className="flex-1 min-h-0 relative flex items-center justify-center px-12 py-4 overflow-hidden lightbox-preview-bg">
+          {isPdf && !src ? (
+            <FileText size={64} className="text-muted-foreground/40" />
+          ) : (
+            <img
+              key={entry?.id}
+              src={src}
+              alt={entry?.filename}
+              className="max-w-full max-h-full object-contain"
+              style={{ imageRendering: 'crisp-edges' }}
+              draggable={false}
+            />
+          )}
           <Button
             variant="ghost"
             size="icon"

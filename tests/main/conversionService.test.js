@@ -23,6 +23,7 @@ const {
   mockResvgCtor,
   mockAsPng,
   mockSharp,
+  mockFlattenFn,
   mockJpegFn,
   mockToBuffer,
   mockPDFDocCtor,
@@ -35,7 +36,8 @@ const {
 
   const mockToBuffer = vi.fn().mockResolvedValue(Buffer.from('jpg-data'))
   const mockJpegFn = vi.fn().mockReturnValue({ toBuffer: mockToBuffer })
-  const mockSharp = vi.fn().mockReturnValue({ jpeg: mockJpegFn })
+  const mockFlattenFn = vi.fn().mockReturnValue({ jpeg: mockJpegFn })
+  const mockSharp = vi.fn().mockReturnValue({ flatten: mockFlattenFn })
 
   const mockSVGtoPDF = vi.fn()
 
@@ -59,6 +61,7 @@ const {
     mockResvgCtor,
     mockAsPng,
     mockSharp,
+    mockFlattenFn,
     mockJpegFn,
     mockToBuffer,
     mockPDFDocCtor,
@@ -149,6 +152,7 @@ describe('exportToFormat()', () => {
 
     expect(mockResvgCtor).toHaveBeenCalledWith(SVG, { fitTo: { mode: 'zoom', value: 300 / 96 } })
     expect(mockSharp).toHaveBeenCalledWith(Buffer.from('png-data'))
+    expect(mockFlattenFn).toHaveBeenCalledWith({ background: '#ffffff' })
     expect(mockJpegFn).toHaveBeenCalledWith({ quality: 95 })
     expect(mockToBuffer).toHaveBeenCalledOnce()
     expect(fsp.writeFile).toHaveBeenCalledWith('/tmp/out.jpg', Buffer.from('jpg-data'))

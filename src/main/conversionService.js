@@ -28,7 +28,7 @@ export async function exportToFormat(svgContent, format, outputPath) {
     const sharp = (await import('sharp')).default
     const resvg = new Resvg(svgContent, { fitTo: { mode: 'zoom', value: 300 / 96 } })
     const pngBuffer = resvg.render().asPng()
-    const jpgBuffer = await sharp(pngBuffer).jpeg({ quality: 95 }).toBuffer()
+    const jpgBuffer = await sharp(pngBuffer).flatten({ background: '#ffffff' }).jpeg({ quality: 95 }).toBuffer()
     await fsp.writeFile(outputPath, jpgBuffer)
     return
   }

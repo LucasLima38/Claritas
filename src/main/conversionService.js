@@ -12,6 +12,18 @@ export function setShell(shell) {
   _shell = shell
 }
 
+const SVG_UNIT_TO_PT = { px: 72 / 96, pt: 1, mm: 72 / 25.4, cm: 72 / 2.54, in: 72 }
+
+function parseSvgDimsToPt(svgContent) {
+  const re = /(?:width|height)="([\d.]+)(px|pt|mm|cm|in)?"/g
+  const dims = []
+  let m
+  while ((m = re.exec(svgContent)) !== null && dims.length < 2) {
+    dims.push(parseFloat(m[1]) * (SVG_UNIT_TO_PT[m[2] ?? 'px'] ?? SVG_UNIT_TO_PT.px))
+  }
+  return dims.length === 2 ? dims : [595.28, 841.89] // A4 fallback
+}
+
 export async function exportToFormat(svgContent, format, outputPath) {
   if (format === 'svg') {
     await fsp.writeFile(outputPath, svgContent, 'utf8')
@@ -35,14 +47,15 @@ export async function exportToFormat(svgContent, format, outputPath) {
   if (format === 'pdf') {
     const PDFDocument = (await import('pdfkit')).default
     const SVGtoPDF = (await import('svg-to-pdfkit')).default
+    const [widthPt, heightPt] = parseSvgDimsToPt(svgContent)
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({ autoFirstPage: false })
       const chunks = []
       doc.on('data', c => chunks.push(c))
       doc.on('end', () => fsp.writeFile(outputPath, Buffer.concat(chunks)).then(resolve).catch(reject))
       doc.on('error', reject)
-      doc.addPage()
-      SVGtoPDF(doc, svgContent, 0, 0)
+      doc.addPage({ size: [widthPt, heightPt], margin: 0 })
+      SVGtoPDF(doc, svgContent, 0, 0, { width: widthPt, height: heightPt })
       doc.end()
     })
     return

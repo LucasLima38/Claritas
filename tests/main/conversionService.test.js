@@ -164,10 +164,32 @@ describe('exportToFormat()', () => {
 
     expect(mockPDFDocCtor).toHaveBeenCalledWith({ autoFirstPage: false })
     const docInstance = mockPDFDocCtor.mock.instances[0]
-    expect(mockSVGtoPDF).toHaveBeenCalledWith(docInstance, SVG, 0, 0)
+    expect(mockPDFDocInstance.addPage).toHaveBeenCalledWith({ size: [595.28, 841.89], margin: 0 })
+    expect(mockSVGtoPDF).toHaveBeenCalledWith(docInstance, SVG, 0, 0, { width: 595.28, height: 841.89 })
     expect(fsp.writeFile).toHaveBeenCalledWith(
       '/tmp/out.pdf',
       Buffer.concat([Buffer.from('pdf-chunk')])
+    )
+  })
+
+  it('sizes the PDF page to match SVG dimensions in points', async () => {
+    const svgWithDims =
+      '<svg xmlns="http://www.w3.org/2000/svg" width="200mm" height="150mm"><rect/></svg>'
+    const expectedW = 200 * (72 / 25.4)
+    const expectedH = 150 * (72 / 25.4)
+
+    await exportToFormat(svgWithDims, 'pdf', '/tmp/out.pdf')
+
+    expect(mockPDFDocInstance.addPage).toHaveBeenCalledWith({
+      size: [expectedW, expectedH],
+      margin: 0,
+    })
+    expect(mockSVGtoPDF).toHaveBeenCalledWith(
+      mockPDFDocCtor.mock.instances[0],
+      svgWithDims,
+      0,
+      0,
+      { width: expectedW, height: expectedH }
     )
   })
 

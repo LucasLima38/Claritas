@@ -13,6 +13,8 @@ asarUnpack:
   - resources/**
 
 extraResources:
+  - from: resources/icon.png
+    to: icon.png
   - from: resources/libemf2svg
     to: libemf2svg
     filter:

@@ -11,6 +11,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
+import LightboxModal from './LightboxModal.jsx'
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -29,6 +30,21 @@ function toFileUrl(fullPath) {
 export default function ClipGrid() {
   const { state, actions } = useApp()
   const [syncing, setSyncing] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(null)
+
+  async function handleLightboxDelete(entry) {
+    const idx = state.history.findIndex((e) => e.id === entry.id)
+    const lengthBefore = state.history.length
+    await actions.deleteHistoryEntry(entry)
+    toast.success(`${entry.filename} removido`)
+    if (lengthBefore === 1) {
+      setSelectedIndex(null)
+    } else if (idx >= lengthBefore - 1) {
+      setSelectedIndex(idx - 1)
+    }
+    // else: selectedIndex stays the same — now points to the next entry
+  }
+
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
   const nextName = activeProject
     ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.svg`
@@ -66,8 +82,8 @@ export default function ClipGrid() {
       </div>
 
       <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
-        {state.history.map((entry) => (
-          <ClipCard key={entry.id} entry={entry} />
+        {state.history.map((entry, i) => (
+          <ClipCard key={entry.id} entry={entry} onOpen={() => setSelectedIndex(i)} />
         ))}
 
         {nextName && (
@@ -79,11 +95,19 @@ export default function ClipGrid() {
           </Card>
         )}
       </div>
+
+      <LightboxModal
+        entries={state.history}
+        index={selectedIndex}
+        onClose={() => setSelectedIndex(null)}
+        onNavigate={setSelectedIndex}
+        onDelete={handleLightboxDelete}
+      />
     </div>
   )
 }
 
-function ClipCard({ entry }) {
+function ClipCard({ entry, onOpen }) {
   const { actions } = useApp()
   const isPdf = entry.filename.endsWith('.pdf')
   const fileUrl = toFileUrl(entry.fullPath)
@@ -107,7 +131,7 @@ function ClipCard({ entry }) {
   return (
     <ContextMenu>
       <ContextMenuTrigger asChild>
-        <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-default p-0">
+        <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0" onClick={onOpen}>
           {/* Thumbnail */}
           <div className="relative h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
             {isPdf && !thumbUrl ? (

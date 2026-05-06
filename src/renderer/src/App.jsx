@@ -9,6 +9,7 @@ import ClipboardArea from './components/ClipboardArea.jsx'
 import ClipGrid from './components/ClipGrid.jsx'
 import StatusBar from './components/StatusBar.jsx'
 import Settings from './components/Settings.jsx'
+import { CaptureTab } from './components/CaptureTab.jsx'
 
 export default function App() {
   const { state, actions } = useApp()
@@ -97,7 +98,7 @@ export default function App() {
         )}
 
         <div className="flex flex-col flex-1 overflow-hidden">
-          {screen === 'main' ? (
+          {screen === 'main' && (
             <>
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                 <div className="w-full max-w-5xl mx-auto flex flex-col gap-4">
@@ -107,9 +108,13 @@ export default function App() {
               </div>
               <StatusBar />
             </>
-          ) : (
-            <Settings onBack={() => setScreen('main')} />
           )}
+          {screen === 'capture' && (
+            <div className="flex flex-1 overflow-hidden">
+              <CaptureTab />
+            </div>
+          )}
+          {screen === 'settings' && <Settings onBack={() => setScreen('main')} />}
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Settings, Clipboard, Download } from 'lucide-react'
+import { Settings, Clipboard, Download, Camera } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -110,6 +110,16 @@ export default function Sidebar({ screen, onNavigate, open, width }) {
           tooltip="Clipboard"
         >
           Clipboard
+        </SidebarItem>
+
+        <SidebarItem
+          icon={<Camera size={14} />}
+          active={screen === 'capture'}
+          onClick={() => onNavigate('capture')}
+          collapsed={!open}
+          tooltip="Captura"
+        >
+          Captura
         </SidebarItem>
 
         <Separator className="mx-3 my-1.5 w-auto" />

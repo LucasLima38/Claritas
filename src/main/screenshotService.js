@@ -93,6 +93,7 @@ export function captureRegion(mainWindow) {
 
     selWin.loadFile(overlayPath('region-select.html'))
     selWin.setAlwaysOnTop(true, 'screen-saver')
+    selWin.focus()
 
     const onRegionSelected = async (_event, rect) => {
       selWin.destroy()

@@ -481,6 +481,7 @@ ipcMain.handle('capture-screen', async (_event, { mode, delay }) => {
   }
 
   if (!delay || delay === 0) {
+    mainWindow.hide()
     await doCapture()
   } else {
     mainWindow.hide()
@@ -498,6 +499,7 @@ ipcMain.handle('capture-screen', async (_event, { mode, delay }) => {
 
 ipcMain.handle('cancel-capture', async () => {
   hideCountdown()
+  ipcMain.emit('region-cancelled')
   mainWindow.show()
   return { ok: true }
 })

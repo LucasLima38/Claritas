@@ -511,7 +511,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
 
   const dirCheck = await checkOutputDir(project.outputDir)
   if (!dirCheck.exists) {
-    return { dirMissing: true, outputDir: project.outputDir }
+    return { ok: false, dirMissing: true, outputDir: project.outputDir }
   }
 
   const ext = format === 'jpg' ? 'jpg' : 'png'

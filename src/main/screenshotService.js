@@ -81,12 +81,12 @@ export function captureRegion(mainWindow) {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, '../../preload/regionSelectPreload.js'),
+        preload: path.join(__dirname, '../preload/regionSelectPreload.js'),
       },
     })
 
     selWin.loadFile(
-      path.join(__dirname, '../../renderer/overlay/region-select.html')
+      path.join(__dirname, '../renderer/overlay/region-select.html')
     )
     selWin.setAlwaysOnTop(true, 'screen-saver')
 

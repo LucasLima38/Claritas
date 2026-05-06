@@ -29,12 +29,12 @@ export function showCountdown(seconds, onComplete, onCancel) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, '../../preload/overlayPreload.js'),
+      preload: path.join(__dirname, '../preload/overlayPreload.js'),
     },
   })
 
   overlayWin.loadFile(
-    path.join(__dirname, '../../renderer/overlay/countdown.html')
+    path.join(__dirname, '../renderer/overlay/countdown.html')
   )
   overlayWin.setAlwaysOnTop(true, 'screen-saver')
 

@@ -24,61 +24,72 @@ function AnnotationShape({ shape }) {
   if (shape.type === 'arrow') {
     return (
       <Arrow
+        id={shape.id}
         points={shape.points}
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
         pointerLength={12}
         pointerWidth={10}
         fill={shape.color}
+        hitStrokeWidth={12}
       />
     )
   }
   if (shape.type === 'rect') {
     return (
       <Rect
+        id={shape.id}
         x={shape.x} y={shape.y}
         width={shape.width} height={shape.height}
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
         fill="transparent"
+        hitStrokeWidth={10}
       />
     )
   }
   if (shape.type === 'ellipse') {
     return (
       <Ellipse
+        id={shape.id}
         x={shape.x} y={shape.y}
         radiusX={shape.radiusX} radiusY={shape.radiusY}
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
         fill="transparent"
+        hitStrokeWidth={10}
       />
     )
   }
   if (shape.type === 'line') {
     return (
       <Line
+        id={shape.id}
         points={shape.points}
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
+        hitStrokeWidth={12}
       />
     )
   }
   if (shape.type === 'pen') {
     return (
       <Line
+        id={shape.id}
         points={shape.points}
         stroke={shape.color}
         strokeWidth={shape.strokeWidth}
         tension={0.5}
         lineCap="round"
         lineJoin="round"
+        hitStrokeWidth={12}
       />
     )
   }
   if (shape.type === 'text') {
     return (
       <Text
+        id={shape.id}
         x={shape.x} y={shape.y}
         text={shape.text}
         fill={shape.color}
@@ -90,6 +101,7 @@ function AnnotationShape({ shape }) {
   if (shape.type === 'highlight') {
     return (
       <Rect
+        id={shape.id}
         x={shape.x} y={shape.y}
         width={shape.width} height={shape.height}
         fill={shape.color}
@@ -99,7 +111,7 @@ function AnnotationShape({ shape }) {
   }
   if (shape.type === 'counter') {
     return (
-      <Group x={shape.x} y={shape.y}>
+      <Group id={shape.id} x={shape.x} y={shape.y}>
         <Circle radius={14} fill={shape.color} />
         <Text
           text={String(shape.count)}
@@ -205,14 +217,11 @@ export function ImageEditor() {
     if (textEditing) { commitTextEdit(); return }
     if (activeTool === 'select') return
     if (activeTool === 'eraser') {
-      const pos = getPointerPos(e)
-      const newAnno = annotations.filter((a) => {
-        if (a.type === 'rect' || a.type === 'highlight') {
-          return !(pos.x >= a.x && pos.x <= a.x + a.width && pos.y >= a.y && pos.y <= a.y + a.height)
-        }
-        return true
-      })
-      if (newAnno.length !== annotations.length) pushHistory(newAnno)
+      isDrawingRef.current = true
+      const targetId = e.target?.id?.()
+      if (targetId && annotations.some((a) => a.id === targetId)) {
+        setAnnotations((prev) => prev.filter((a) => a.id !== targetId))
+      }
       return
     }
 
@@ -274,6 +283,16 @@ export function ImageEditor() {
   }
 
   const handleMouseMove = (e) => {
+    if (activeTool === 'eraser' && isDrawingRef.current) {
+      const targetId = e.target?.id?.()
+      if (targetId) {
+        setAnnotations((prev) => {
+          if (!prev.some((a) => a.id === targetId)) return prev
+          return prev.filter((a) => a.id !== targetId)
+        })
+      }
+      return
+    }
     if (!isDrawingRef.current || !currentShapeRef.current) return
     const pos = getPointerPos(e)
     const shape = currentShapeRef.current
@@ -306,6 +325,10 @@ export function ImageEditor() {
   const handleMouseUp = () => {
     if (!isDrawingRef.current) return
     isDrawingRef.current = false
+    if (activeTool === 'eraser') {
+      pushHistory([...annotations])
+      return
+    }
     if (currentShapeRef.current) {
       pushHistory([...annotations])
     }

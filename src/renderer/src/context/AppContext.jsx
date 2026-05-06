@@ -18,6 +18,9 @@ const initialState = {
   dirMissingPath: null,
   exportFormat: 'svg',
   updateInfo: null,
+  captureStatus: 'capture-idle',
+  captureData: null,
+  captureFormat: 'png',
 }
 
 function reducer(state, action) {
@@ -136,6 +139,44 @@ function reducer(state, action) {
     case 'SYNC_HISTORY':
       return { ...state, history: action.history }
 
+    case 'CAPTURE_READY':
+      return {
+        ...state,
+        captureStatus: 'capture-editor',
+        captureData: { dataURL: action.dataURL, width: action.width, height: action.height },
+      }
+
+    case 'CAPTURE_CANCELLED':
+      return {
+        ...state,
+        captureStatus: 'capture-idle',
+        captureData: null,
+      }
+
+    case 'CAPTURE_DISCARD':
+      return {
+        ...state,
+        captureStatus: 'capture-idle',
+        captureData: null,
+      }
+
+    case 'CAPTURE_SAVE_SUCCESS':
+      return {
+        ...state,
+        captureStatus: 'capture-idle',
+        captureData: null,
+        history: [action.entry, ...state.history],
+        projects: state.projects.map((p) =>
+          p.id === action.projectId ? { ...p, counter: action.newCounter } : p
+        ),
+      }
+
+    case 'SET_CAPTURE_FORMAT':
+      return { ...state, captureFormat: action.format }
+
+    case 'CAPTURE_COUNTDOWN_START':
+      return { ...state, captureStatus: 'capture-countdown' }
+
     default:
       return state
   }
@@ -187,6 +228,12 @@ export function AppProvider({ children }) {
       }),
       window.electronAPI.onUpdateAvailable(({ version, releaseDate }) => {
         dispatch({ type: 'UPDATE_AVAILABLE', version, releaseDate })
+      }),
+      window.electronAPI.onCaptureReady((data) => {
+        dispatch({ type: 'CAPTURE_READY', ...data })
+      }),
+      window.electronAPI.onCaptureCancelled(() => {
+        dispatch({ type: 'CAPTURE_CANCELLED' })
       }),
       // onNavigateTo is handled in App.jsx — no listener needed here
     ]
@@ -305,6 +352,55 @@ export function AppProvider({ children }) {
     async syncHistory() {
       const result = await window.electronAPI.syncHistory()
       dispatch({ type: 'SYNC_HISTORY', history: result.history })
+    },
+
+    async startCapture({ mode, delay }) {
+      if (delay > 0) dispatch({ type: 'CAPTURE_COUNTDOWN_START' })
+      await window.electronAPI.captureScreen({ mode, delay })
+    },
+
+    cancelCapture() {
+      window.electronAPI.cancelCapture()
+      dispatch({ type: 'CAPTURE_CANCELLED' })
+    },
+
+    discardCapture() {
+      dispatch({ type: 'CAPTURE_DISCARD' })
+    },
+
+    async saveCapture({ dataURL, format }) {
+      const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
+      if (!activeProject) {
+        toast.error('Selecione um projeto antes de salvar.')
+        return
+      }
+      const result = await window.electronAPI.saveImage({
+        dataURL,
+        projectId: state.activeProjectId,
+        format,
+      })
+      if (result.ok) {
+        toast.success(`Salvo: ${result.filename}`)
+        dispatch({
+          type: 'CAPTURE_SAVE_SUCCESS',
+          projectId: state.activeProjectId,
+          newCounter: (activeProject.counter ?? 0) + 1,
+          entry: result.entry ?? {
+            id: Date.now(),
+            filename: result.filename,
+            fullPath: result.fullPath,
+            projectId: state.activeProjectId,
+          },
+        })
+      } else if (result.dirMissing) {
+        dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
+      } else {
+        toast.error(result.message || 'Erro ao salvar imagem.')
+      }
+    },
+
+    setCaptureFormat(format) {
+      dispatch({ type: 'SET_CAPTURE_FORMAT', format })
     },
   }
 

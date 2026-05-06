@@ -56,7 +56,7 @@ describe('CaptureTab', () => {
     setup('capture-countdown')
     render(<CaptureTab />)
     expect(screen.getByTestId('loader')).toBeDefined()
-    expect(screen.getByText('Capturando em breve…')).toBeDefined()
+    expect(screen.getByText('Capturando…')).toBeDefined()
     expect(screen.getByText('Cancelar')).toBeDefined()
   })
 

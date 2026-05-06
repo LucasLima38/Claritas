@@ -355,7 +355,7 @@ export function AppProvider({ children }) {
     },
 
     async startCapture({ mode, delay }) {
-      if (delay > 0) dispatch({ type: 'CAPTURE_COUNTDOWN_START' })
+      dispatch({ type: 'CAPTURE_COUNTDOWN_START' })
       await window.electronAPI.captureScreen({ mode, delay })
     },
 
@@ -384,7 +384,7 @@ export function AppProvider({ children }) {
         dispatch({
           type: 'CAPTURE_SAVE_SUCCESS',
           projectId: state.activeProjectId,
-          newCounter: (activeProject.counter ?? 0) + 1,
+          newCounter: result.newCounter ?? (activeProject.counter ?? 0) + 1,
           entry: result.entry ?? {
             id: Date.now(),
             filename: result.filename,

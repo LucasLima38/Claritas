@@ -1,6 +1,6 @@
 import {
   MousePointer, ArrowUpRight, Square, Circle, Minus, Pen,
-  Type, Highlighter, Eraser, Hash, ScanFace, Crop, Maximize, Scan,
+  Type, Highlighter, Eraser, Hash, Scan,
   Undo2, Redo2
 } from 'lucide-react'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -21,9 +21,6 @@ const DRAW_TOOLS = [
   { value: 'highlight',   icon: Highlighter,   label: 'Highlight' },
   { value: 'eraser',      icon: Eraser,        label: 'Borracha' },
   { value: 'counter',     icon: Hash,          label: 'Contador' },
-  { value: 'blur',        icon: ScanFace,      label: 'Blur' },
-  { value: 'crop',        icon: Crop,          label: 'Crop' },
-  { value: 'resize',      icon: Maximize,      label: 'Redimensionar' },
 ]
 
 const PALETTE_COLORS = [

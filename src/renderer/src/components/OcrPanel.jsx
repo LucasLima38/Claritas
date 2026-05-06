@@ -43,7 +43,11 @@ export function OcrPanel({ worker, imageDataURL, autoRun = false }) {
       }
     } catch (err) {
       setStatus('error')
-      setError('OCR demorou muito. Tente novamente.')
+      setError(
+        err.message === 'OCR_TIMEOUT'
+          ? 'OCR demorou muito. Tente novamente.'
+          : `Erro ao extrair texto: ${err.message}`
+      )
     }
   }, [worker, imageDataURL])
 

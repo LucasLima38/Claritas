@@ -166,7 +166,7 @@ export function ImageEditor() {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  })
+  }, [handleUndo, handleRedo])
 
   const pushHistory = useCallback((newAnnotations) => {
     setHistory((prev) => {

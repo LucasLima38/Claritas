@@ -15,7 +15,7 @@ export function CaptureTab() {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
         <Loader2 size={40} className="animate-spin" />
-        <p className="text-sm">Capturando em breve…</p>
+        <p className="text-sm">Capturando…</p>
         <button
           className="text-xs underline hover:text-foreground transition-colors"
           onClick={actions.cancelCapture}

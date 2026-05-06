@@ -1,8 +1,14 @@
-import { desktopCapturer, screen, BrowserWindow, ipcMain } from 'electron'
+import { app, desktopCapturer, screen, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function overlayPath(filename) {
+  return app.isPackaged
+    ? path.join(__dirname, '../renderer/overlay', filename)
+    : path.resolve(process.cwd(), 'src/renderer/overlay', filename)
+}
 
 /**
  * Converts a nativeImage to { dataURL, width, height }.
@@ -85,9 +91,7 @@ export function captureRegion(mainWindow) {
       },
     })
 
-    selWin.loadFile(
-      path.join(__dirname, '../renderer/overlay/region-select.html')
-    )
+    selWin.loadFile(overlayPath('region-select.html'))
     selWin.setAlwaysOnTop(true, 'screen-saver')
 
     const onRegionSelected = async (_event, rect) => {

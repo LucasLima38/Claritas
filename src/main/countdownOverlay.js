@@ -1,8 +1,14 @@
-import { BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function overlayPath(filename) {
+  return app.isPackaged
+    ? path.join(__dirname, '../renderer/overlay', filename)
+    : path.resolve(process.cwd(), 'src/renderer/overlay', filename)
+}
 
 let overlayWin = null
 let tickInterval = null
@@ -33,9 +39,7 @@ export function showCountdown(seconds, onComplete, onCancel) {
     },
   })
 
-  overlayWin.loadFile(
-    path.join(__dirname, '../renderer/overlay/countdown.html')
-  )
+  overlayWin.loadFile(overlayPath('countdown.html'))
   overlayWin.setAlwaysOnTop(true, 'screen-saver')
 
   let remaining = seconds

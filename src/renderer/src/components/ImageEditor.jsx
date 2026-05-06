@@ -140,8 +140,9 @@ export function ImageEditor() {
   const [history, setHistory] = useState([[]])
   const [historyIdx, setHistoryIdx] = useState(0)
   const [ocrOpen, setOcrOpen] = useState(false)
-  const [counterCount, setCounterCount] = useState(1)
+  const [counterCount, setCounterCount] = useState({})
   const [textEditing, setTextEditing] = useState(null) // { id, x, y, value, color, fontSize }
+  const [ocrWorker, setOcrWorker] = useState(null)
 
   const isDrawingRef = useRef(false)
   const currentShapeRef = useRef(null)
@@ -151,7 +152,10 @@ export function ImageEditor() {
   useEffect(() => {
     let mounted = true
     createWorker('por+eng').then((w) => {
-      if (mounted) workerRef.current = w
+      if (mounted) {
+        workerRef.current = w
+        setOcrWorker(w)
+      }
     })
     return () => {
       mounted = false
@@ -266,12 +270,13 @@ export function ImageEditor() {
       isDrawingRef.current = false
       return
     } else if (activeTool === 'counter') {
+      const colorCount = (counterCount[color] ?? 0) + 1
       const newCounter = {
         id: generateId(), type: 'counter',
         x: pos.x, y: pos.y,
-        count: counterCount, color,
+        count: colorCount, color,
       }
-      setCounterCount((c) => c + 1)
+      setCounterCount((prev) => ({ ...prev, [color]: colorCount }))
       pushHistory([...annotations, newCounter])
       isDrawingRef.current = false
       return
@@ -360,7 +365,7 @@ export function ImageEditor() {
 
       <div className="flex flex-1 overflow-auto">
         <div
-          className="flex-1 overflow-auto bg-muted flex items-start justify-start"
+          className="flex-1 overflow-auto bg-muted flex items-center justify-center"
           style={{ cursor: activeTool === 'select' ? 'default' : 'crosshair' }}
         >
           <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -428,7 +433,7 @@ export function ImageEditor() {
 
         {ocrOpen && (
           <OcrPanel
-            worker={workerRef.current}
+            worker={ocrWorker}
             imageDataURL={captureData?.dataURL}
           />
         )}

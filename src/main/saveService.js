@@ -51,3 +51,23 @@ export async function saveSVG(svgContent, outputDir, filename) {
   }
   return fullPath
 }
+
+/**
+ * Saves image from a data URL (PNG/JPG) to disk.
+ * Decodes base64 content and writes the binary buffer.
+ * Creates the output directory if it does not exist.
+ * @returns {Promise<string>} The full absolute path of the saved file.
+ */
+export async function saveImage(dataURL, outputDir, filename) {
+  await fsp.mkdir(outputDir, { recursive: true })
+  const base64Data = dataURL.replace(/^data:[^;]+;base64,/, '')
+  const buffer = Buffer.from(base64Data, 'base64')
+  const fullPath = path.join(outputDir, filename)
+  try {
+    await fsp.writeFile(fullPath, buffer)
+  } catch (err) {
+    const code = err.code ?? 'WRITE_ERROR'
+    throw new Error(`${code}: ${err.message}`)
+  }
+  return fullPath
+}

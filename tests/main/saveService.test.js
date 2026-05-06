@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { promises as fsp } from 'fs'
+import path from 'path'
 
+// Unit tests use mocked fs
 vi.mock('fs', async (importOriginal) => {
   const actual = await importOriginal()
   return {
@@ -13,7 +16,7 @@ vi.mock('fs', async (importOriginal) => {
   }
 })
 
-const { generateFilename, generateFilenameWithExt, saveSVG, checkOutputDir } = await import('../../src/main/saveService.js')
+const { generateFilename, generateFilenameWithExt, saveSVG, checkOutputDir, saveImage } = await import('../../src/main/saveService.js')
 
 describe('SaveService', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -110,5 +113,55 @@ describe('dirMissing signal', () => {
       : { ok: true }
     expect(handlerResponse.dirMissing).toBe(true)
     expect(handlerResponse.outputDir).toBe('D:\\nonexistent')
+  })
+})
+
+describe('saveImage', () => {
+  beforeEach(() => vi.resetAllMocks())
+
+  it('calls mkdir and writeFile with correct args for PNG', async () => {
+    const pngData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const dataURL = `data:image/png;base64,${pngData}`
+    const outputDir = 'D:\\docs\\screenshots'
+    const filename = 'test-image.png'
+
+    const result = await saveImage(dataURL, outputDir, filename)
+
+    expect(fsp.mkdir).toHaveBeenCalledWith(outputDir, { recursive: true })
+    expect(fsp.writeFile).toHaveBeenCalledWith(
+      path.join(outputDir, filename),
+      expect.any(Buffer)
+    )
+    expect(result).toBe(path.join(outputDir, filename))
+  })
+
+  it('strips dataURL header and decodes base64 to buffer', async () => {
+    const pngData = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const dataURL = `data:image/png;base64,${pngData}`
+
+    await saveImage(dataURL, 'D:\\out', 'img.png')
+
+    const [, writtenBuffer] = fsp.writeFile.mock.calls[0]
+    expect(writtenBuffer).toBeInstanceOf(Buffer)
+    expect(writtenBuffer.length).toBeGreaterThan(0)
+  })
+
+  it('works with JPG dataURL', async () => {
+    const jpgData = '/9j/4AAQSkZJRgABAQEASABIAAD/2Q=='
+    const dataURL = `data:image/jpeg;base64,${jpgData}`
+
+    const result = await saveImage(dataURL, 'D:\\out', 'img.jpg')
+
+    expect(fsp.writeFile).toHaveBeenCalled()
+    expect(result).toContain('img.jpg')
+  })
+
+  it('throws with error code when writeFile rejects', async () => {
+    const err = new Error('permission denied')
+    err.code = 'EACCES'
+    fsp.writeFile.mockRejectedValueOnce(err)
+
+    await expect(saveImage('data:image/png;base64,abc', 'D:\\out', 'img.png'))
+      .rejects.toThrow('EACCES')
   })
 })

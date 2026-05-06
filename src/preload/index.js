@@ -66,4 +66,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showInFolder: (data) => ipcRenderer.invoke('show-in-folder', data),
   deleteHistoryFile: (data) => ipcRenderer.invoke('delete-history-file', data),
   copyFileToClipboard: (data) => ipcRenderer.invoke('copy-file-to-clipboard', data),
+
+  // Screenshot capture
+  captureScreen: (data) => ipcRenderer.invoke('capture-screen', data),
+  cancelCapture: () => ipcRenderer.invoke('cancel-capture'),
+  saveImage: (data) => ipcRenderer.invoke('save-image', data),
+  onCaptureReady: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('capture-ready', handler)
+    return () => ipcRenderer.removeListener('capture-ready', handler)
+  },
+  onCaptureCancelled: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('capture-cancelled', handler)
+    return () => ipcRenderer.removeListener('capture-cancelled', handler)
+  },
 })

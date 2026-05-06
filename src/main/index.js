@@ -7,7 +7,9 @@ import { ProjectStore } from './projectStore.js'
 import { readEMF } from './clipboardService.js'
 import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat, generateThumbnail } from './conversionService.js'
 import { Libemf2svgShell } from './libemf2svgShell.js'
-import { generateFilenameWithExt, checkOutputDir } from './saveService.js'
+import { generateFilenameWithExt, checkOutputDir, saveImage } from './saveService.js'
+import { captureFullscreen, captureWindow, captureRegion } from './screenshotService.js'
+import { showCountdown, hideCountdown } from './countdownOverlay.js'
 import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
 import { initAutoUpdater } from './updateService.js'
@@ -453,5 +455,73 @@ ipcMain.handle('copy-file-to-clipboard', (_event, { fullPath }) => {
     return { ok: true }
   } catch (err) {
     return { error: err.message }
+  }
+})
+
+ipcMain.handle('capture-screen', async (_event, { mode, delay }) => {
+  const doCapture = async () => {
+    try {
+      let result
+      if (mode === 'fullscreen') {
+        result = await captureFullscreen(mainWindow)
+      } else if (mode === 'window') {
+        result = await captureWindow()
+      } else if (mode === 'region') {
+        result = await captureRegion(mainWindow)
+      } else {
+        throw new Error(`Unknown capture mode: ${mode}`)
+      }
+      mainWindow.show()
+      mainWindow.webContents.send('capture-ready', result)
+    } catch (err) {
+      mainWindow.show()
+      if (err.message === 'CANCELLED') {
+        mainWindow.webContents.send('capture-cancelled')
+      } else {
+        mainWindow.webContents.send('capture-cancelled')
+      }
+    }
+  }
+
+  if (!delay || delay === 0) {
+    await doCapture()
+  } else {
+    mainWindow.hide()
+    showCountdown(
+      delay,
+      doCapture,
+      () => {
+        mainWindow.show()
+        mainWindow.webContents.send('capture-cancelled')
+      }
+    )
+  }
+  return { ok: true }
+})
+
+ipcMain.handle('cancel-capture', async () => {
+  hideCountdown()
+  mainWindow.show()
+  return { ok: true }
+})
+
+ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
+  const project = store.getProjects().find((p) => p.id === projectId)
+  if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
+
+  const dirCheck = await checkOutputDir(project.outputDir)
+  if (!dirCheck.exists) {
+    return { dirMissing: true, outputDir: project.outputDir }
+  }
+
+  const ext = format === 'jpg' ? 'jpg' : 'png'
+  const filename = generateFilenameWithExt(project.prefix, project.counter + 1, ext)
+
+  try {
+    const fullPath = await saveImage(dataURL, project.outputDir, filename)
+    store.incrementCounter(projectId)
+    return { ok: true, filename, fullPath }
+  } catch (err) {
+    return { ok: false, error: err.message }
   }
 })

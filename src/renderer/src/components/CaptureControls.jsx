@@ -40,24 +40,23 @@ export function CaptureControls({ onCapture, disabled = false }) {
     <div className="flex flex-col items-center justify-center gap-8 h-full py-12">
       <div className="flex flex-col items-center gap-3">
         <span className="text-sm font-medium text-muted-foreground">Modo de captura</span>
-        <ToggleGroup
-          type="single"
-          value={mode}
-          onValueChange={(v) => v && setMode(v)}
-          className="gap-2"
-        >
+        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
           {MODES.map(({ value, label, icon: Icon }) => (
-            <ToggleGroupItem
+            <button
               key={value}
-              value={value}
-              aria-label={label}
-              className="flex items-center gap-2 px-4 py-2 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              onClick={() => setMode(value)}
+              className={[
+                'flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
+                mode === value
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              ].join(' ')}
             >
-              <Icon size={16} />
-              <span className="text-sm">{label}</span>
-            </ToggleGroupItem>
+              <Icon size={15} />
+              {label}
+            </button>
           ))}
-        </ToggleGroup>
+        </div>
       </div>
 
       <div className="flex flex-col items-center gap-3">

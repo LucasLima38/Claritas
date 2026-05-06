@@ -22,7 +22,6 @@ const ToggleGroupItem = React.forwardRef(({ className, children, ...props }, ref
       'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
       'disabled:pointer-events-none disabled:opacity-50',
       'data-[state=on]:bg-accent data-[state=on]:text-accent-foreground',
-      'h-7 w-7',
       className
     )}
     {...props}

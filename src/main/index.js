@@ -475,11 +475,8 @@ ipcMain.handle('capture-screen', async (_event, { mode, delay }) => {
       mainWindow.webContents.send('capture-ready', result)
     } catch (err) {
       mainWindow.show()
-      if (err.message === 'CANCELLED') {
-        mainWindow.webContents.send('capture-cancelled')
-      } else {
-        mainWindow.webContents.send('capture-cancelled')
-      }
+      const cancelled = err.message === 'CANCELLED'
+      mainWindow.webContents.send('capture-cancelled', { cancelled, error: cancelled ? null : err.message })
     }
   }
 
@@ -519,8 +516,19 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
 
   try {
     const fullPath = await saveImage(dataURL, project.outputDir, filename)
-    store.incrementCounter(projectId)
-    return { ok: true, filename, fullPath }
+    const { size: sizeBytes } = await fsp.stat(fullPath)
+    const newCounter = store.incrementCounter(projectId)
+    const entry = {
+      id: crypto.randomUUID(),
+      filename,
+      fullPath,
+      projectId,
+      timestamp: new Date().toISOString(),
+      sizeBytes,
+    }
+    store.addHistoryEntry(entry)
+    updateTrayMenu(mainWindow, store)
+    return { ok: true, filename, fullPath, entry, newCounter }
   } catch (err) {
     return { ok: false, error: err.message }
   }

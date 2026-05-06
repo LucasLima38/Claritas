@@ -69,6 +69,7 @@ export async function captureWindow() {
  */
 export function captureRegion(mainWindow) {
   return new Promise((resolve, reject) => {
+    let settled = false
     const display = screen.getDisplayMatching(mainWindow.getBounds())
     const { x, y, width, height } = display.bounds
 
@@ -96,6 +97,7 @@ export function captureRegion(mainWindow) {
     selWin.focus()
 
     const onRegionSelected = async (_event, rect) => {
+      settled = true
       selWin.destroy()
       cleanup()
       try {
@@ -138,6 +140,7 @@ export function captureRegion(mainWindow) {
     ipcMain.once('region-cancelled', onCancelled)
 
     selWin.on('closed', () => {
+      if (settled) return
       cleanup()
       reject(new Error('CANCELLED'))
     })

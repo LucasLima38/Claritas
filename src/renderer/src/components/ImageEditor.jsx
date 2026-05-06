@@ -129,10 +129,12 @@ export function ImageEditor() {
   const [historyIdx, setHistoryIdx] = useState(0)
   const [ocrOpen, setOcrOpen] = useState(false)
   const [counterCount, setCounterCount] = useState(1)
+  const [textEditing, setTextEditing] = useState(null) // { id, x, y, value, color, fontSize }
 
   const isDrawingRef = useRef(false)
   const currentShapeRef = useRef(null)
   const workerRef = useRef(null)
+  const textareaRef = useRef(null)
 
   useEffect(() => {
     let mounted = true
@@ -184,7 +186,23 @@ export function ImageEditor() {
     return stage.getPointerPosition()
   }
 
+  useEffect(() => {
+    if (textEditing) {
+      textareaRef.current?.focus()
+    }
+  }, [textEditing])
+
+  const commitTextEdit = useCallback(() => {
+    if (!textEditing) return
+    const updated = annotations
+      .map((a) => a.id === textEditing.id ? { ...a, text: textEditing.value } : a)
+      .filter((a) => !(a.id === textEditing.id && textEditing.value.trim() === ''))
+    pushHistory(updated)
+    setTextEditing(null)
+  }, [textEditing, annotations, pushHistory])
+
   const handleMouseDown = (e) => {
+    if (textEditing) { commitTextEdit(); return }
     if (activeTool === 'select') return
     if (activeTool === 'eraser') {
       const pos = getPointerPos(e)
@@ -227,13 +245,15 @@ export function ImageEditor() {
         color, strokeWidth,
       }
     } else if (activeTool === 'text') {
+      const newId = generateId()
       const newText = {
-        id: generateId(), type: 'text',
+        id: newId, type: 'text',
         x: pos.x, y: pos.y,
-        text: 'Texto',
+        text: '',
         color, fontSize: 16,
       }
       pushHistory([...annotations, newText])
+      setTextEditing({ id: newId, x: pos.x, y: pos.y, value: '', color, fontSize: 16 })
       isDrawingRef.current = false
       return
     } else if (activeTool === 'counter') {
@@ -320,24 +340,67 @@ export function ImageEditor() {
           className="flex-1 overflow-auto bg-muted flex items-start justify-start"
           style={{ cursor: activeTool === 'select' ? 'default' : 'crosshair' }}
         >
-          <Stage
-            width={stageWidth}
-            height={stageHeight}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-          >
-            <Layer>
-              {image && (
-                <KonvaImage image={image} x={0} y={0} width={stageWidth} height={stageHeight} />
-              )}
-            </Layer>
-            <Layer>
-              {annotations.map((shape) => (
-                <AnnotationShape key={shape.id} shape={shape} />
-              ))}
-            </Layer>
-          </Stage>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <Stage
+              width={stageWidth}
+              height={stageHeight}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+            >
+              <Layer>
+                {image && (
+                  <KonvaImage image={image} x={0} y={0} width={stageWidth} height={stageHeight} />
+                )}
+              </Layer>
+              <Layer>
+                {annotations.map((shape) => (
+                  shape.id === textEditing?.id
+                    ? null
+                    : <AnnotationShape key={shape.id} shape={shape} />
+                ))}
+              </Layer>
+            </Stage>
+            {textEditing && (
+              <textarea
+                ref={textareaRef}
+                value={textEditing.value}
+                onChange={(e) => setTextEditing((prev) => ({ ...prev, value: e.target.value }))}
+                onBlur={commitTextEdit}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setAnnotations((prev) => prev.filter((a) => a.id !== textEditing.id))
+                    setTextEditing(null)
+                  } else if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault()
+                    commitTextEdit()
+                  }
+                }}
+                style={{
+                  position: 'absolute',
+                  left: textEditing.x,
+                  top: textEditing.y,
+                  minWidth: 120,
+                  minHeight: 28,
+                  fontSize: textEditing.fontSize,
+                  color: textEditing.color,
+                  background: 'rgba(0,0,0,0.55)',
+                  border: '1px dashed ' + textEditing.color,
+                  borderRadius: 3,
+                  padding: '2px 4px',
+                  outline: 'none',
+                  resize: 'none',
+                  overflow: 'hidden',
+                  fontFamily: 'system-ui, sans-serif',
+                  lineHeight: 1.4,
+                  zIndex: 10,
+                  whiteSpace: 'pre',
+                }}
+                rows={1}
+                placeholder="Digite o texto…"
+              />
+            )}
+          </div>
         </div>
 
         {ocrOpen && (

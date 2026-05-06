@@ -148,6 +148,7 @@ export function ImageEditor() {
   const currentShapeRef = useRef(null)
   const workerRef = useRef(null)
   const textareaRef = useRef(null)
+  const stageRef = useRef(null)
 
   useEffect(() => {
     let mounted = true
@@ -202,6 +203,21 @@ export function ImageEditor() {
     return stage.getPointerPosition()
   }
 
+  const resolveAnnotationId = (e) => {
+    const id = e.target?.id?.()
+    if (id && annotations.some((a) => a.id === id)) return id
+    const parentId = e.target?.getParent?.()?.id?.()
+    if (parentId && annotations.some((a) => a.id === parentId)) return parentId
+    return null
+  }
+
+  const handleSave = useCallback(() => {
+    if (!stageRef.current) return
+    const mimeType = captureFormat === 'jpg' ? 'image/jpeg' : 'image/png'
+    const dataURL = stageRef.current.toDataURL({ mimeType, pixelRatio: 1, quality: 0.92 })
+    actions.saveCapture({ dataURL, format: captureFormat })
+  }, [captureFormat, actions])
+
   useEffect(() => {
     if (textEditing) {
       textareaRef.current?.focus()
@@ -222,8 +238,8 @@ export function ImageEditor() {
     if (activeTool === 'select') return
     if (activeTool === 'eraser') {
       isDrawingRef.current = true
-      const targetId = e.target?.id?.()
-      if (targetId && annotations.some((a) => a.id === targetId)) {
+      const targetId = resolveAnnotationId(e)
+      if (targetId) {
         setAnnotations((prev) => prev.filter((a) => a.id !== targetId))
       }
       return
@@ -289,12 +305,9 @@ export function ImageEditor() {
 
   const handleMouseMove = (e) => {
     if (activeTool === 'eraser' && isDrawingRef.current) {
-      const targetId = e.target?.id?.()
+      const targetId = resolveAnnotationId(e)
       if (targetId) {
-        setAnnotations((prev) => {
-          if (!prev.some((a) => a.id === targetId)) return prev
-          return prev.filter((a) => a.id !== targetId)
-        })
+        setAnnotations((prev) => prev.filter((a) => a.id !== targetId))
       }
       return
     }
@@ -370,6 +383,7 @@ export function ImageEditor() {
         >
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <Stage
+              ref={stageRef}
               width={stageWidth}
               height={stageHeight}
               onMouseDown={handleMouseDown}
@@ -456,7 +470,7 @@ export function ImageEditor() {
               <Button
                 size="sm"
                 className="rounded-r-none"
-                onClick={() => actions.saveCapture({ dataURL: captureData?.dataURL, format: captureFormat })}
+                onClick={handleSave}
               >
                 Salvar {captureFormat.toUpperCase()}
               </Button>

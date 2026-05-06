@@ -13,5 +13,8 @@ export default defineConfig({
     globals: true,
     environmentMatchGlobs: [['tests/renderer/**', 'jsdom']],
     setupFiles: ['tests/renderer/setup.js'],
+    restoreMocks: true,
+    unstubEnvs: true,
+    unstubGlobals: true,
   },
 })

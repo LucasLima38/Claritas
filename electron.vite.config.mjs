@@ -25,7 +25,16 @@ export default defineConfig({
     build: { rollupOptions: { external: ['electron-store'] } }
   },
   preload: {
-    build: { rollupOptions: { external: ['electron-store'] } }
+    build: {
+      rollupOptions: {
+        external: ['electron-store'],
+        input: {
+          index: path.resolve(__dirname, 'src/preload/index.js'),
+          regionSelectPreload: path.resolve(__dirname, 'src/preload/regionSelectPreload.js'),
+          overlayPreload: path.resolve(__dirname, 'src/preload/overlayPreload.js'),
+        }
+      }
+    }
   },
   renderer: {
     plugins: [react(), copyOverlays()],

@@ -40,7 +40,7 @@ if (-not $engine) {
 if (-not $engine) { exit 1 }
 
 $result = Await ($engine.RecognizeAsync($bitmap))
-($result.Lines | ForEach-Object { $_.Text }) -join "`n"
+($result.Lines | ForEach-Object { $_.Text }) -join [Environment]::NewLine
 `
 
 export async function recognizeDataURL(dataURL) {
@@ -50,7 +50,7 @@ export async function recognizeDataURL(dataURL) {
   const tmpPs   = path.join(os.tmpdir(), `claritas-ocr-${ts}.ps1`)
 
   // UTF-8 BOM so PowerShell 5.1 reads it correctly
-  const bom = Buffer.from('﻿', 'utf8')
+  const bom = Buffer.from([0xEF, 0xBB, 0xBF])
   fs.writeFileSync(tmpImg, Buffer.from(base64, 'base64'))
   fs.writeFileSync(tmpPs,  Buffer.concat([bom, Buffer.from(PS_SCRIPT, 'utf8')]))
 

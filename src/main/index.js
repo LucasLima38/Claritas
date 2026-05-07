@@ -13,6 +13,7 @@ import { showCountdown, hideCountdown } from './countdownOverlay.js'
 import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
 import { initAutoUpdater } from './updateService.js'
+import { recognizeDataURL, terminateOcr } from './ocrService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -204,6 +205,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   clipboardMonitor.stop()
   conversionShell.stop()
+  terminateOcr()
   if (_registeredShortcut) globalShortcut.unregister(_registeredShortcut)
 })
 
@@ -217,6 +219,11 @@ nativeTheme.on('updated', () => {
 })
 
 // ── IPC Handlers ──────────────────────────────────────────────────────────
+
+ipcMain.handle('run-ocr', async (_e, dataURL) => {
+  const text = await recognizeDataURL(dataURL)
+  return text
+})
 
 ipcMain.handle('paste-schematic', async () => {
   const emfBuffer = await readEMF()

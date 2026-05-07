@@ -37,7 +37,7 @@ export function CaptureControls({ onCapture, disabled = false }) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 h-full py-12">
+    <div className="flex flex-col items-center justify-center gap-8 flex-1 py-12">
       <div className="flex flex-col items-center gap-3">
         <span className="text-sm font-medium text-muted-foreground">Modo de captura</span>
         <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">

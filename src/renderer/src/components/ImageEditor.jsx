@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Stage, Layer, Image as KonvaImage, Arrow, Rect, Ellipse, Line, Text, Group, Circle } from 'react-konva'
-import { createWorker } from 'tesseract.js'
 import useImage from 'use-image'
 import { EditorToolbar } from './EditorToolbar'
 import { OcrPanel } from './OcrPanel'
@@ -118,8 +117,8 @@ function AnnotationShape({ shape }) {
           fill="#fff"
           fontSize={14}
           fontStyle="bold"
-          x={-7} y={-7}
-          width={14}
+          x={-14} y={-7}
+          width={28}
           align="center"
         />
       </Group>
@@ -142,26 +141,28 @@ export function ImageEditor() {
   const [ocrOpen, setOcrOpen] = useState(false)
   const [counterCount, setCounterCount] = useState({})
   const [textEditing, setTextEditing] = useState(null) // { id, x, y, value, color, fontSize }
-  const [ocrWorker, setOcrWorker] = useState(null)
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 })
+  const [ocrRegion, setOcrRegion] = useState(null)
+  const [ocrCroppedDataURL, setOcrCroppedDataURL] = useState(null)
+  const [ocrAutoRunKey, setOcrAutoRunKey] = useState(0)
+  const ocrRegionStartRef = useRef(null)
 
   const isDrawingRef = useRef(false)
   const currentShapeRef = useRef(null)
-  const workerRef = useRef(null)
   const textareaRef = useRef(null)
   const stageRef = useRef(null)
+  const containerRef = useRef(null)
+  const isCommittingRef = useRef(false)
 
   useEffect(() => {
-    let mounted = true
-    createWorker('por+eng').then((w) => {
-      if (mounted) {
-        workerRef.current = w
-        setOcrWorker(w)
-      }
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect
+      setContainerSize({ width, height })
     })
-    return () => {
-      mounted = false
-      workerRef.current?.terminate()
-    }
+    ro.observe(el)
+    return () => ro.disconnect()
   }, [])
 
   const handleUndo = useCallback(() => {
@@ -198,10 +199,27 @@ export function ImageEditor() {
     setAnnotations(newAnnotations)
   }, [historyIdx])
 
-  const getPointerPos = (e) => {
-    const stage = e.target.getStage()
-    return stage.getPointerPosition()
+  const getPointerPos = () => {
+    const stage = stageRef.current
+    if (!stage) return null
+    const pos = stage.getPointerPosition()
+    if (!pos) return null
+    return { x: pos.x / stage.scaleX(), y: pos.y / stage.scaleY() }
   }
+
+  const cropAndSetOcrRegion = useCallback((x, y, w, h) => {
+    if (!captureData?.dataURL) return
+    const img = new Image()
+    img.onload = () => {
+      const cvs = document.createElement('canvas')
+      cvs.width = w
+      cvs.height = h
+      cvs.getContext('2d').drawImage(img, x, y, w, h, 0, 0, w, h)
+      setOcrCroppedDataURL(cvs.toDataURL('image/png'))
+      setOcrAutoRunKey((k) => k + 1)
+    }
+    img.src = captureData.dataURL
+  }, [captureData])
 
   const resolveAnnotationId = (e) => {
     const id = e.target?.id?.()
@@ -214,7 +232,9 @@ export function ImageEditor() {
   const handleSave = useCallback(() => {
     if (!stageRef.current) return
     const mimeType = captureFormat === 'jpg' ? 'image/jpeg' : 'image/png'
-    const dataURL = stageRef.current.toDataURL({ mimeType, pixelRatio: 1, quality: 0.92 })
+    const scale = stageRef.current.scaleX()
+    const pixelRatio = scale > 0 ? 1 / scale : 1
+    const dataURL = stageRef.current.toDataURL({ mimeType, pixelRatio, quality: 0.92 })
     actions.saveCapture({ dataURL, format: captureFormat })
   }, [captureFormat, actions])
 
@@ -225,7 +245,8 @@ export function ImageEditor() {
   }, [textEditing])
 
   const commitTextEdit = useCallback(() => {
-    if (!textEditing) return
+    if (!textEditing || isCommittingRef.current) return
+    isCommittingRef.current = true
     const updated = annotations
       .map((a) => a.id === textEditing.id ? { ...a, text: textEditing.value } : a)
       .filter((a) => !(a.id === textEditing.id && textEditing.value.trim() === ''))
@@ -233,9 +254,20 @@ export function ImageEditor() {
     setTextEditing(null)
   }, [textEditing, annotations, pushHistory])
 
+  useEffect(() => {
+    if (!textEditing) isCommittingRef.current = false
+  }, [textEditing])
+
   const handleMouseDown = (e) => {
     if (textEditing) { commitTextEdit(); return }
     if (activeTool === 'select') return
+    if (activeTool === 'ocr-region') {
+      const pos = getPointerPos()
+      if (!pos) return
+      ocrRegionStartRef.current = pos
+      setOcrRegion({ x: pos.x, y: pos.y, width: 0, height: 0 })
+      return
+    }
     if (activeTool === 'eraser') {
       isDrawingRef.current = true
       const targetId = resolveAnnotationId(e)
@@ -246,7 +278,8 @@ export function ImageEditor() {
     }
 
     isDrawingRef.current = true
-    const pos = getPointerPos(e)
+    const pos = getPointerPos()
+    if (!pos) return
 
     if (activeTool === 'arrow' || activeTool === 'line') {
       currentShapeRef.current = {
@@ -304,6 +337,13 @@ export function ImageEditor() {
   }
 
   const handleMouseMove = (e) => {
+    if (activeTool === 'ocr-region' && ocrRegionStartRef.current) {
+      const pos = getPointerPos()
+      if (!pos) return
+      const start = ocrRegionStartRef.current
+      setOcrRegion({ x: start.x, y: start.y, width: pos.x - start.x, height: pos.y - start.y })
+      return
+    }
     if (activeTool === 'eraser' && isDrawingRef.current) {
       const targetId = resolveAnnotationId(e)
       if (targetId) {
@@ -312,7 +352,8 @@ export function ImageEditor() {
       return
     }
     if (!isDrawingRef.current || !currentShapeRef.current) return
-    const pos = getPointerPos(e)
+    const pos = getPointerPos()
+    if (!pos) return
     const shape = currentShapeRef.current
 
     if (shape.type === 'arrow' || shape.type === 'line') {
@@ -341,6 +382,20 @@ export function ImageEditor() {
   }
 
   const handleMouseUp = () => {
+    if (activeTool === 'ocr-region') {
+      if (ocrRegion) {
+        const rx = ocrRegion.width >= 0 ? ocrRegion.x : ocrRegion.x + ocrRegion.width
+        const ry = ocrRegion.height >= 0 ? ocrRegion.y : ocrRegion.y + ocrRegion.height
+        const rw = Math.abs(ocrRegion.width)
+        const rh = Math.abs(ocrRegion.height)
+        if (rw > 5 && rh > 5) {
+          cropAndSetOcrRegion(rx, ry, rw, rh)
+          setOcrOpen(true)
+        }
+      }
+      ocrRegionStartRef.current = null
+      return
+    }
     if (!isDrawingRef.current) return
     isDrawingRef.current = false
     if (activeTool === 'eraser') {
@@ -359,8 +414,12 @@ export function ImageEditor() {
   const stageWidth = captureData?.width ?? 800
   const stageHeight = captureData?.height ?? 600
 
+  const fitScale = containerSize.width > 0 && containerSize.height > 0
+    ? Math.min(1, containerSize.width / stageWidth, containerSize.height / stageHeight)
+    : 1
+
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full w-full bg-background overflow-hidden">
       <EditorToolbar
         activeTool={activeTool}
         onToolChange={setActiveTool}
@@ -373,19 +432,34 @@ export function ImageEditor() {
         onUndo={handleUndo}
         onRedo={handleRedo}
         ocrOpen={ocrOpen}
-        onToggleOcr={() => setOcrOpen((v) => !v)}
+        onToggleOcr={() => {
+          setOcrOpen((v) => {
+            if (v) {
+              setOcrRegion(null)
+              setOcrCroppedDataURL(null)
+              setOcrAutoRunKey(0)
+              setActiveTool('select')
+            } else {
+              setActiveTool('ocr-region')
+            }
+            return !v
+          })
+        }}
       />
 
-      <div className="flex flex-1 overflow-auto">
+      <div className="flex flex-1 overflow-hidden">
         <div
-          className="flex-1 overflow-auto bg-muted flex items-center justify-center"
+          ref={containerRef}
+          className="flex-1 overflow-hidden bg-muted relative"
           style={{ cursor: activeTool === 'select' ? 'default' : 'crosshair' }}
         >
-          <div style={{ position: 'relative', display: 'inline-block' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
             <Stage
               ref={stageRef}
-              width={stageWidth}
-              height={stageHeight}
+              width={Math.round(stageWidth * fitScale)}
+              height={Math.round(stageHeight * fitScale)}
+              scaleX={fitScale}
+              scaleY={fitScale}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -402,6 +476,19 @@ export function ImageEditor() {
                     : <AnnotationShape key={shape.id} shape={shape} />
                 ))}
               </Layer>
+              {ocrRegion && (
+                <Layer>
+                  <Rect
+                    x={ocrRegion.x} y={ocrRegion.y}
+                    width={ocrRegion.width} height={ocrRegion.height}
+                    stroke="#3b82f6"
+                    strokeWidth={2 / fitScale}
+                    dash={[8 / fitScale, 4 / fitScale]}
+                    fill="rgba(59, 130, 246, 0.1)"
+                    listening={false}
+                  />
+                </Layer>
+              )}
             </Stage>
             {textEditing && (
               <textarea
@@ -420,8 +507,8 @@ export function ImageEditor() {
                 }}
                 style={{
                   position: 'absolute',
-                  left: textEditing.x,
-                  top: textEditing.y,
+                  left: textEditing.x * fitScale,
+                  top: textEditing.y * fitScale,
                   minWidth: 120,
                   minHeight: 28,
                   fontSize: textEditing.fontSize,
@@ -439,6 +526,7 @@ export function ImageEditor() {
                   whiteSpace: 'pre',
                 }}
                 rows={1}
+                autoFocus
                 placeholder="Digite o texto…"
               />
             )}
@@ -446,10 +534,13 @@ export function ImageEditor() {
         </div>
 
         {ocrOpen && (
-          <OcrPanel
-            worker={ocrWorker}
-            imageDataURL={captureData?.dataURL}
-          />
+          <div className="w-72 shrink-0 flex flex-col h-full">
+            <OcrPanel
+              key={ocrAutoRunKey}
+              runOcr={() => window.electronAPI.runOcr(ocrCroppedDataURL ?? captureData?.dataURL)}
+              autoRun={ocrAutoRunKey > 0}
+            />
+          </div>
         )}
       </div>
 

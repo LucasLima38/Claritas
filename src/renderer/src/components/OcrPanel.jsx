@@ -14,26 +14,24 @@ function createTimeoutPromise(ms) {
 
 /**
  * Props:
- *   worker         — Tesseract.js worker instance (created + managed by ImageEditor)
- *   imageDataURL   — the current image as dataURL for OCR processing
- *   autoRun        — if true, start OCR immediately on mount (used in tests)
+ *   runOcr         — async () => string — calls main process OCR via IPC
+ *   autoRun        — if true, start OCR immediately on mount
  */
-export function OcrPanel({ worker, imageDataURL, autoRun = false }) {
+export function OcrPanel({ runOcr, autoRun = false }) {
   const [status, setStatus] = useState('idle') // 'idle' | 'loading' | 'ready' | 'error' | 'empty'
   const [text, setText] = useState('')
   const [error, setError] = useState(null)
 
-  const runOcr = useCallback(async () => {
-    if (!worker || !imageDataURL) return
+  const handleRunOcr = useCallback(async () => {
+    if (!runOcr) return
     setStatus('loading')
     setError(null)
 
     try {
-      const result = await Promise.race([
-        worker.recognize(imageDataURL),
+      const extracted = await Promise.race([
+        runOcr(),
         createTimeoutPromise(OCR_TIMEOUT_MS),
       ])
-      const extracted = result.data.text.trim()
       if (!extracted) {
         setStatus('empty')
         setText('')
@@ -49,11 +47,11 @@ export function OcrPanel({ worker, imageDataURL, autoRun = false }) {
           : `Erro ao extrair texto: ${err.message}`
       )
     }
-  }, [worker, imageDataURL])
+  }, [runOcr])
 
   useEffect(() => {
-    if (autoRun) runOcr()
-  }, [autoRun, runOcr])
+    if (autoRun) handleRunOcr()
+  }, [autoRun, handleRunOcr])
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text)
@@ -81,7 +79,7 @@ export function OcrPanel({ worker, imageDataURL, autoRun = false }) {
   }[status]
 
   return (
-    <Card className="w-[280px] flex flex-col h-full rounded-none border-l border-t-0 border-b-0 border-r-0">
+    <Card className="w-full flex flex-col h-full rounded-none border-l border-t-0 border-b-0 border-r-0">
       <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
         <span className="text-sm font-medium">Texto extraído</span>
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -106,12 +104,19 @@ export function OcrPanel({ worker, imageDataURL, autoRun = false }) {
         />
       </CardContent>
 
-      <CardFooter className="px-4 py-3 gap-2">
-        {status === 'idle' && worker && (
-          <Button variant="default" size="sm" onClick={runOcr} className="flex-1">
-            Extrair
-          </Button>
-        )}
+      <CardFooter className="px-4 py-3 gap-2 flex-wrap">
+        <Button
+          variant="default"
+          size="sm"
+          onClick={handleRunOcr}
+          disabled={status === 'loading'}
+          className="flex-1 gap-1.5"
+        >
+          {status === 'loading' && (
+            <Loader2 size={14} className="animate-spin" />
+          )}
+          Extrair
+        </Button>
         {status !== 'idle' && (
           <>
             <Button variant="outline" size="sm" onClick={handleCopy} disabled={!text} className="flex-1">

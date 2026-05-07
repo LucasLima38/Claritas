@@ -19,8 +19,8 @@ const DRAW_TOOLS = [
   { value: 'pen',         icon: Pen,           label: 'Pincel' },
   { value: 'text',        icon: Type,          label: 'Texto' },
   { value: 'highlight',   icon: Highlighter,   label: 'Highlight' },
-  { value: 'eraser',      icon: Eraser,        label: 'Borracha' },
-  { value: 'counter',     icon: Hash,          label: 'Contador' },
+  { value: 'eraser',  icon: Eraser, label: 'Borracha' },
+  { value: 'counter', icon: Hash,   label: 'Contador' },
 ]
 
 const PALETTE_COLORS = [
@@ -59,13 +59,13 @@ export function EditorToolbar({
   onToggleOcr,
 }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-2 bg-background border-b border-border flex-wrap">
+    <div className="flex items-center gap-2 px-3 py-2 bg-background border-b border-border flex-wrap min-w-0">
       {/* Drawing tools */}
       <ToggleGroup
         type="single"
         value={activeTool}
         onValueChange={(v) => v && onToolChange(v)}
-        className="flex gap-0.5"
+        className="flex flex-wrap gap-0.5"
       >
         {DRAW_TOOLS.map(({ value, icon: Icon, label }) => (
           <ToggleGroupItem
@@ -82,12 +82,12 @@ export function EditorToolbar({
 
       <Separator orientation="vertical" className="h-6 mx-1" />
 
-      {/* OCR toggle — separated visually */}
+      {/* OCR — único botão: ativa ferramenta + painel */}
       <Button
-        variant={ocrOpen ? 'default' : 'ghost'}
+        variant={(ocrOpen || activeTool === 'ocr-region') ? 'default' : 'ghost'}
         size="sm"
         onClick={onToggleOcr}
-        title="OCR — extrair texto"
+        title="OCR — selecionar região e extrair texto"
         className="w-8 h-8 p-0"
         aria-label="OCR"
       >

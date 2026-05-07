@@ -67,6 +67,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   deleteHistoryFile: (data) => ipcRenderer.invoke('delete-history-file', data),
   copyFileToClipboard: (data) => ipcRenderer.invoke('copy-file-to-clipboard', data),
 
+  // OCR
+  runOcr: (dataURL) => ipcRenderer.invoke('run-ocr', dataURL),
+
   // Screenshot capture
   captureScreen: (data) => ipcRenderer.invoke('capture-screen', data),
   cancelCapture: () => ipcRenderer.invoke('cancel-capture'),

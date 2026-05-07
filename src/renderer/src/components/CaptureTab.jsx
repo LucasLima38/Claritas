@@ -27,7 +27,7 @@ export function CaptureTab() {
   }
 
   return (
-    <div className="flex flex-1 w-full h-full">
+    <div className="flex flex-col flex-1">
       <CaptureControls
         onCapture={({ mode, delay }) => actions.startCapture({ mode, delay })}
         disabled={captureStatus === 'capture-countdown'}

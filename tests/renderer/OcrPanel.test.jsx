@@ -3,37 +3,21 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { OcrPanel } from '../../src/renderer/src/components/OcrPanel'
 
-// Mock tesseract.js
-vi.mock('tesseract.js', () => ({
-  createWorker: vi.fn(),
-}))
-
 describe('OcrPanel', () => {
-  let mockWorker
-
   beforeEach(() => {
     vi.clearAllMocks()
-    mockWorker = {
-      recognize: vi.fn(),
-      terminate: vi.fn(),
-    }
   })
 
   it('shows idle state initially', () => {
-    render(<OcrPanel worker={null} imageDataURL="data:image/png;base64,abc" />)
-    // Should show the panel with no extracted text yet
+    render(<OcrPanel runOcr={vi.fn()} />)
     expect(screen.getByRole('textbox')).toHaveValue('')
   })
 
   it('shows loading state while OCR is running', async () => {
-    // A worker that never resolves (simulates loading)
     const neverResolves = new Promise(() => {})
-    mockWorker.recognize.mockReturnValue(neverResolves)
-
     render(
       <OcrPanel
-        worker={mockWorker}
-        imageDataURL="data:image/png;base64,abc"
+        runOcr={() => neverResolves}
         autoRun
       />
     )
@@ -44,15 +28,12 @@ describe('OcrPanel', () => {
   })
 
   it('shows extracted text when OCR succeeds', async () => {
-    mockWorker.recognize.mockResolvedValue({
-      data: { text: 'Hello World\n' },
-    })
+    const mockRunOcr = vi.fn().mockResolvedValue('Hello World')
 
     await act(async () => {
       render(
         <OcrPanel
-          worker={mockWorker}
-          imageDataURL="data:image/png;base64,abc"
+          runOcr={mockRunOcr}
           autoRun
         />
       )
@@ -65,14 +46,13 @@ describe('OcrPanel', () => {
 
   it('shows error message when OCR times out', async () => {
     vi.useFakeTimers()
-    mockWorker.recognize.mockImplementation(
+    const mockRunOcr = vi.fn().mockImplementation(
       () => new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 31000))
     )
 
     render(
       <OcrPanel
-        worker={mockWorker}
-        imageDataURL="data:image/png;base64,abc"
+        runOcr={mockRunOcr}
         autoRun
       />
     )
@@ -86,7 +66,7 @@ describe('OcrPanel', () => {
   })
 
   it('copies text to clipboard on Copiar click', async () => {
-    mockWorker.recognize.mockResolvedValue({ data: { text: 'copied text' } })
+    const mockRunOcr = vi.fn().mockResolvedValue('copied text')
     const writeText = vi.fn().mockResolvedValue(undefined)
     Object.defineProperty(navigator, 'clipboard', {
       value: { writeText },
@@ -94,9 +74,7 @@ describe('OcrPanel', () => {
     })
 
     await act(async () => {
-      render(
-        <OcrPanel worker={mockWorker} imageDataURL="data:image/png;base64,abc" autoRun />
-      )
+      render(<OcrPanel runOcr={mockRunOcr} autoRun />)
     })
     await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('copied text'))
 
@@ -105,12 +83,10 @@ describe('OcrPanel', () => {
   })
 
   it('clears text on Limpar click', async () => {
-    mockWorker.recognize.mockResolvedValue({ data: { text: 'some text' } })
+    const mockRunOcr = vi.fn().mockResolvedValue('some text')
 
     await act(async () => {
-      render(
-        <OcrPanel worker={mockWorker} imageDataURL="data:image/png;base64,abc" autoRun />
-      )
+      render(<OcrPanel runOcr={mockRunOcr} autoRun />)
     })
     await waitFor(() => expect(screen.getByRole('textbox')).toHaveValue('some text'))
 
@@ -119,12 +95,10 @@ describe('OcrPanel', () => {
   })
 
   it('shows "nenhum texto" message when OCR returns empty string', async () => {
-    mockWorker.recognize.mockResolvedValue({ data: { text: '   \n' } })
+    const mockRunOcr = vi.fn().mockResolvedValue('')
 
     await act(async () => {
-      render(
-        <OcrPanel worker={mockWorker} imageDataURL="data:image/png;base64,abc" autoRun />
-      )
+      render(<OcrPanel runOcr={mockRunOcr} autoRun />)
     })
 
     await waitFor(() => {

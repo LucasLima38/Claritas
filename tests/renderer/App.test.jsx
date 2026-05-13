@@ -63,6 +63,16 @@ describe('Update check button', () => {
     expect(screen.getByTestId('icon-refresh').className).toMatch(/animate-spin/)
   })
 
+  it('resets to idle when update-available fires while checking', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByTitle(/verificar atualizações/i))
+    expect(screen.getByTestId('icon-refresh').className).toMatch(/animate-spin/)
+
+    await act(async () => { updateAvailableCb({ version: '9.9.9', releaseDate: null }) })
+    expect(screen.getByTestId('icon-refresh')).toBeInTheDocument()
+    expect(screen.getByTestId('icon-refresh').className).not.toMatch(/animate-spin/)
+  })
+
   it('shows upToDate state after update-not-available and reverts to idle', async () => {
     vi.useFakeTimers()
     render(<App />)

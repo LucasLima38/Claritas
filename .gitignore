@@ -36,3 +36,6 @@ docs/superpowers/
 
 # Superpowers runtime directory
 .superpowers/
+
+# Tauri build artifacts
+src-tauri/target/

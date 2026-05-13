@@ -10,7 +10,6 @@ export default function ClipboardArea() {
   useEffect(() => {
     function handleKeyDown(e) {
       if (e.ctrlKey && e.key === 'v' && state.status === 'idle') {
-        if (state.shellStatus !== 'ready') return
         if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return
         e.preventDefault()
         actions.paste()
@@ -18,7 +17,7 @@ export default function ClipboardArea() {
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [state.status, state.shellStatus, actions])
+  }, [state.status, actions])
 
   if (state.status === 'converting') {
     return (

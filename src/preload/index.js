@@ -45,11 +45,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('navigate-to', handler)
     return () => ipcRenderer.removeListener('navigate-to', handler)
   },
-  onShellStatus: (cb) => {
-    const handler = (_e, data) => cb(data)
-    ipcRenderer.on('shell-status', handler)
-    return () => ipcRenderer.removeListener('shell-status', handler)
-  },
   onPreviewReady: (cb) => {
     const handler = (_e, data) => cb(data)
     ipcRenderer.on('preview-ready', handler)

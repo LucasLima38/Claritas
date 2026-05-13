@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 
 const initialState = {
   status: 'idle',
-  shellStatus: 'ready',
   svgContent: null,
   svgMetadata: null,
   previewQueue: [],
@@ -32,7 +31,6 @@ function reducer(state, action) {
         activeProjectId: action.activeProjectId,
         settings: action.settings,
         history: action.history,
-        shellStatus: action.shellStatus ?? state.shellStatus,
       }
 
     case 'PASTE_START':
@@ -123,9 +121,6 @@ function reducer(state, action) {
 
     case 'SET_EXPORT_FORMAT':
       return { ...state, exportFormat: action.format }
-
-    case 'SHELL_STATUS':
-      return { ...state, shellStatus: action.status }
 
     case 'CLEAR_ERROR':
       return { ...state, status: 'idle', error: null }
@@ -219,9 +214,6 @@ export function AppProvider({ children }) {
       ),
       window.electronAPI.onThemeChanged(({ isDark }) => {
         applyTheme(themeRef.current, isDark)
-      }),
-      window.electronAPI.onShellStatus(({ status }) => {
-        dispatch({ type: 'SHELL_STATUS', status })
       }),
       window.electronAPI.onPreviewReady(({ svgContent, metadata }) => {
         dispatch({ type: 'SVG_READY', svgContent, metadata })

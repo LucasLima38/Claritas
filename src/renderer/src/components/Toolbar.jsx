@@ -20,7 +20,7 @@ export default function Toolbar() {
       <Button
         size="sm"
         onClick={actions.paste}
-        disabled={isConverting || state.projects.length === 0 || state.shellStatus !== 'ready'}
+        disabled={isConverting || state.projects.length === 0}
         className="app-region-no-drag h-7 text-xs"
       >
         <Clipboard size={13} className="mr-1.5" />

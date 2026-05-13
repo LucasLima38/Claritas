@@ -31,9 +31,13 @@ export function makeDataURLFromSource(nativeImage, cropRect) {
  */
 export async function captureFullscreen(mainWindow) {
   const display = screen.getDisplayMatching(mainWindow.getBounds())
+  const scale = display.scaleFactor ?? 1
   const sources = await desktopCapturer.getSources({
     types: ['screen'],
-    thumbnailSize: { width: display.bounds.width, height: display.bounds.height },
+    thumbnailSize: {
+      width: Math.round(display.bounds.width * scale),
+      height: Math.round(display.bounds.height * scale),
+    },
   })
 
   if (sources.length === 0) throw new Error('No screen source found')
@@ -73,6 +77,7 @@ export function captureRegion(mainWindow) {
     const display = screen.getDisplayMatching(mainWindow.getBounds())
     const { x, y, width, height } = display.bounds
 
+    const scale = display.scaleFactor ?? 1
     const selWin = new BrowserWindow({
       x,
       y,
@@ -103,7 +108,10 @@ export function captureRegion(mainWindow) {
       try {
         const sources = await desktopCapturer.getSources({
           types: ['screen'],
-          thumbnailSize: { width: display.bounds.width, height: display.bounds.height },
+          thumbnailSize: {
+            width: Math.round(display.bounds.width * scale),
+            height: Math.round(display.bounds.height * scale),
+          },
         })
         if (sources.length === 0) {
           reject(new Error('No screen source found'))

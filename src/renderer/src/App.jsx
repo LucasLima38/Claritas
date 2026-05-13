@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, RefreshCw, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ export default function App() {
   const [screen, setScreen] = useState('main')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
+  const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'upToDate'
   const isResizing = useRef(false)
 
   // Load sidebarWidth from settings once settings arrive
@@ -43,6 +44,22 @@ export default function App() {
       })
     })
   }, [])
+
+  useEffect(() => {
+    return window.electronAPI.onUpdateNotAvailable(() => {
+      setUpdateStatus((prev) => {
+        if (prev !== 'checking') return prev
+        setTimeout(() => setUpdateStatus('idle'), 2500)
+        return 'upToDate'
+      })
+    })
+  }, [])
+
+  const handleCheckUpdate = () => {
+    if (updateStatus !== 'idle') return
+    setUpdateStatus('checking')
+    window.electronAPI.checkForUpdates()
+  }
 
   const handleResizeMouseDown = useCallback((e) => {
     e.preventDefault()
@@ -82,8 +99,19 @@ export default function App() {
         <span className="flex-1 text-center text-xs font-medium text-muted-foreground app-region-drag">
           Claritas
         </span>
-        {/* spacer to keep title centered */}
-        <div className="h-7 w-7 shrink-0" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="app-region-no-drag h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+          onClick={handleCheckUpdate}
+          disabled={updateStatus === 'checking'}
+          title={updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
+        >
+          {updateStatus === 'upToDate'
+            ? <Check size={13} className="text-green-500" />
+            : <RefreshCw size={13} className={updateStatus === 'checking' ? 'animate-spin' : ''} />
+          }
+        </Button>
       </div>
 
       <div className="h-px bg-border shrink-0" />

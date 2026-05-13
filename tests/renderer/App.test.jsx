@@ -1,0 +1,79 @@
+// @vitest-environment jsdom
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+
+// Mock all heavy child components
+vi.mock('../../src/renderer/src/components/Sidebar', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/ClipboardArea', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/ClipGrid', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/StatusBar', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/Settings', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/CaptureTab', () => ({ CaptureTab: () => null }))
+vi.mock('@/components/ui/sonner', () => ({ Toaster: () => null }))
+vi.mock('sonner', () => ({ toast: vi.fn() }))
+vi.mock('lucide-react', () => ({
+  PanelLeftClose: () => <span>PanelLeftClose</span>,
+  PanelLeftOpen:  () => <span>PanelLeftOpen</span>,
+  RefreshCw:      ({ className }) => <span data-testid="icon-refresh" className={className} />,
+  Check:          () => <span data-testid="icon-check" />,
+}))
+
+vi.mock('../../src/renderer/src/context/AppContext', () => ({
+  useApp: () => ({
+    state: { settings: {} },
+    actions: { updateSettings: vi.fn() },
+  }),
+}))
+
+let notAvailableCb = null
+let updateAvailableCb = null
+let navigateCb = null
+
+beforeEach(() => {
+  notAvailableCb = null
+  updateAvailableCb = null
+  navigateCb = null
+
+  globalThis.window.electronAPI = {
+    getInitData: vi.fn().mockResolvedValue({}),
+    checkForUpdates: vi.fn(),
+    onUpdateNotAvailable: vi.fn((cb) => { notAvailableCb = cb; return () => {} }),
+    onUpdateAvailable:    vi.fn((cb) => { updateAvailableCb = cb; return () => {} }),
+    onNavigateTo:         vi.fn((cb) => { navigateCb = cb; return () => {} }),
+    onShellStatus:        vi.fn(() => () => {}),
+    onProjectsUpdated:    vi.fn(() => () => {}),
+    onThemeChanged:       vi.fn(() => () => {}),
+    installUpdate:        vi.fn(),
+  }
+})
+
+import App from '../../src/renderer/src/App'
+
+describe('Update check button', () => {
+  it('renders the refresh button in idle state', () => {
+    render(<App />)
+    expect(screen.getByTitle(/verificar atualizações/i)).toBeInTheDocument()
+    expect(screen.getByTestId('icon-refresh')).toBeInTheDocument()
+  })
+
+  it('enters checking state on click', async () => {
+    render(<App />)
+    fireEvent.click(screen.getByTitle(/verificar atualizações/i))
+    expect(window.electronAPI.checkForUpdates).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('icon-refresh').className).toMatch(/animate-spin/)
+  })
+
+  it('shows upToDate state after update-not-available and reverts to idle', async () => {
+    vi.useFakeTimers()
+    render(<App />)
+
+    fireEvent.click(screen.getByTitle(/verificar atualizações/i))
+
+    await act(async () => { notAvailableCb() })
+    expect(screen.getByTestId('icon-check')).toBeInTheDocument()
+    expect(screen.getByTitle(/atualizado/i)).toBeInTheDocument()
+
+    await act(async () => { vi.advanceTimersByTime(2500) })
+    expect(screen.getByTestId('icon-refresh')).toBeInTheDocument()
+  })
+})

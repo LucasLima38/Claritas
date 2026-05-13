@@ -83,15 +83,17 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               variant="ghost"
               size="icon"
               className="app-region-no-drag h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={onCheckUpdate}
+              onClick={state.updateInfo ? () => setUpdateDialogOpen(true) : onCheckUpdate}
               disabled={updateStatus === 'checking'}
-              title={updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
+              title={state.updateInfo ? 'Atualização disponível' : updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
             >
-              {updateStatus === 'upToDate'
-                ? <Check size={12} className="text-green-500" />
-                : updateStatus === 'checking'
-                  ? <Loader2 size={12} className="animate-spin" />
-                  : <Download size={12} className={state.updateInfo ? 'animate-levitate' : ''} />
+              {state.updateInfo
+                ? <RefreshCw size={12} className="text-amber-500" />
+                : updateStatus === 'upToDate'
+                  ? <Check size={12} className="text-green-500" />
+                  : updateStatus === 'checking'
+                    ? <Loader2 size={12} className="animate-spin" />
+                    : <Download size={12} />
               }
             </Button>
           </>
@@ -99,25 +101,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden py-2">
-        {state.updateInfo && (
-          <div className="px-1.5 pb-1">
-            <Button
-              variant="ghost"
-              onClick={() => setUpdateDialogOpen(true)}
-              className="app-region-no-drag w-full justify-start gap-2 px-2.5 h-7 text-[12.5px] font-normal text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
-            >
-              <span className="relative flex items-center justify-center w-4 shrink-0">
-                <Download size={14} />
-                <Badge className="absolute -top-2 -right-2 h-3.5 min-w-[14px] px-0.5 text-[8px] leading-none flex items-center justify-center bg-amber-500 text-white border-0 rounded-full">
-                  1
-                </Badge>
-              </span>
-              {open && <span className="flex-1 truncate text-left">Atualização</span>}
-            </Button>
-          </div>
-        )}
-
-        {open && <SectionLabel>Workspace</SectionLabel>}
+          {open && <SectionLabel>Workspace</SectionLabel>}
         <SidebarItem
           icon={<Clipboard size={14} />}
           active={screen === 'main'}
@@ -197,7 +181,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Download size={16} /> Atualização disponível
+              <RefreshCw size={16} /> Atualização disponível
             </AlertDialogTitle>
             <AlertDialogDescription>
               A versão <strong>{state.updateInfo?.version}</strong> foi baixada e está pronta para instalar.

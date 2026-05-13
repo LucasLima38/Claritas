@@ -3,6 +3,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer utilities {
+  .animate-levitate {
+    animation: levitate 2s ease-in-out infinite;
+  }
+}
+
+@keyframes levitate {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-4px); }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

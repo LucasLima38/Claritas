@@ -91,7 +91,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
                 ? <Check size={12} className="text-green-500" />
                 : updateStatus === 'checking'
                   ? <Loader2 size={12} className="animate-spin" />
-                  : <Download size={12} />
+                  : <Download size={12} className={state.updateInfo ? 'animate-levitate' : ''} />
               }
             </Button>
           </>

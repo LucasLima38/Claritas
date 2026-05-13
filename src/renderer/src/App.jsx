@@ -16,8 +16,7 @@ export default function App() {
   const [screen, setScreen] = useState('main')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
-  const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'upToDate'
-  const updateTimerRef = useRef(null)
+  const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking'
   const isResizing = useRef(false)
 
   // Load sidebarWidth from settings once settings arrive
@@ -49,16 +48,9 @@ export default function App() {
 
   useEffect(() => {
     return window.electronAPI.onUpdateNotAvailable(() => {
-      setUpdateStatus((prev) => {
-        if (prev !== 'checking') return prev
-        clearTimeout(updateTimerRef.current)
-        updateTimerRef.current = setTimeout(() => setUpdateStatus('idle'), 2500)
-        return 'upToDate'
-      })
+      setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
     })
   }, [])
-
-  useEffect(() => () => clearTimeout(updateTimerRef.current), [])
 
   const handleCheckUpdate = () => {
     if (updateStatus !== 'idle') return

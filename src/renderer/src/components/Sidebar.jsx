@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Settings, Clipboard, Download, Camera, RefreshCw, Check, Loader2 } from 'lucide-react'
+import { Settings, Clipboard, Download, Camera, RefreshCw, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -85,15 +85,13 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               className="app-region-no-drag h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
               onClick={state.updateInfo ? () => setUpdateDialogOpen(true) : onCheckUpdate}
               disabled={updateStatus === 'checking'}
-              title={state.updateInfo ? 'Atualização disponível' : updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
+              title={state.updateInfo ? 'Atualização disponível' : 'Verificar atualizações'}
             >
               {state.updateInfo
                 ? <RefreshCw size={12} className="text-amber-500" />
-                : updateStatus === 'upToDate'
-                  ? <Check size={12} className="text-green-500" />
-                  : updateStatus === 'checking'
-                    ? <Loader2 size={12} className="animate-spin" />
-                    : <Download size={12} />
+                : updateStatus === 'checking'
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Download size={12} />
               }
             </Button>
           </>

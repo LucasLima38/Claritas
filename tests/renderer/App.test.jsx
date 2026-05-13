@@ -6,15 +6,13 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 vi.mock('../../src/renderer/src/components/Sidebar', () => ({
   default: ({ updateStatus, onCheckUpdate }) => (
     <button
-      title={updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
+      title="Verificar atualizações"
       onClick={onCheckUpdate}
       disabled={updateStatus === 'checking'}
     >
-      {updateStatus === 'upToDate'
-        ? <span data-testid="icon-check" />
-        : updateStatus === 'checking'
-          ? <span data-testid="icon-loader" className="animate-spin" />
-          : <span data-testid="icon-download" />
+      {updateStatus === 'checking'
+        ? <span data-testid="icon-loader" className="animate-spin" />
+        : <span data-testid="icon-download" />
       }
     </button>
   ),
@@ -85,17 +83,12 @@ describe('Update check button', () => {
     expect(screen.getByTestId('icon-download')).toBeInTheDocument()
   })
 
-  it('shows upToDate state after update-not-available and reverts to idle', async () => {
-    vi.useFakeTimers()
+  it('returns to download icon immediately after update-not-available', async () => {
     render(<App />)
-
     fireEvent.click(screen.getByTitle(/verificar atualizações/i))
+    expect(screen.getByTestId('icon-loader').className).toMatch(/animate-spin/)
 
     await act(async () => { notAvailableCb() })
-    expect(screen.getByTestId('icon-check')).toBeInTheDocument()
-    expect(screen.getByTitle(/atualizado/i)).toBeInTheDocument()
-
-    await act(async () => { vi.advanceTimersByTime(2500) })
     expect(screen.getByTestId('icon-download')).toBeInTheDocument()
   })
 })

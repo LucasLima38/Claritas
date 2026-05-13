@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Settings, Clipboard, Download, Camera, RefreshCw, Loader2 } from 'lucide-react'
+import { Settings, Clipboard, Download, Camera, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -88,7 +88,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               title={state.updateInfo ? 'Atualização disponível' : 'Verificar atualizações'}
             >
               {state.updateInfo
-                ? <RefreshCw size={12} className="text-amber-500" />
+                ? <Download size={12} className="animate-levitate text-primary" />
                 : updateStatus === 'checking'
                   ? <Loader2 size={12} className="animate-spin" />
                   : <Download size={12} />
@@ -179,7 +179,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <RefreshCw size={16} /> Atualização disponível
+              <Download size={16} /> Atualização disponível
             </AlertDialogTitle>
             <AlertDialogDescription>
               A versão <strong>{state.updateInfo?.version}</strong> foi baixada e está pronta para instalar.

@@ -17,6 +17,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
   const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking'
+  const checkTimeoutRef = useRef(null)
   const isResizing = useRef(false)
 
   // Load sidebarWidth from settings once settings arrive
@@ -34,6 +35,7 @@ export default function App() {
 
   useEffect(() => {
     return window.electronAPI.onUpdateAvailable((info) => {
+      clearTimeout(checkTimeoutRef.current)
       setUpdateStatus('idle')
       toast(`Nova versão ${info.version} disponível`, {
         description: 'Reinicie o app para instalar a atualização.',
@@ -48,6 +50,7 @@ export default function App() {
 
   useEffect(() => {
     return window.electronAPI.onUpdateNotAvailable(() => {
+      clearTimeout(checkTimeoutRef.current)
       setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
     })
   }, [])
@@ -56,7 +59,13 @@ export default function App() {
     if (updateStatus !== 'idle') return
     setUpdateStatus('checking')
     window.electronAPI.checkForUpdates()
+    clearTimeout(checkTimeoutRef.current)
+    checkTimeoutRef.current = setTimeout(() => {
+      setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
+    }, 10000)
   }
+
+  useEffect(() => () => clearTimeout(checkTimeoutRef.current), [])
 
   const handleResizeMouseDown = useCallback((e) => {
     e.preventDefault()

@@ -4,15 +4,17 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 // Mock all heavy child components
 vi.mock('../../src/renderer/src/components/Sidebar', () => ({
-  default: ({ updateStatus, onCheckUpdate }) => (
+  default: ({ updateStatus, downloadPercent, onCheckUpdate }) => (
     <button
       title="Verificar atualizações"
       onClick={onCheckUpdate}
-      disabled={updateStatus === 'checking'}
+      disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
     >
       {updateStatus === 'checking'
         ? <span data-testid="icon-loader" className="animate-spin" />
-        : <span data-testid="icon-download" />
+        : updateStatus === 'downloading'
+          ? <span data-testid="icon-downloading">{downloadPercent}%</span>
+          : <span data-testid="icon-download" />
       }
     </button>
   ),
@@ -39,22 +41,28 @@ vi.mock('../../src/renderer/src/context/AppContext', () => ({
 let notAvailableCb = null
 let updateAvailableCb = null
 let navigateCb = null
+let updateDownloadingCb = null
+let updateDownloadProgressCb = null
 
 beforeEach(() => {
   notAvailableCb = null
   updateAvailableCb = null
   navigateCb = null
+  updateDownloadingCb = null
+  updateDownloadProgressCb = null
 
   globalThis.window.electronAPI = {
     getInitData: vi.fn().mockResolvedValue({}),
     checkForUpdates: vi.fn(),
-    onUpdateNotAvailable: vi.fn((cb) => { notAvailableCb = cb; return () => {} }),
-    onUpdateAvailable:    vi.fn((cb) => { updateAvailableCb = cb; return () => {} }),
-    onNavigateTo:         vi.fn((cb) => { navigateCb = cb; return () => {} }),
-    onShellStatus:        vi.fn(() => () => {}),
-    onProjectsUpdated:    vi.fn(() => () => {}),
-    onThemeChanged:       vi.fn(() => () => {}),
-    installUpdate:        vi.fn(),
+    onUpdateNotAvailable:      vi.fn((cb) => { notAvailableCb = cb; return () => {} }),
+    onUpdateAvailable:         vi.fn((cb) => { updateAvailableCb = cb; return () => {} }),
+    onNavigateTo:              vi.fn((cb) => { navigateCb = cb; return () => {} }),
+    onUpdateDownloading:       vi.fn((cb) => { updateDownloadingCb = cb; return () => {} }),
+    onUpdateDownloadProgress:  vi.fn((cb) => { updateDownloadProgressCb = cb; return () => {} }),
+    onShellStatus:             vi.fn(() => () => {}),
+    onProjectsUpdated:         vi.fn(() => () => {}),
+    onThemeChanged:            vi.fn(() => () => {}),
+    installUpdate:             vi.fn(),
   }
 })
 

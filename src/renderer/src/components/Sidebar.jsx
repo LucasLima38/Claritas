@@ -51,7 +51,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
   )
 }
 
-export default function Sidebar({ screen, onNavigate, open, width, updateStatus, onCheckUpdate }) {
+export default function Sidebar({ screen, onNavigate, open, width, updateStatus, downloadPercent, onCheckUpdate }) {
   const { state, actions } = useApp()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
@@ -84,14 +84,21 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               size="icon"
               className="app-region-no-drag h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
               onClick={state.updateInfo ? () => setUpdateDialogOpen(true) : onCheckUpdate}
-              disabled={updateStatus === 'checking'}
-              title={state.updateInfo ? 'Atualização disponível' : 'Verificar atualizações'}
+              disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
+              title={
+                state.updateInfo ? 'Atualização disponível — clique para instalar'
+                : updateStatus === 'downloading' ? `Baixando atualização… ${downloadPercent}%`
+                : updateStatus === 'checking' ? 'Verificando atualizações…'
+                : 'Verificar atualizações'
+              }
             >
               {state.updateInfo
                 ? <Download size={12} className="animate-levitate text-primary" />
-                : updateStatus === 'checking'
-                  ? <Loader2 size={12} className="animate-spin" />
-                  : <Download size={12} />
+                : updateStatus === 'downloading'
+                  ? <span className="text-[9px] font-bold tabular-nums text-primary leading-none">{downloadPercent}%</span>
+                  : updateStatus === 'checking'
+                    ? <Loader2 size={12} className="animate-spin" />
+                    : <Download size={12} />
               }
             </Button>
           </>

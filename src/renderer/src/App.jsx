@@ -16,7 +16,8 @@ export default function App() {
   const [screen, setScreen] = useState('main')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
-  const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking'
+  const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'downloading'
+  const [downloadPercent, setDownloadPercent] = useState(0)
   const checkTimeoutRef = useRef(null)
   const isResizing = useRef(false)
 
@@ -34,9 +35,24 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    return window.electronAPI.onUpdateDownloading(() => {
+      clearTimeout(checkTimeoutRef.current)
+      setUpdateStatus('downloading')
+      setDownloadPercent(0)
+    })
+  }, [])
+
+  useEffect(() => {
+    return window.electronAPI.onUpdateDownloadProgress(({ percent }) => {
+      setDownloadPercent(percent)
+    })
+  }, [])
+
+  useEffect(() => {
     return window.electronAPI.onUpdateAvailable((info) => {
       clearTimeout(checkTimeoutRef.current)
       setUpdateStatus('idle')
+      setDownloadPercent(0)
       toast(`Nova versão ${info.version} disponível`, {
         description: 'Reinicie o app para instalar a atualização.',
         duration: Infinity,
@@ -62,7 +78,7 @@ export default function App() {
     clearTimeout(checkTimeoutRef.current)
     checkTimeoutRef.current = setTimeout(() => {
       setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
-    }, 10000)
+    }, 15000)
   }
 
   useEffect(() => () => clearTimeout(checkTimeoutRef.current), [])
@@ -110,7 +126,7 @@ export default function App() {
 
       <div className="h-px bg-border shrink-0" />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} width={sidebarWidth} updateStatus={updateStatus} onCheckUpdate={handleCheckUpdate} />
+        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} width={sidebarWidth} updateStatus={updateStatus} downloadPercent={downloadPercent} onCheckUpdate={handleCheckUpdate} />
 
         {sidebarOpen && (
           <div

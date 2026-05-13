@@ -55,6 +55,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('update-available', handler)
     return () => ipcRenderer.removeListener('update-available', handler)
   },
+  onUpdateDownloading: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('update-downloading', handler)
+    return () => ipcRenderer.removeListener('update-downloading', handler)
+  },
+  onUpdateDownloadProgress: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('update-download-progress', handler)
+    return () => ipcRenderer.removeListener('update-download-progress', handler)
+  },
   installUpdate: () => ipcRenderer.invoke('install-update'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   simulateUpdate: () => ipcRenderer.invoke('simulate-update'),

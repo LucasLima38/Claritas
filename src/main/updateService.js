@@ -4,6 +4,21 @@ export function initAutoUpdater(mainWindow, ipcMain) {
   autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
 
+  autoUpdater.on('update-available', (info) => {
+    mainWindow.webContents.send('update-downloading', {
+      version: info.version,
+      releaseDate: info.releaseDate ?? null,
+    })
+  })
+
+  autoUpdater.on('download-progress', (progress) => {
+    mainWindow.webContents.send('update-download-progress', {
+      percent: Math.round(progress.percent),
+      transferred: progress.transferred,
+      total: progress.total,
+    })
+  })
+
   autoUpdater.on('update-downloaded', (info) => {
     mainWindow.webContents.send('update-available', {
       version: info.version,

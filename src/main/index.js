@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut, shell, clipboard, protocol, net } from 'electron'
+import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut, shell, clipboard, protocol } from 'electron'
 import { promises as fsp } from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -136,6 +136,14 @@ function createWindow() {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
+  }
+
+  if (is.dev) {
+    mainWindow.webContents.on('before-input-event', (_e, input) => {
+      if (input.type === 'keyDown' && input.key === 'F12') {
+        mainWindow.webContents.toggleDevTools()
+      }
+    })
   }
 
   mainWindow.on('close', (e) => {

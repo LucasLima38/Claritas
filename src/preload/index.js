@@ -62,6 +62,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   },
   installUpdate: () => ipcRenderer.invoke('install-update'),
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  simulateUpdate: () => ipcRenderer.invoke('simulate-update'),
   onUpdateNotAvailable: (cb) => {
     const handler = () => cb()
     ipcRenderer.on('update-not-available', handler)

@@ -30,6 +30,11 @@ export function initAutoUpdater(mainWindow, ipcMain) {
     autoUpdater.checkForUpdates().catch(() => {})
   })
 
+  ipcMain.removeHandler('simulate-update')
+  ipcMain.handle('simulate-update', () => {
+    mainWindow.webContents.send('update-available', { version: '99.9.9', releaseDate: null })
+  })
+
   autoUpdater.checkForUpdates().catch(() => {})
   setInterval(() => autoUpdater.checkForUpdates().catch(() => {}), 60 * 60 * 1000)
 }

@@ -11,6 +11,10 @@ export function initAutoUpdater(mainWindow, ipcMain) {
     })
   })
 
+  autoUpdater.on('update-not-available', () => {
+    mainWindow.webContents.send('update-not-available')
+  })
+
   autoUpdater.on('error', (err) => {
     console.error('[auto-updater]', err.message)
   })
@@ -18,6 +22,11 @@ export function initAutoUpdater(mainWindow, ipcMain) {
   ipcMain.removeHandler('install-update')
   ipcMain.handle('install-update', () => {
     autoUpdater.quitAndInstall(false, true)
+  })
+
+  ipcMain.removeHandler('check-for-updates')
+  ipcMain.handle('check-for-updates', () => {
+    autoUpdater.checkForUpdates().catch(() => {})
   })
 
   autoUpdater.checkForUpdates().catch(() => {})

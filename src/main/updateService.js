@@ -17,6 +17,7 @@ export function initAutoUpdater(mainWindow, ipcMain) {
 
   autoUpdater.on('error', (err) => {
     console.error('[auto-updater]', err.message)
+    mainWindow.webContents.send('update-not-available')
   })
 
   ipcMain.removeHandler('install-update')

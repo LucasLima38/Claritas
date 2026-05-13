@@ -61,6 +61,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('update-available', handler)
   },
   installUpdate: () => ipcRenderer.invoke('install-update'),
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  onUpdateNotAvailable: (cb) => {
+    const handler = () => cb()
+    ipcRenderer.on('update-not-available', handler)
+    return () => ipcRenderer.removeListener('update-not-available', handler)
+  },
 
   // File operations
   showInFolder: (data) => ipcRenderer.invoke('show-in-folder', data),

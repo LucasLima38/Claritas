@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Settings, Clipboard, Download, Camera, RefreshCw, Check } from 'lucide-react'
+import { Settings, Clipboard, Download, Camera, RefreshCw, Check, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -89,7 +89,9 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
             >
               {updateStatus === 'upToDate'
                 ? <Check size={12} className="text-green-500" />
-                : <RefreshCw size={12} className={updateStatus === 'checking' ? 'animate-spin' : ''} />
+                : updateStatus === 'checking'
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Download size={12} />
               }
             </Button>
           </>

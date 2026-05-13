@@ -12,7 +12,9 @@ vi.mock('../../src/renderer/src/components/Sidebar', () => ({
     >
       {updateStatus === 'upToDate'
         ? <span data-testid="icon-check" />
-        : <span data-testid="icon-refresh" className={updateStatus === 'checking' ? 'animate-spin' : ''} />
+        : updateStatus === 'checking'
+          ? <span data-testid="icon-loader" className="animate-spin" />
+          : <span data-testid="icon-download" />
       }
     </button>
   ),
@@ -61,27 +63,26 @@ beforeEach(() => {
 import App from '../../src/renderer/src/App'
 
 describe('Update check button', () => {
-  it('renders the refresh button in idle state', () => {
+  it('renders the download button in idle state', () => {
     render(<App />)
     expect(screen.getByTitle(/verificar atualizações/i)).toBeInTheDocument()
-    expect(screen.getByTestId('icon-refresh')).toBeInTheDocument()
+    expect(screen.getByTestId('icon-download')).toBeInTheDocument()
   })
 
   it('enters checking state on click', async () => {
     render(<App />)
     fireEvent.click(screen.getByTitle(/verificar atualizações/i))
     expect(window.electronAPI.checkForUpdates).toHaveBeenCalledTimes(1)
-    expect(screen.getByTestId('icon-refresh').className).toMatch(/animate-spin/)
+    expect(screen.getByTestId('icon-loader').className).toMatch(/animate-spin/)
   })
 
   it('resets to idle when update-available fires while checking', async () => {
     render(<App />)
     fireEvent.click(screen.getByTitle(/verificar atualizações/i))
-    expect(screen.getByTestId('icon-refresh').className).toMatch(/animate-spin/)
+    expect(screen.getByTestId('icon-loader').className).toMatch(/animate-spin/)
 
     await act(async () => { updateAvailableCb({ version: '9.9.9', releaseDate: null }) })
-    expect(screen.getByTestId('icon-refresh')).toBeInTheDocument()
-    expect(screen.getByTestId('icon-refresh').className).not.toMatch(/animate-spin/)
+    expect(screen.getByTestId('icon-download')).toBeInTheDocument()
   })
 
   it('shows upToDate state after update-not-available and reverts to idle', async () => {
@@ -95,6 +96,6 @@ describe('Update check button', () => {
     expect(screen.getByTitle(/atualizado/i)).toBeInTheDocument()
 
     await act(async () => { vi.advanceTimersByTime(2500) })
-    expect(screen.getByTestId('icon-refresh')).toBeInTheDocument()
+    expect(screen.getByTestId('icon-download')).toBeInTheDocument()
   })
 })

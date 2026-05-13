@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
-import { Loader2, Check, AlertCircle } from 'lucide-react'
+import { Loader2, Check, AlertCircle, Lock, LockOpen } from 'lucide-react'
 
 const OCR_TIMEOUT_MS = 30_000
 
@@ -12,15 +12,91 @@ function createTimeoutPromise(ms) {
   )
 }
 
+function interpretParagraphs(text) {
+  if (!text) return []
+
+  // Double newlines → explicit paragraph breaks
+  const byDouble = text.split(/\n{2,}/)
+  if (byDouble.length > 1) {
+    return byDouble.map(p => p.replace(/\n/g, ' ').trim()).filter(Boolean)
+  }
+
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+  if (lines.length === 0) return []
+
+  const paragraphs = []
+  let current = []
+
+  for (const line of lines) {
+    if (current.length === 0) {
+      current.push(line)
+      continue
+    }
+    const lastLine = current[current.length - 1]
+    const prevEndsTerminal = /[.!?]$/.test(lastLine)
+    // Only join lines when clearly mid-paragraph: previous doesn't end a sentence
+    // and current line starts with a lowercase letter (wrapped continuation)
+    const c = line[0]
+    const startsLower = c !== undefined && c === c.toLowerCase() && c !== c.toUpperCase()
+
+    if (!prevEndsTerminal && !startsLower) {
+      // Uppercase start after a non-terminal line = heading/title → new paragraph
+      paragraphs.push(current.join(' '))
+      current = [line]
+    } else {
+      // Everything else: mid-sentence continuation OR post-terminal uppercase → join
+      current.push(line)
+    }
+  }
+  if (current.length > 0) paragraphs.push(current.join(' '))
+
+  return paragraphs.filter(Boolean)
+}
+
+/**
+ * Post-processes raw OCR text to fix common artefacts:
+ *
+ * 1. End-of-line syllable-break hyphens
+ *    OCR splits a word across lines and adds a hyphen at the end of the first line.
+ *    If the fragment before the hyphen ends with a vowel → soft hyphen, remove it and join.
+ *    If it ends with a consonant → likely a real compound word, keep the hyphen.
+ *      "pro-\ncesso"  → "processo"
+ *      "well-\nknown" → "well-known"
+ *
+ * 2. Spurious whitespace inside a hyphenated word
+ *    The OCR engine sometimes inserts a space right after (or before) the hyphen.
+ *      "e- mail"  → "e-mail"
+ *      "t -shirt" → "t-shirt"
+ */
+function fixOcrArtifacts(text) {
+  if (!text) return text
+
+  // 1. End-of-line soft hyphens
+  let out = text.replace(
+    /(\w+)-\n([a-záàãâéêíóôõúüç])/gi,
+    (_, before, after) =>
+      /[aeiouáàãâéêíóôõúü]$/i.test(before)
+        ? before + after        // vowel ending → syllable break, remove hyphen
+        : before + '-' + after  // consonant ending → compound word, keep hyphen
+  )
+
+  // 2. Spurious whitespace around the hyphen inside a word
+  out = out.replace(/(\w)\s*-\s+(\w)/g, '$1-$2')
+  out = out.replace(/(\w)\s+-\s*(\w)/g, '$1-$2')
+
+  return out
+}
+
 /**
  * Props:
- *   runOcr         — async () => string — calls main process OCR via IPC
- *   autoRun        — if true, start OCR immediately on mount
+ *   runOcr   — async () => string
+ *   autoRun  — start OCR immediately on mount
  */
 export function OcrPanel({ runOcr, autoRun = false }) {
-  const [status, setStatus] = useState('idle') // 'idle' | 'loading' | 'ready' | 'error' | 'empty'
+  const [status, setStatus] = useState('idle')
   const [text, setText] = useState('')
   const [error, setError] = useState(null)
+  const [locked, setLocked] = useState(false)
 
   const handleRunOcr = useCallback(async () => {
     if (!runOcr) return
@@ -37,7 +113,7 @@ export function OcrPanel({ runOcr, autoRun = false }) {
         setText('')
       } else {
         setStatus('ready')
-        setText(extracted)
+        setText(fixOcrArtifacts(extracted))
       }
     } catch (err) {
       setStatus('error')
@@ -53,14 +129,15 @@ export function OcrPanel({ runOcr, autoRun = false }) {
     if (autoRun) handleRunOcr()
   }, [autoRun, handleRunOcr])
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(text)
-  }
+  const handleCopy = () => navigator.clipboard.writeText(text)
 
   const handleClear = () => {
     setText('')
     setStatus('idle')
+    setLocked(false)
   }
+
+  const paragraphs = interpretParagraphs(text)
 
   const statusIcon = {
     idle: null,
@@ -80,31 +157,59 @@ export function OcrPanel({ runOcr, autoRun = false }) {
 
   return (
     <Card className="w-full flex flex-col h-full rounded-none border-l border-t-0 border-b-0 border-r-0">
-      <CardHeader className="py-3 px-4 flex-row items-center justify-between space-y-0">
-        <span className="text-sm font-medium">Texto extraído</span>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          {statusIcon}
-          <span>{statusLabel}</span>
+      <CardHeader className="py-2 px-3 flex-row items-center space-y-0 gap-2 shrink-0">
+        <span className="text-sm font-medium flex-1">Texto extraído</span>
+
+        {/* ── Lock button + status ── */}
+        <div className="flex items-center gap-1 shrink-0">
+          {status === 'ready' && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-foreground"
+              onClick={() => setLocked(l => !l)}
+              title={locked ? 'Desbloquear edição' : 'Bloquear edição'}
+            >
+              {locked ? <Lock size={12} /> : <LockOpen size={12} />}
+            </Button>
+          )}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            {statusIcon}
+            <span>{statusLabel}</span>
+          </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-4 pb-2 flex-1 flex flex-col gap-2">
+      <CardContent className="px-3 pb-2 flex-1 flex flex-col gap-2 overflow-hidden min-h-0">
         {status === 'error' && (
           <p className="text-xs text-destructive">{error}</p>
         )}
         {status === 'empty' && (
           <p className="text-xs text-muted-foreground">Nenhum texto encontrado na imagem.</p>
         )}
-        <Textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={status === 'idle' ? 'Clique em Extrair para iniciar o OCR' : ''}
-          className="flex-1 resize-none text-sm font-mono min-h-[200px]"
-          aria-label="Texto extraído"
-        />
+
+        {locked && status === 'ready' ? (
+          // ── Formatted paragraph view (read-only) ──
+          <div className="flex-1 overflow-y-auto rounded-md border border-input bg-background px-4 py-3 text-sm leading-relaxed min-h-[200px]">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="mb-4 last:mb-0">
+                {p}
+              </p>
+            ))}
+          </div>
+        ) : (
+          // ── Editable raw textarea ──
+          <Textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={status === 'idle' ? 'Clique em Extrair para iniciar o OCR' : ''}
+            className="flex-1 resize-none text-sm font-mono min-h-[200px]"
+            aria-label="Texto extraído"
+          />
+        )}
       </CardContent>
 
-      <CardFooter className="px-4 py-3 gap-2 flex-wrap">
+      <CardFooter className="px-3 py-2 gap-2 flex-wrap shrink-0">
         <Button
           variant="default"
           size="sm"
@@ -112,9 +217,7 @@ export function OcrPanel({ runOcr, autoRun = false }) {
           disabled={status === 'loading'}
           className="flex-1 gap-1.5"
         >
-          {status === 'loading' && (
-            <Loader2 size={14} className="animate-spin" />
-          )}
+          {status === 'loading' && <Loader2 size={14} className="animate-spin" />}
           Extrair
         </Button>
         {status !== 'idle' && (

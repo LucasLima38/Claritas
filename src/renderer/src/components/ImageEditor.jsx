@@ -145,6 +145,7 @@ export function ImageEditor() {
   const [ocrRegion, setOcrRegion] = useState(null)
   const [ocrCroppedDataURL, setOcrCroppedDataURL] = useState(null)
   const [ocrAutoRunKey, setOcrAutoRunKey] = useState(0)
+  const [ocrPanelWidth, setOcrPanelWidth] = useState(288)
   const ocrRegionStartRef = useRef(null)
 
   const isDrawingRef = useRef(false)
@@ -206,6 +207,22 @@ export function ImageEditor() {
     if (!pos) return null
     return { x: pos.x / stage.scaleX(), y: pos.y / stage.scaleY() }
   }
+
+  const handleOcrResizeMouseDown = useCallback((e) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startWidth = ocrPanelWidth
+    const onMove = (ev) => {
+      const delta = startX - ev.clientX
+      setOcrPanelWidth(Math.min(600, Math.max(220, startWidth + delta)))
+    }
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }, [ocrPanelWidth])
 
   const cropAndSetOcrRegion = useCallback((x, y, w, h) => {
     if (!captureData?.dataURL) return
@@ -534,12 +551,19 @@ export function ImageEditor() {
         </div>
 
         {ocrOpen && (
-          <div className="w-72 shrink-0 flex flex-col h-full">
-            <OcrPanel
-              key={ocrAutoRunKey}
-              runOcr={() => window.electronAPI.runOcr(ocrCroppedDataURL ?? captureData?.dataURL)}
-              autoRun={ocrAutoRunKey > 0}
+          <div className="shrink-0 flex h-full" style={{ width: ocrPanelWidth }}>
+            <div
+              className="w-1.5 h-full cursor-col-resize shrink-0 hover:bg-primary/20 transition-colors select-none"
+              onMouseDown={handleOcrResizeMouseDown}
+              title="Arraste para redimensionar"
             />
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+              <OcrPanel
+                key={ocrAutoRunKey}
+                runOcr={() => window.electronAPI.runOcr(ocrCroppedDataURL ?? captureData?.dataURL)}
+                autoRun={ocrAutoRunKey > 0}
+              />
+            </div>
           </div>
         )}
       </div>

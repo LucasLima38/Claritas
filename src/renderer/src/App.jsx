@@ -19,6 +19,7 @@ export default function App() {
   const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'downloading'
   const [downloadPercent, setDownloadPercent] = useState(0)
   const checkTimeoutRef = useRef(null)
+  const isManualCheck = useRef(false)
   const isResizing = useRef(false)
 
   // Load sidebarWidth from settings once settings arrive
@@ -37,6 +38,7 @@ export default function App() {
   useEffect(() => {
     return window.electronAPI.onUpdateDownloading(() => {
       clearTimeout(checkTimeoutRef.current)
+      isManualCheck.current = false
       setUpdateStatus('downloading')
       setDownloadPercent(0)
     })
@@ -67,16 +69,22 @@ export default function App() {
   useEffect(() => {
     return window.electronAPI.onUpdateNotAvailable(() => {
       clearTimeout(checkTimeoutRef.current)
+      if (isManualCheck.current) {
+        isManualCheck.current = false
+        toast('Você está na versão mais recente', { duration: 3000 })
+      }
       setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
     })
   }, [])
 
   const handleCheckUpdate = () => {
     if (updateStatus !== 'idle') return
+    isManualCheck.current = true
     setUpdateStatus('checking')
     window.electronAPI.checkForUpdates()
     clearTimeout(checkTimeoutRef.current)
     checkTimeoutRef.current = setTimeout(() => {
+      isManualCheck.current = false
       setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
     }, 15000)
   }

@@ -163,6 +163,20 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'localfile', privileges: { secure: true, standard: true, supportFetchAPI: true } },
 ])
 
+// ── Single instance lock ──────────────────────────────────────────────────
+
+const gotInstanceLock = app.requestSingleInstanceLock()
+if (!gotInstanceLock) {
+  app.quit()
+}
+
+app.on('second-instance', () => {
+  if (!mainWindow) return
+  if (mainWindow.isMinimized()) mainWindow.restore()
+  mainWindow.show()
+  mainWindow.focus()
+})
+
 app.whenReady().then(() => {
   protocol.handle('localfile', async (request) => {
     const MIME = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.pdf': 'application/pdf' }

@@ -3,7 +3,20 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 // Mock all heavy child components
-vi.mock('../../src/renderer/src/components/Sidebar', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/Sidebar', () => ({
+  default: ({ updateStatus, onCheckUpdate }) => (
+    <button
+      title={updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
+      onClick={onCheckUpdate}
+      disabled={updateStatus === 'checking'}
+    >
+      {updateStatus === 'upToDate'
+        ? <span data-testid="icon-check" />
+        : <span data-testid="icon-refresh" className={updateStatus === 'checking' ? 'animate-spin' : ''} />
+      }
+    </button>
+  ),
+}))
 vi.mock('../../src/renderer/src/components/ClipboardArea', () => ({ default: () => null }))
 vi.mock('../../src/renderer/src/components/ClipGrid', () => ({ default: () => null }))
 vi.mock('../../src/renderer/src/components/StatusBar', () => ({ default: () => null }))
@@ -14,8 +27,6 @@ vi.mock('sonner', () => ({ toast: vi.fn() }))
 vi.mock('lucide-react', () => ({
   PanelLeftClose: () => <span>PanelLeftClose</span>,
   PanelLeftOpen:  () => <span>PanelLeftOpen</span>,
-  RefreshCw:      ({ className }) => <span data-testid="icon-refresh" className={className} />,
-  Check:          () => <span data-testid="icon-check" />,
 }))
 
 vi.mock('../../src/renderer/src/context/AppContext', () => ({

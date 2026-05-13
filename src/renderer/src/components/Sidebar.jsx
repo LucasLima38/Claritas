@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Settings, Clipboard, Download, Camera } from 'lucide-react'
+import { Settings, Clipboard, Download, Camera, RefreshCw, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -51,7 +51,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
   )
 }
 
-export default function Sidebar({ screen, onNavigate, open, width }) {
+export default function Sidebar({ screen, onNavigate, open, width, updateStatus, onCheckUpdate }) {
   const { state, actions } = useApp()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
@@ -77,7 +77,22 @@ export default function Sidebar({ screen, onNavigate, open, width }) {
       <div className="flex items-center gap-2 px-2.5 py-2 border-b border-border shrink-0">
         <img src={logoUrl} alt="Claritas" className="w-6 h-6 shrink-0 object-contain" />
         {open && (
-          <span className="text-[13px] font-semibold tracking-tight truncate">Claritas</span>
+          <>
+            <span className="text-[13px] font-semibold tracking-tight truncate flex-1">Claritas</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="app-region-no-drag h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+              onClick={onCheckUpdate}
+              disabled={updateStatus === 'checking'}
+              title={updateStatus === 'upToDate' ? 'Claritas está atualizado' : 'Verificar atualizações'}
+            >
+              {updateStatus === 'upToDate'
+                ? <Check size={12} className="text-green-500" />
+                : <RefreshCw size={12} className={updateStatus === 'checking' ? 'animate-spin' : ''} />
+              }
+            </Button>
+          </>
         )}
       </div>
 

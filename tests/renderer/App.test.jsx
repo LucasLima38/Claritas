@@ -25,6 +25,7 @@ vi.mock('../../src/renderer/src/components/StatusBar', () => ({ default: () => n
 vi.mock('../../src/renderer/src/components/Settings', () => ({ default: () => null }))
 vi.mock('../../src/renderer/src/components/CaptureTab', () => ({ CaptureTab: () => null }))
 vi.mock('../../src/renderer/src/components/About', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/NotificationsDialog', () => ({ default: () => null }))
 vi.mock('@/components/ui/sonner', () => ({ Toaster: () => null }))
 vi.mock('sonner', () => ({ toast: vi.fn() }))
 vi.mock('lucide-react', () => ({
@@ -34,8 +35,8 @@ vi.mock('lucide-react', () => ({
 
 vi.mock('../../src/renderer/src/context/AppContext', () => ({
   useApp: () => ({
-    state: { settings: {} },
-    actions: { updateSettings: vi.fn() },
+    state: { settings: {}, notifications: [] },
+    actions: { updateSettings: vi.fn(), addNotification: vi.fn(), markAllRead: vi.fn(), clearNotifications: vi.fn() },
   }),
 }))
 
@@ -60,6 +61,7 @@ beforeEach(() => {
     onNavigateTo:              vi.fn((cb) => { navigateCb = cb; return () => {} }),
     onUpdateDownloading:       vi.fn((cb) => { updateDownloadingCb = cb; return () => {} }),
     onUpdateDownloadProgress:  vi.fn((cb) => { updateDownloadProgressCb = cb; return () => {} }),
+    saveNotifications:         vi.fn(),
     onShellStatus:             vi.fn(() => () => {}),
     onProjectsUpdated:         vi.fn(() => () => {}),
     onThemeChanged:            vi.fn(() => () => {}),

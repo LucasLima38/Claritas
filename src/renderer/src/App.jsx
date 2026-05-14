@@ -11,11 +11,13 @@ import StatusBar from './components/StatusBar.jsx'
 import Settings from './components/Settings.jsx'
 import { CaptureTab } from './components/CaptureTab.jsx'
 import About from './components/About.jsx'
+import NotificationsDialog from './components/NotificationsDialog.jsx'
 
 export default function App() {
   const { state, actions } = useApp()
   const [screen, setScreen] = useState('main')
   const [aboutOpen, setAboutOpen] = useState(false)
+  const [notifOpen, setNotifOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
   const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'downloading'
@@ -64,6 +66,13 @@ export default function App() {
           label: 'Reiniciar agora',
           onClick: () => window.electronAPI.installUpdate(),
         },
+      })
+      actions.addNotification({
+        id: crypto.randomUUID(),
+        type: 'info',
+        message: `Nova versão ${info.version} disponível`,
+        read: false,
+        timestamp: Date.now(),
       })
     })
   }, [])
@@ -136,7 +145,18 @@ export default function App() {
 
       <div className="h-px bg-border shrink-0" />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} width={sidebarWidth} updateStatus={updateStatus} downloadPercent={downloadPercent} onCheckUpdate={handleCheckUpdate} onOpenAbout={() => setAboutOpen(true)} />
+        <Sidebar
+          screen={screen}
+          onNavigate={setScreen}
+          open={sidebarOpen}
+          width={sidebarWidth}
+          updateStatus={updateStatus}
+          downloadPercent={downloadPercent}
+          onCheckUpdate={handleCheckUpdate}
+          onOpenAbout={() => setAboutOpen(true)}
+          onOpenNotifications={() => setNotifOpen(true)}
+          unreadCount={state.notifications.filter((n) => !n.read).length}
+        />
 
         {sidebarOpen && (
           <div
@@ -166,6 +186,13 @@ export default function App() {
         </div>
       </div>
 
+      <NotificationsDialog
+        open={notifOpen}
+        onOpenChange={setNotifOpen}
+        notifications={state.notifications}
+        onMarkAllRead={actions.markAllRead}
+        onClear={actions.clearNotifications}
+      />
       <About open={aboutOpen} onOpenChange={setAboutOpen} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />
       <Toaster richColors position="bottom-center" />
     </div>

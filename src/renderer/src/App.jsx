@@ -15,6 +15,7 @@ import About from './components/About.jsx'
 export default function App() {
   const { state, actions } = useApp()
   const [screen, setScreen] = useState('main')
+  const [aboutOpen, setAboutOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
   const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'downloading'
@@ -135,7 +136,7 @@ export default function App() {
 
       <div className="h-px bg-border shrink-0" />
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} width={sidebarWidth} updateStatus={updateStatus} downloadPercent={downloadPercent} onCheckUpdate={handleCheckUpdate} />
+        <Sidebar screen={screen} onNavigate={setScreen} open={sidebarOpen} width={sidebarWidth} updateStatus={updateStatus} downloadPercent={downloadPercent} onCheckUpdate={handleCheckUpdate} onOpenAbout={() => setAboutOpen(true)} />
 
         {sidebarOpen && (
           <div
@@ -162,10 +163,10 @@ export default function App() {
             </div>
           )}
           {screen === 'settings' && <Settings onBack={() => setScreen('main')} />}
-          {screen === 'about' && <About onBack={() => setScreen('main')} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />}
         </div>
       </div>
 
+      <About open={aboutOpen} onOpenChange={setAboutOpen} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />
       <Toaster richColors position="bottom-center" />
     </div>
   )

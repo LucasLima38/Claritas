@@ -51,7 +51,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
   )
 }
 
-export default function Sidebar({ screen, onNavigate, open, width, updateStatus, downloadPercent, onCheckUpdate }) {
+export default function Sidebar({ screen, onNavigate, open, width, updateStatus, downloadPercent, onCheckUpdate, onOpenAbout }) {
   const { state, actions } = useApp()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
@@ -160,7 +160,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
                 title={!open ? 'Configurações' : undefined}
                 className={cn(
                   'app-region-no-drag justify-start gap-2 mx-1.5 px-2.5 h-7 text-[12.5px] w-[calc(100%-12px)] font-normal',
-                  (screen === 'settings' || screen === 'about') && 'bg-accent font-medium text-accent-foreground',
+                  screen === 'settings' && 'bg-accent font-medium text-accent-foreground',
                   !open && 'justify-center px-0'
                 )}
               >
@@ -177,7 +177,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
                 <Settings size={13} />
                 Configurações
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onNavigate('about')}>
+              <DropdownMenuItem onClick={onOpenAbout}>
                 <Info size={13} />
                 Sobre
               </DropdownMenuItem>

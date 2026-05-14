@@ -24,6 +24,7 @@ vi.mock('../../src/renderer/src/components/ClipGrid', () => ({ default: () => nu
 vi.mock('../../src/renderer/src/components/StatusBar', () => ({ default: () => null }))
 vi.mock('../../src/renderer/src/components/Settings', () => ({ default: () => null }))
 vi.mock('../../src/renderer/src/components/CaptureTab', () => ({ CaptureTab: () => null }))
+vi.mock('../../src/renderer/src/components/About', () => ({ default: () => null }))
 vi.mock('@/components/ui/sonner', () => ({ Toaster: () => null }))
 vi.mock('sonner', () => ({ toast: vi.fn() }))
 vi.mock('lucide-react', () => ({

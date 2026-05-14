@@ -20,9 +20,10 @@ const initialState = {
   captureStatus: 'capture-idle',
   captureData: null,
   captureFormat: 'png',
+  notifications: [],
 }
 
-function reducer(state, action) {
+export function reducer(state, action) {
   switch (action.type) {
     case 'INIT':
       return {
@@ -31,6 +32,7 @@ function reducer(state, action) {
         activeProjectId: action.activeProjectId,
         settings: action.settings,
         history: action.history,
+        notifications: action.notifications ?? [],
       }
 
     case 'PASTE_START':
@@ -171,6 +173,17 @@ function reducer(state, action) {
 
     case 'CAPTURE_COUNTDOWN_START':
       return { ...state, captureStatus: 'capture-countdown' }
+
+    case 'ADD_NOTIFICATION': {
+      const updated = [action.notification, ...state.notifications]
+      return { ...state, notifications: updated.slice(0, 50) }
+    }
+
+    case 'MARK_ALL_READ':
+      return { ...state, notifications: state.notifications.map((n) => ({ ...n, read: true })) }
+
+    case 'CLEAR_NOTIFICATIONS':
+      return { ...state, notifications: [] }
 
     default:
       return state
@@ -393,6 +406,21 @@ export function AppProvider({ children }) {
 
     setCaptureFormat(format) {
       dispatch({ type: 'SET_CAPTURE_FORMAT', format })
+    },
+
+    addNotification(notification) {
+      const updated = [notification, ...state.notifications].slice(0, 50)
+      dispatch({ type: 'ADD_NOTIFICATION', notification })
+      window.electronAPI.saveNotifications(updated)
+    },
+
+    markAllRead() {
+      dispatch({ type: 'MARK_ALL_READ' })
+    },
+
+    clearNotifications() {
+      dispatch({ type: 'CLEAR_NOTIFICATIONS' })
+      window.electronAPI.saveNotifications([])
     },
   }
 

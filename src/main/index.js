@@ -437,6 +437,11 @@ ipcMain.handle('set-login-item-settings', (_event, { openAtLogin }) => {
   return { ok: true }
 })
 
+ipcMain.handle('save-notifications', (_event, list) => {
+  store.saveNotifications(list)
+  return { ok: true }
+})
+
 // Renderer calls this once on mount to get initial state (avoids did-finish-load race condition)
 ipcMain.handle('get-init-data', () => {
   const projects = store.getProjects()
@@ -451,6 +456,7 @@ ipcMain.handle('get-init-data', () => {
     activeProjectId,
     settings: store.getSettings(),
     history: store.getHistory(),
+    notifications: store.getNotifications(),
     shellStatus: 'ready',
   }
 })

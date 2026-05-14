@@ -90,6 +90,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   captureScreen: (data) => ipcRenderer.invoke('capture-screen', data),
   cancelCapture: () => ipcRenderer.invoke('cancel-capture'),
   saveImage: (data) => ipcRenderer.invoke('save-image', data),
+
+  // Notifications
+  saveNotifications: (list) => ipcRenderer.invoke('save-notifications', list),
   onCaptureReady: (cb) => {
     const handler = (_e, data) => cb(data)
     ipcRenderer.on('capture-ready', handler)

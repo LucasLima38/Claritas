@@ -388,6 +388,12 @@ ipcMain.handle('reorder-projects', (_event, { ids }) => {
   return { projects: store.getProjects() }
 })
 
+ipcMain.handle('get-app-info', () => ({
+  version: app.getVersion(),
+  platform: process.platform,
+  arch: process.arch,
+}))
+
 ipcMain.handle('get-settings', () => store.getSettings())
 
 ipcMain.handle('update-settings', (_event, updates) => {

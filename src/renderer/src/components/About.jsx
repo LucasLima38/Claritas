@@ -1,0 +1,64 @@
+import { useState, useEffect } from 'react'
+import { ArrowLeft } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+import logoUrl from '../assets/logo.png'
+
+export default function About({ onBack }) {
+  const [appInfo, setAppInfo] = useState(null)
+
+  useEffect(() => {
+    window.electronAPI.getAppInfo().then(setAppInfo).catch(() => setAppInfo(null))
+  }, [])
+
+  return (
+    <div className="flex-1 overflow-y-auto">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          className="app-region-no-drag h-7 px-2 text-xs text-muted-foreground gap-1"
+        >
+          <ArrowLeft size={14} /> Voltar
+        </Button>
+        <h2 className="text-sm font-semibold">Sobre</h2>
+      </div>
+
+      <div className="p-5 flex flex-col gap-6 w-full max-w-2xl mx-auto">
+        <div className="flex flex-col items-center gap-3 py-6">
+          <img src={logoUrl} alt="Claritas" className="w-16 h-16 object-contain" />
+          <div className="text-center">
+            <h1 className="text-xl font-semibold tracking-tight">Claritas</h1>
+            {appInfo && (
+              <p className="text-xs text-muted-foreground mt-0.5">v{appInfo.version}</p>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        <section className="flex flex-col gap-3">
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Sistema</p>
+          <div className="flex flex-col gap-2">
+            <InfoRow label="Plataforma" value={appInfo?.platform ?? '—'} />
+            <InfoRow label="Arquitetura" value={appInfo?.arch ?? '—'} />
+          </div>
+        </section>
+
+        <div className="mt-auto pt-4">
+          <p className="text-[10px] text-muted-foreground text-center">Made by Lucas Vieira</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InfoRow({ label, value }) {
+  return (
+    <div className="flex items-center justify-between py-1.5">
+      <span className="text-[12.5px] text-muted-foreground">{label}</span>
+      <span className="text-[12.5px] font-mono">{value}</span>
+    </div>
+  )
+}

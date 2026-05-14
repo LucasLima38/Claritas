@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Settings, Clipboard, Download, Camera, Loader2 } from 'lucide-react'
+import { Settings, Clipboard, Download, Camera, Loader2, Info, Bell, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
@@ -160,7 +160,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
                 title={!open ? 'Configurações' : undefined}
                 className={cn(
                   'app-region-no-drag justify-start gap-2 mx-1.5 px-2.5 h-7 text-[12.5px] w-[calc(100%-12px)] font-normal',
-                  screen === 'settings' && 'bg-accent font-medium text-accent-foreground',
+                  (screen === 'settings' || screen === 'about') && 'bg-accent font-medium text-accent-foreground',
                   !open && 'justify-center px-0'
                 )}
               >
@@ -171,11 +171,24 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="top" align="start" className="w-48">
-              <DropdownMenuLabel>Configurações Gerais</DropdownMenuLabel>
+              <DropdownMenuLabel>Geral</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onNavigate('settings')}>
                 <Settings size={13} />
                 Configurações
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onNavigate('about')}>
+                <Info size={13} />
+                Sobre
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled>
+                <Bell size={13} />
+                Notificações
+              </DropdownMenuItem>
+              <DropdownMenuItem disabled>
+                <User size={13} />
+                Conta
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

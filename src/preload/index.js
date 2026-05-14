@@ -82,6 +82,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // OCR
   runOcr: (dataURL) => ipcRenderer.invoke('run-ocr', dataURL),
 
+  // App info
+  getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+
   // Screenshot capture
   captureScreen: (data) => ipcRenderer.invoke('capture-screen', data),
   cancelCapture: () => ipcRenderer.invoke('cancel-capture'),

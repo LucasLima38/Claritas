@@ -10,6 +10,7 @@ import ClipGrid from './components/ClipGrid.jsx'
 import StatusBar from './components/StatusBar.jsx'
 import Settings from './components/Settings.jsx'
 import { CaptureTab } from './components/CaptureTab.jsx'
+import About from './components/About.jsx'
 
 export default function App() {
   const { state, actions } = useApp()
@@ -161,6 +162,7 @@ export default function App() {
             </div>
           )}
           {screen === 'settings' && <Settings onBack={() => setScreen('main')} />}
+          {screen === 'about' && <About onBack={() => setScreen('main')} />}
         </div>
       </div>
 

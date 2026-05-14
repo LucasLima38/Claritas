@@ -255,6 +255,15 @@ export function AppProvider({ children }) {
         const toastOnly = result.error === 'NO_EMF'
         if (toastOnly) toast.error(result.message)
         dispatch({ type: 'CONVERSION_ERROR', errorType: result.error, message: result.message, toastOnly })
+        if (!toastOnly) {
+          actions.addNotification({
+            id: crypto.randomUUID(),
+            type: 'error',
+            message: `Erro de conversão: ${result.message}`,
+            read: false,
+            timestamp: Date.now(),
+          })
+        }
       }
     },
 
@@ -271,11 +280,25 @@ export function AppProvider({ children }) {
       } catch (err) {
         toast.error(`Erro de comunicação: ${err.message}`)
         dispatch({ type: 'SAVE_ERROR' })
+        actions.addNotification({
+          id: crypto.randomUUID(),
+          type: 'error',
+          message: `Erro ao salvar: ${err.message}`,
+          read: false,
+          timestamp: Date.now(),
+        })
         return
       }
       if (!result) {
         toast.error('Resposta inválida do processo principal.')
         dispatch({ type: 'SAVE_ERROR' })
+        actions.addNotification({
+          id: crypto.randomUUID(),
+          type: 'error',
+          message: 'Erro ao salvar: resposta inválida do processo principal.',
+          read: false,
+          timestamp: Date.now(),
+        })
         return
       }
       if (result.ok) {
@@ -283,12 +306,33 @@ export function AppProvider({ children }) {
         toast.success(`Salvo: ${result.filename}`)
       } else if (result.dirMissing) {
         dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
+        actions.addNotification({
+          id: crypto.randomUUID(),
+          type: 'warning',
+          message: `Pasta de saída não encontrada: ${result.outputDir ?? '(desconhecida)'}`,
+          read: false,
+          timestamp: Date.now(),
+        })
       } else if (result.error === 'EACCES') {
         toast.error('Sem permissão de escrita na pasta de destino.')
         dispatch({ type: 'SAVE_ERROR' })
+        actions.addNotification({
+          id: crypto.randomUUID(),
+          type: 'error',
+          message: 'Erro ao salvar: sem permissão de escrita na pasta de destino.',
+          read: false,
+          timestamp: Date.now(),
+        })
       } else {
         toast.error(result.message || 'Erro desconhecido ao salvar.')
         dispatch({ type: 'SAVE_ERROR' })
+        actions.addNotification({
+          id: crypto.randomUUID(),
+          type: 'error',
+          message: `Erro ao salvar: ${result.message || 'erro desconhecido.'}`,
+          read: false,
+          timestamp: Date.now(),
+        })
       }
     },
 

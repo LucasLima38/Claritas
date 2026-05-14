@@ -225,6 +225,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  tray?.destroy()
   clipboardMonitor.stop()
   conversionShell.stop()
   terminateOcr()

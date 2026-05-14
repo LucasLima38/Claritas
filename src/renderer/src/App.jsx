@@ -162,7 +162,7 @@ export default function App() {
             </div>
           )}
           {screen === 'settings' && <Settings onBack={() => setScreen('main')} />}
-          {screen === 'about' && <About onBack={() => setScreen('main')} />}
+          {screen === 'about' && <About onBack={() => setScreen('main')} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />}
         </div>
       </div>
 

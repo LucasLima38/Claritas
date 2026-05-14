@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Download, ExternalLink, Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import logoUrl from '../assets/logo.png'
 
-export default function About({ onBack }) {
+export default function About({ onBack, onCheckUpdate, updateStatus, downloadPercent }) {
   const [appInfo, setAppInfo] = useState(null)
 
   useEffect(() => {
     window.electronAPI.getAppInfo().then(setAppInfo).catch(() => setAppInfo(null))
   }, [])
+
+  const isChecking = updateStatus === 'checking'
+  const isDownloading = updateStatus === 'downloading'
+  const isBusy = isChecking || isDownloading
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -33,6 +37,9 @@ export default function About({ onBack }) {
             {appInfo && (
               <p className="text-xs text-muted-foreground mt-0.5">v{appInfo.version}</p>
             )}
+            <p className="text-xs text-muted-foreground mt-2 max-w-xs">
+              Captura e exporta esquemáticos do Altium Designer
+            </p>
           </div>
         </div>
 
@@ -43,6 +50,55 @@ export default function About({ onBack }) {
           <div className="flex flex-col gap-2">
             <InfoRow label="Plataforma" value={appInfo?.platform ?? '—'} />
             <InfoRow label="Arquitetura" value={appInfo?.arch ?? '—'} />
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="flex flex-col gap-3">
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Atualizações</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[12.5px] text-muted-foreground">
+              {isDownloading
+                ? `Baixando… ${downloadPercent}%`
+                : isChecking
+                ? 'Verificando…'
+                : 'Verificar atualizações'}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-3 text-xs gap-1.5"
+              onClick={onCheckUpdate}
+              disabled={isBusy}
+            >
+              {isDownloading ? (
+                <span className="tabular-nums">{downloadPercent}%</span>
+              ) : isChecking ? (
+                <Loader2 size={12} className="animate-spin" />
+              ) : (
+                <RefreshCw size={12} />
+              )}
+              {isDownloading ? 'Baixando' : isChecking ? 'Verificando' : 'Verificar'}
+            </Button>
+          </div>
+        </section>
+
+        <Separator />
+
+        <section className="flex flex-col gap-3">
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">Links</p>
+          <div className="flex items-center justify-between">
+            <span className="text-[12.5px] text-muted-foreground">Repositório no GitHub</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-3 text-xs gap-1.5"
+              onClick={() => window.electronAPI.openExternal('https://github.com/LucasLima38/Claritas')}
+            >
+              <ExternalLink size={12} />
+              Abrir
+            </Button>
           </div>
         </section>
 

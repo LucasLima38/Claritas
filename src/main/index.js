@@ -394,6 +394,8 @@ ipcMain.handle('get-app-info', () => ({
   arch: process.arch,
 }))
 
+ipcMain.handle('open-external', (_e, url) => shell.openExternal(url))
+
 ipcMain.handle('get-settings', () => store.getSettings())
 
 ipcMain.handle('update-settings', (_event, updates) => {

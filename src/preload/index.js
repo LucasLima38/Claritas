@@ -84,6 +84,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // App info
   getAppInfo: () => ipcRenderer.invoke('get-app-info'),
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
 
   // Screenshot capture
   captureScreen: (data) => ipcRenderer.invoke('capture-screen', data),

@@ -177,3 +177,30 @@ describe('reorderProjects', () => {
     expect(ids).toEqual(['b', 'a'])
   })
 })
+
+describe('notifications', () => {
+  let store
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    store = new ProjectStore()
+  })
+
+  it('getNotifications() returns empty array by default', () => {
+    expect(store.getNotifications()).toEqual([])
+  })
+
+  it('saveNotifications() persists the list', () => {
+    const list = [{ id: '1', type: 'error', message: 'Oops', read: false, timestamp: 1000 }]
+    store.saveNotifications(list)
+    expect(store.getNotifications()).toEqual(list)
+  })
+
+  it('saveNotifications() trims list to 50 items', () => {
+    const list = Array.from({ length: 60 }, (_, i) => ({
+      id: String(i), type: 'info', message: `msg ${i}`, read: false, timestamp: i,
+    }))
+    store.saveNotifications(list)
+    expect(store.getNotifications()).toHaveLength(50)
+  })
+})

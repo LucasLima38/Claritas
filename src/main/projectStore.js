@@ -22,6 +22,7 @@ export class ProjectStore {
     this._projects = new Store({ name: 'projects', defaults: PROJECT_DEFAULTS })
     this._settings = new Store({ name: 'settings', defaults: SETTINGS_DEFAULTS })
     this._history = new Store({ name: 'history', defaults: { entries: [] } })
+    this._notifications = new Store({ name: 'notifications', defaults: { entries: [] } })
   }
 
   initSession() {
@@ -112,5 +113,13 @@ export class ProjectStore {
   deleteHistoryEntry(entryId) {
     const entries = this._history.get('entries', []).filter((e) => e.id !== entryId)
     this._history.set('entries', entries)
+  }
+
+  getNotifications() {
+    return this._notifications.get('entries', [])
+  }
+
+  saveNotifications(list) {
+    this._notifications.set('entries', list.slice(0, 50))
   }
 }

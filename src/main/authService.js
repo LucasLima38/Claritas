@@ -45,7 +45,7 @@ function startCallbackServer() {
     })
     server.listen(0, '127.0.0.1', () => {
       const { port } = server.address()
-      resolve({ port, codePromise })
+      resolve({ port, codePromise, server })
     })
     server.on('error', reject)
   })
@@ -82,7 +82,7 @@ export function getAuthClient() {
 }
 
 export async function loginWithGoogle() {
-  const { port, codePromise } = await startCallbackServer()
+  const { port, codePromise, server } = await startCallbackServer()
   const redirectUri = `http://localhost:${port}/callback`
   const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri)
   const { codeVerifier, codeChallenge } = generatePKCE()
@@ -98,16 +98,21 @@ export async function loginWithGoogle() {
     timeoutId = setTimeout(() => rej(new Error('Login cancelado')), LOGIN_TIMEOUT_MS)
   })
   shell.openExternal(authUrl)
-  const code = await Promise.race([codePromise, timeoutPromise])
-  clearTimeout(timeoutId)
-  const { tokens } = await oauth2Client.getToken({ code, codeVerifier })
-  oauth2Client.setCredentials(tokens)
-  const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client })
-  const { data } = await oauth2.userinfo.get()
-  const user = { email: data.email, name: data.name, photo: data.picture }
-  saveTokens(tokens)
-  _store.set('googleUser', user)
-  return { ok: true, user }
+  try {
+    const code = await Promise.race([codePromise, timeoutPromise])
+    clearTimeout(timeoutId)
+    const { tokens } = await oauth2Client.getToken({ code, codeVerifier })
+    oauth2Client.setCredentials(tokens)
+    const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client })
+    const { data } = await oauth2.userinfo.get()
+    const user = { email: data.email, name: data.name, photo: data.picture }
+    saveTokens(tokens)
+    _store.set('googleUser', user)
+    return { ok: true, user }
+  } finally {
+    clearTimeout(timeoutId)
+    server.close()
+  }
 }
 
 export async function loadStoredSession() {

@@ -53,13 +53,18 @@ describe('getAppDataFile', () => {
     const result = await driveService.getAppDataFile(mockAuthClient, 'projects.json')
     expect(result).toBe('{"updatedAt":1,"projects":[]}')
   })
+
+  it('propagates error when files.list rejects', async () => {
+    mockDriveInstance.files.list.mockRejectedValue(new Error('network error'))
+    await expect(driveService.getAppDataFile(mockAuthClient, 'projects.json')).rejects.toThrow('network error')
+  })
 })
 
 describe('upsertAppDataFile', () => {
   it('creates a new file when it does not exist', async () => {
     mockDriveInstance.files.list.mockResolvedValue({ data: { files: [] } })
     mockDriveInstance.files.create.mockResolvedValue({ data: { id: 'new-id' } })
-    const result = await driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"ok":true}')
+    const result = await driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"projects":[]}')
     expect(result).toEqual({ ok: true })
     expect(mockDriveInstance.files.create).toHaveBeenCalledTimes(1)
   })
@@ -67,10 +72,16 @@ describe('upsertAppDataFile', () => {
   it('updates existing file when it already exists', async () => {
     mockDriveInstance.files.list.mockResolvedValue({ data: { files: [{ id: 'existing-id' }] } })
     mockDriveInstance.files.update.mockResolvedValue({ data: { id: 'existing-id' } })
-    const result = await driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"ok":true}')
+    const result = await driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"projects":[]}')
     expect(result).toEqual({ ok: true })
     expect(mockDriveInstance.files.update).toHaveBeenCalledTimes(1)
     expect(mockDriveInstance.files.create).not.toHaveBeenCalled()
+  })
+
+  it('propagates error when create rejects', async () => {
+    mockDriveInstance.files.list.mockResolvedValue({ data: { files: [] } })
+    mockDriveInstance.files.create.mockRejectedValue(new Error('quota exceeded'))
+    await expect(driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"projects":[]}')).rejects.toThrow('quota exceeded')
   })
 })
 
@@ -86,6 +97,11 @@ describe('uploadFile', () => {
       webViewLink: 'https://drive.google.com/file/d/uploaded-id/view',
     })
   })
+
+  it('propagates error when files.create rejects', async () => {
+    mockDriveInstance.files.create.mockRejectedValue(new Error('upload failed'))
+    await expect(driveService.uploadFile(mockAuthClient, 'C:\\test\\file.svg', 'file.svg', 'image/svg+xml')).rejects.toThrow('upload failed')
+  })
 })
 
 describe('shareFileWithEmail', () => {
@@ -98,5 +114,10 @@ describe('shareFileWithEmail', () => {
       sendNotificationEmail: true,
       requestBody: { role: 'reader', type: 'user', emailAddress: 'user@example.com' },
     })
+  })
+
+  it('propagates error when permissions.create rejects', async () => {
+    mockDriveInstance.permissions.create.mockRejectedValue(new Error('invalid email'))
+    await expect(driveService.shareFileWithEmail(mockAuthClient, 'file-id', 'bad@')).rejects.toThrow('invalid email')
   })
 })

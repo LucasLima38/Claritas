@@ -9,7 +9,7 @@ async function findAppDataFile(authClient, filename) {
   const drive = getDrive(authClient)
   const res = await drive.files.list({
     spaces: 'appDataFolder',
-    q: `name = '${filename}'`,
+    q: `name = '${filename.replace(/'/g, "\\'")}'`,
     fields: 'files(id)',
     pageSize: 1,
   })

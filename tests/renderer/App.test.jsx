@@ -4,19 +4,22 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 
 // Mock all heavy child components
 vi.mock('../../src/renderer/src/components/Sidebar', () => ({
-  default: ({ updateStatus, downloadPercent, onCheckUpdate }) => (
-    <button
-      title="Verificar atualizações"
-      onClick={onCheckUpdate}
-      disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
-    >
-      {updateStatus === 'checking'
-        ? <span data-testid="icon-loader" className="animate-spin" />
-        : updateStatus === 'downloading'
-          ? <span data-testid="icon-downloading">{downloadPercent}%</span>
-          : <span data-testid="icon-download" />
-      }
-    </button>
+  default: ({ updateStatus, downloadPercent, onCheckUpdate, onOpenAccount }) => (
+    <>
+      <button
+        title="Verificar atualizações"
+        onClick={onCheckUpdate}
+        disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
+      >
+        {updateStatus === 'checking'
+          ? <span data-testid="icon-loader" className="animate-spin" />
+          : updateStatus === 'downloading'
+            ? <span data-testid="icon-downloading">{downloadPercent}%</span>
+            : <span data-testid="icon-download" />
+        }
+      </button>
+      <button data-testid="open-account" onClick={onOpenAccount}>Conta</button>
+    </>
   ),
 }))
 vi.mock('../../src/renderer/src/components/ClipboardArea', () => ({ default: () => null }))
@@ -112,5 +115,11 @@ describe('AccountPanel integration', () => {
   it('does not render AccountPanel by default', () => {
     render(<App />)
     expect(screen.queryByTestId('account-panel')).not.toBeInTheDocument()
+  })
+
+  it('opens AccountPanel when onOpenAccount is called', () => {
+    render(<App />)
+    fireEvent.click(screen.getByTestId('open-account'))
+    expect(screen.getByTestId('account-panel')).toBeInTheDocument()
   })
 })

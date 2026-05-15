@@ -12,6 +12,15 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import LightboxModal from './LightboxModal.jsx'
+import { Share2 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 
 function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`
@@ -112,6 +121,18 @@ function ClipCard({ entry, onOpen, onDelete }) {
   const isPdf = entry.filename.endsWith('.pdf')
   const fileUrl = toFileUrl(entry.fullPath)
   const thumbUrl = entry.thumbPath ? toFileUrl(entry.thumbPath) : null
+  const { state, actions } = useApp()
+  const [shareOpen, setShareOpen] = useState(false)
+  const [shareEmail, setShareEmail] = useState('')
+  const [sharing, setSharing] = useState(false)
+
+  async function handleShare() {
+    setSharing(true)
+    await actions.shareFile({ fullPath: entry.fullPath, email: shareEmail })
+    setSharing(false)
+    setShareOpen(false)
+    setShareEmail('')
+  }
 
   async function handleCopy() {
     const result = await window.electronAPI.copyFileToClipboard({ fullPath: entry.fullPath })
@@ -124,52 +145,90 @@ function ClipCard({ entry, onOpen, onDelete }) {
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0" onClick={onOpen}>
-          {/* Thumbnail */}
-          <div className="relative h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
-            {isPdf && !thumbUrl ? (
-              <FileText size={28} className="text-muted-foreground/50" />
-            ) : (
-              <>
-                <img
-                  src={isPdf ? thumbUrl : fileUrl}
-                  alt={entry.filename}
-                  className="w-full h-full object-contain p-1"
-                  style={{ imageRendering: 'crisp-edges' }}
-                  draggable={false}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement.querySelector('.fallback-icon')?.classList.remove('hidden')
-                  }}
-                />
-                <FileText size={28} className="fallback-icon hidden text-muted-foreground/50 absolute" />
-              </>
-            )}
-          </div>
-          {/* Info */}
-          <div className="px-2 py-1.5">
-            <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
-            <p className="text-[10px] text-muted-foreground">
-              {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
-            </p>
-          </div>
-        </Card>
-      </ContextMenuTrigger>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0" onClick={onOpen}>
+            {/* Thumbnail */}
+            <div className="relative h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
+              {isPdf && !thumbUrl ? (
+                <FileText size={28} className="text-muted-foreground/50" />
+              ) : (
+                <>
+                  <img
+                    src={isPdf ? thumbUrl : fileUrl}
+                    alt={entry.filename}
+                    className="w-full h-full object-contain p-1"
+                    style={{ imageRendering: 'crisp-edges' }}
+                    draggable={false}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      e.currentTarget.parentElement.querySelector('.fallback-icon')?.classList.remove('hidden')
+                    }}
+                  />
+                  <FileText size={28} className="fallback-icon hidden text-muted-foreground/50 absolute" />
+                </>
+              )}
+            </div>
+            {/* Info */}
+            <div className="px-2 py-1.5">
+              <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
+              <p className="text-[10px] text-muted-foreground">
+                {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
+              </p>
+            </div>
+          </Card>
+        </ContextMenuTrigger>
 
-      <ContextMenuContent>
-        <ContextMenuItem onClick={handleCopy}>
-          Copiar arquivo
-        </ContextMenuItem>
-        <ContextMenuItem onClick={handleShowInFolder}>
-          Ir para a pasta
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={() => onDelete(entry)} className="text-destructive focus:text-destructive">
-          Deletar arquivo
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handleCopy}>
+            Copiar arquivo
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleShowInFolder}>
+            Ir para a pasta
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={() => onDelete(entry)} className="text-destructive focus:text-destructive">
+            Deletar arquivo
+          </ContextMenuItem>
+          {state.account && (
+            <>
+              <ContextMenuSeparator />
+              <ContextMenuItem onClick={() => setShareOpen(true)}>
+                <Share2 size={13} />
+                Compartilhar
+              </ContextMenuItem>
+            </>
+          )}
+        </ContextMenuContent>
+      </ContextMenu>
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="w-80">
+          <DialogHeader>
+            <DialogTitle className="text-sm">Compartilhar arquivo</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground truncate">{entry.filename}</p>
+          <Input
+            type="email"
+            placeholder="E-mail do destinatário"
+            value={shareEmail}
+            onChange={(e) => setShareEmail(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && shareEmail) handleShare()
+            }}
+          />
+          <DialogFooter>
+            <Button
+              size="sm"
+              disabled={!shareEmail || sharing}
+              onClick={handleShare}
+            >
+              {sharing ? 'Enviando…' : 'Compartilhar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

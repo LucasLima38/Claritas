@@ -51,7 +51,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
   )
 }
 
-export default function Sidebar({ screen, onNavigate, open, width, updateStatus, downloadPercent, onCheckUpdate, onOpenAbout, onOpenNotifications, unreadCount }) {
+export default function Sidebar({ screen, onNavigate, open, width, updateStatus, downloadPercent, onCheckUpdate, onOpenAbout, onOpenNotifications, unreadCount, onOpenAccount }) {
   const { state, actions } = useApp()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
@@ -187,7 +187,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
                 Notificações
                 {unreadCount > 0 && <span className="ml-auto w-2 h-2 rounded-full bg-destructive" />}
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>
+              <DropdownMenuItem onClick={onOpenAccount}>
                 <User size={13} />
                 Conta
               </DropdownMenuItem>

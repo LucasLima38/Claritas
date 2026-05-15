@@ -26,6 +26,9 @@ vi.mock('../../src/renderer/src/components/Settings', () => ({ default: () => nu
 vi.mock('../../src/renderer/src/components/CaptureTab', () => ({ CaptureTab: () => null }))
 vi.mock('../../src/renderer/src/components/About', () => ({ default: () => null }))
 vi.mock('../../src/renderer/src/components/NotificationsDialog', () => ({ default: () => null }))
+vi.mock('../../src/renderer/src/components/AccountPanel', () => ({
+  default: ({ open }) => open ? <div data-testid="account-panel" /> : null,
+}))
 vi.mock('@/components/ui/sonner', () => ({ Toaster: () => null }))
 vi.mock('sonner', () => ({ toast: vi.fn() }))
 vi.mock('lucide-react', () => ({
@@ -102,5 +105,12 @@ describe('Update check button', () => {
 
     await act(async () => { notAvailableCb() })
     expect(screen.getByTestId('icon-download')).toBeInTheDocument()
+  })
+})
+
+describe('AccountPanel integration', () => {
+  it('does not render AccountPanel by default', () => {
+    render(<App />)
+    expect(screen.queryByTestId('account-panel')).not.toBeInTheDocument()
   })
 })

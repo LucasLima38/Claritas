@@ -12,12 +12,14 @@ import Settings from './components/Settings.jsx'
 import { CaptureTab } from './components/CaptureTab.jsx'
 import About from './components/About.jsx'
 import NotificationsDialog from './components/NotificationsDialog.jsx'
+import AccountPanel from './components/AccountPanel.jsx'
 
 export default function App() {
   const { state, actions } = useApp()
   const [screen, setScreen] = useState('main')
   const [aboutOpen, setAboutOpen] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarWidth, setSidebarWidth] = useState(200)
   const [updateStatus, setUpdateStatus] = useState('idle') // 'idle' | 'checking' | 'downloading'
@@ -156,6 +158,7 @@ export default function App() {
           onOpenAbout={() => setAboutOpen(true)}
           onOpenNotifications={() => setNotifOpen(true)}
           unreadCount={state.notifications.filter((n) => !n.read).length}
+          onOpenAccount={() => setAccountOpen(true)}
         />
 
         {sidebarOpen && (
@@ -194,6 +197,7 @@ export default function App() {
         onClear={actions.clearNotifications}
       />
       <About open={aboutOpen} onOpenChange={setAboutOpen} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />
+      <AccountPanel open={accountOpen} onOpenChange={setAccountOpen} />
       <Toaster richColors position="bottom-center" />
     </div>
   )

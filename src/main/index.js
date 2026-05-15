@@ -229,7 +229,7 @@ app.whenReady().then(() => {
         })
         result.newProjectNames?.forEach((name) => {
           mainWindow?.webContents.send('notification', {
-            id: `sync-${Date.now()}`,
+            id: crypto.randomUUID(),
             type: 'info',
             message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
             read: false,
@@ -644,7 +644,7 @@ ipcMain.handle('google-login', async () => {
       })
       syncResult.newProjectNames?.forEach((name) => {
         mainWindow?.webContents.send('notification', {
-          id: `sync-${Date.now()}`,
+          id: crypto.randomUUID(),
           type: 'info',
           message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
           read: false,
@@ -662,9 +662,14 @@ ipcMain.handle('google-login', async () => {
 })
 
 ipcMain.handle('google-logout', async () => {
-  const result = await logout()
-  mainWindow?.webContents.send('account-changed', null)
-  return result
+  try {
+    const result = await logout()
+    mainWindow?.webContents.send('account-changed', null)
+    return result
+  } catch (err) {
+    mainWindow?.webContents.send('account-changed', null)
+    return { ok: false, error: err.message }
+  }
 })
 
 ipcMain.handle('sync-projects', async () => {
@@ -685,7 +690,7 @@ ipcMain.handle('sync-projects', async () => {
       })
       result.newProjectNames?.forEach((name) => {
         mainWindow?.webContents.send('notification', {
-          id: `sync-${Date.now()}`,
+          id: crypto.randomUUID(),
           type: 'info',
           message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
           read: false,
@@ -693,7 +698,7 @@ ipcMain.handle('sync-projects', async () => {
         })
       })
     } else {
-      await pushProjects(authClient, store.getProjects())
+      pushProjects(authClient, store.getProjects()).catch(() => {})
     }
     return { ok: true }
   } catch (err) {
@@ -705,11 +710,9 @@ ipcMain.handle('share-file', async (_event, { fullPath, email }) => {
   try {
     const authClient = getAuthClient()
     if (!authClient) return { ok: false, error: 'Não autenticado' }
-    const path = await import('node:path')
-    const fs = await import('node:fs')
-    if (!fs.default.existsSync(fullPath)) return { ok: false, error: 'Arquivo não encontrado' }
-    const filename = path.default.basename(fullPath)
-    const ext = path.default.extname(filename).toLowerCase()
+    try { await fsp.access(fullPath) } catch { return { ok: false, error: 'Arquivo não encontrado' } }
+    const filename = path.basename(fullPath)
+    const ext = path.extname(filename).toLowerCase()
     const mimeTypes = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.pdf': 'application/pdf' }
     const mimeType = mimeTypes[ext] ?? 'application/octet-stream'
     const uploadResult = await uploadFile(authClient, fullPath, filename, mimeType)

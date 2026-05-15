@@ -153,6 +153,23 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
 
         <div className="mt-auto">
           <Separator className="mx-3 mb-1.5 w-auto" />
+          <SidebarItem
+            icon={<Bell size={14} />}
+            onClick={onOpenNotifications}
+            collapsed={!open}
+            tooltip="Notificações"
+            badge={unreadCount > 0 ? unreadCount : null}
+          >
+            Notificações
+          </SidebarItem>
+          <SidebarItem
+            icon={<User size={14} />}
+            onClick={onOpenAccount}
+            collapsed={!open}
+            tooltip="Conta"
+          >
+            Conta
+          </SidebarItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -180,16 +197,6 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               <DropdownMenuItem onClick={onOpenAbout}>
                 <Info size={13} />
                 Sobre
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onOpenNotifications}>
-                <Bell size={13} />
-                Notificações
-                {unreadCount > 0 && <span className="ml-auto w-2 h-2 rounded-full bg-destructive" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onOpenAccount}>
-                <User size={13} />
-                Conta
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

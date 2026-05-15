@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { PanelLeftClose, PanelLeftOpen, User } from 'lucide-react'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
@@ -142,7 +142,15 @@ export default function App() {
         <span className="flex-1 text-center text-xs font-medium text-muted-foreground app-region-drag">
           Claritas
         </span>
-        <div className="h-7 w-7 shrink-0" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="app-region-no-drag h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
+          title="Conta Google"
+          onClick={() => setAccountOpen(true)}
+        >
+          <User size={15} />
+        </Button>
       </div>
 
       <div className="h-px bg-border shrink-0" />

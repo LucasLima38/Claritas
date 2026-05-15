@@ -37,6 +37,7 @@ vi.mock('sonner', () => ({ toast: vi.fn() }))
 vi.mock('lucide-react', () => ({
   PanelLeftClose: () => <span>PanelLeftClose</span>,
   PanelLeftOpen:  () => <span>PanelLeftOpen</span>,
+  User: () => <span data-testid="icon-user" />,
 }))
 
 vi.mock('../../src/renderer/src/context/AppContext', () => ({

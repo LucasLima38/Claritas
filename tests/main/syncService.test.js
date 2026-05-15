@@ -77,5 +77,6 @@ describe('pushProjects', () => {
     const parsed = JSON.parse(content)
     expect(parsed.projects[0].id).toBe('1')
     expect(typeof parsed.updatedAt).toBe('number')
+    expect(parsed.projects[0].prefix).toBe('P')
   })
 })

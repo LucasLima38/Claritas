@@ -261,6 +261,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  stopTrayBlink()
   tray?.destroy()
   clipboardMonitor.stop()
   conversionShell.stop()

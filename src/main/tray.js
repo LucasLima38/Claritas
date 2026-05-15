@@ -49,6 +49,7 @@ export function startTrayBlink() {
   let showIcon = true
   const emptyIcon = nativeImage.createEmpty()
   _blinkInterval = setInterval(() => {
+    if (!tray) { clearInterval(_blinkInterval); _blinkInterval = null; return }
     tray.setImage(showIcon ? _normalIcon : emptyIcon)
     showIcon = !showIcon
   }, 500)
@@ -119,6 +120,7 @@ export function updateTrayMenu(mainWindow, projectStore) {
     {
       label: 'Sair',
       click: () => {
+        stopTrayBlink()
         tray.destroy()
         app.quit()
       },

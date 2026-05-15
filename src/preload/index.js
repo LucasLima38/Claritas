@@ -103,4 +103,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('capture-cancelled', handler)
     return () => ipcRenderer.removeListener('capture-cancelled', handler)
   },
+
+  // Google Auth / Drive
+  googleLogin: () => ipcRenderer.invoke('google-login'),
+  googleLogout: () => ipcRenderer.invoke('google-logout'),
+  syncProjects: () => ipcRenderer.invoke('sync-projects'),
+  shareFile: (payload) => ipcRenderer.invoke('share-file', payload),
+  onAccountChanged: (cb) => {
+    const handler = (_e, data) => cb(data)
+    ipcRenderer.on('account-changed', handler)
+    return () => ipcRenderer.removeListener('account-changed', handler)
+  },
 })

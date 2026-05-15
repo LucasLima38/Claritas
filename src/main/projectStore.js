@@ -122,4 +122,16 @@ export class ProjectStore {
   saveNotifications(list) {
     this._notifications.set('entries', list.slice(0, 50))
   }
+
+  getProjectsUpdatedAt() {
+    return this._projects.get('projectsUpdatedAt', 0)
+  }
+
+  touchProjectsUpdatedAt() {
+    this._projects.set('projectsUpdatedAt', Date.now())
+  }
+
+  setProjects(projects) {
+    this._projects.set('projects', projects)
+  }
 }

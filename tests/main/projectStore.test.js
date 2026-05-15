@@ -204,3 +204,22 @@ describe('notifications', () => {
     expect(store.getNotifications()).toHaveLength(50)
   })
 })
+
+describe('ProjectStore – timestamp methods', () => {
+  it('getProjectsUpdatedAt returns 0 when never set', async () => {
+    const { ProjectStore } = await import('../../src/main/projectStore.js')
+    const store = new ProjectStore()
+    expect(store.getProjectsUpdatedAt()).toBe(0)
+  })
+
+  it('touchProjectsUpdatedAt stores a timestamp close to now', async () => {
+    const before = Date.now()
+    const { ProjectStore } = await import('../../src/main/projectStore.js')
+    const store = new ProjectStore()
+    store.touchProjectsUpdatedAt()
+    const after = Date.now()
+    const ts = store.getProjectsUpdatedAt()
+    expect(ts).toBeGreaterThanOrEqual(before)
+    expect(ts).toBeLessThanOrEqual(after)
+  })
+})

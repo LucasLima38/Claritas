@@ -1,4 +1,4 @@
-import { FileText, RefreshCw } from 'lucide-react'
+import { FileText, RefreshCw, Share2 } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
@@ -12,7 +12,6 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu'
 import LightboxModal from './LightboxModal.jsx'
-import { Share2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -128,10 +127,15 @@ function ClipCard({ entry, onOpen, onDelete }) {
 
   async function handleShare() {
     setSharing(true)
-    await actions.shareFile({ fullPath: entry.fullPath, email: shareEmail })
-    setSharing(false)
-    setShareOpen(false)
-    setShareEmail('')
+    try {
+      await actions.shareFile({ fullPath: entry.fullPath, email: shareEmail })
+      setShareOpen(false)
+      setShareEmail('')
+    } catch {
+      toast.error('Erro ao compartilhar')
+    } finally {
+      setSharing(false)
+    }
   }
 
   async function handleCopy() {
@@ -203,7 +207,7 @@ function ClipCard({ entry, onOpen, onDelete }) {
         </ContextMenuContent>
       </ContextMenu>
 
-      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+      <Dialog open={shareOpen} onOpenChange={(open) => { setShareOpen(open); if (!open) setShareEmail('') }}>
         <DialogContent className="w-80">
           <DialogHeader>
             <DialogTitle className="text-sm">Compartilhar arquivo</DialogTitle>
@@ -217,6 +221,7 @@ function ClipCard({ entry, onOpen, onDelete }) {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && shareEmail) handleShare()
             }}
+            autoFocus
           />
           <DialogFooter>
             <Button

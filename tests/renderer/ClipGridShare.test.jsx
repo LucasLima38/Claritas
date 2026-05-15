@@ -61,7 +61,7 @@ import { useApp } from '../../src/renderer/src/context/AppContext'
 import ClipGrid from '../../src/renderer/src/components/ClipGrid'
 
 const baseHistory = [{ id: '1', filename: 'f.svg', fullPath: 'C:\\f.svg', projectId: 'p1', thumbPath: null, timestamp: new Date().toISOString(), sizeBytes: 1024 }]
-const baseProjects = [{ id: 'p1', name: 'P1', color: '#f00' }]
+const baseProjects = [{ id: 'p1', name: 'P1', color: '#f00', prefix: 'SCH', counter: 0 }]
 
 describe('ClipGrid share feature', () => {
   it('does not show Compartilhar item when not logged in', () => {
@@ -80,5 +80,42 @@ describe('ClipGrid share feature', () => {
     })
     render(<ClipGrid />)
     expect(screen.getByText(/Compartilhar/i)).toBeInTheDocument()
+  })
+
+  it('opens share dialog when Compartilhar is clicked', () => {
+    useApp.mockReturnValue({
+      state: { account: mockAccount, history: baseHistory, projects: baseProjects, activeProjectId: 'p1', previewQueue: [], status: 'idle' },
+      actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
+    })
+    render(<ClipGrid />)
+    fireEvent.click(screen.getByText(/Compartilhar/i))
+    expect(screen.getByTestId('share-dialog')).toBeInTheDocument()
+  })
+
+  it('submit button is disabled when email is empty', () => {
+    useApp.mockReturnValue({
+      state: { account: mockAccount, history: baseHistory, projects: baseProjects, activeProjectId: 'p1', previewQueue: [], status: 'idle' },
+      actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
+    })
+    render(<ClipGrid />)
+    fireEvent.click(screen.getByText(/Compartilhar/i))
+    const buttons = screen.getAllByRole('button')
+    const submitBtn = buttons.find(b => b.textContent === 'Compartilhar' && b.closest('[data-testid="share-dialog"]'))
+    expect(submitBtn).toBeDisabled()
+  })
+
+  it('calls shareFile with correct args on submit', async () => {
+    useApp.mockReturnValue({
+      state: { account: mockAccount, history: baseHistory, projects: baseProjects, activeProjectId: 'p1', previewQueue: [], status: 'idle' },
+      actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
+    })
+    render(<ClipGrid />)
+    fireEvent.click(screen.getByText(/Compartilhar/i))
+    fireEvent.change(screen.getByPlaceholderText(/E-mail do destinatário/i), { target: { value: 'test@example.com' } })
+    const dialog = screen.getByTestId('share-dialog')
+    const buttons = dialog.querySelectorAll('button')
+    const submitBtn = Array.from(buttons).find(b => b.textContent === 'Compartilhar')
+    fireEvent.click(submitBtn)
+    expect(mockShareFile).toHaveBeenCalledWith({ fullPath: 'C:\\f.svg', email: 'test@example.com' })
   })
 })

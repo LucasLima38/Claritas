@@ -65,6 +65,13 @@ describe('pullProjects', () => {
     const result = await syncService.pullProjects({}, local)
     expect(result).toEqual({ ok: true, action: 'none', projects: null })
   })
+
+  it('returns ok false when Drive throws', async () => {
+    driveService.getAppDataFile.mockRejectedValue(new Error('network error'))
+    const result = await syncService.pullProjects({}, { updatedAt: 0, projects: [] })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('network error')
+  })
 })
 
 describe('pushProjects', () => {
@@ -78,5 +85,12 @@ describe('pushProjects', () => {
     expect(parsed.projects[0].id).toBe('1')
     expect(typeof parsed.updatedAt).toBe('number')
     expect(parsed.projects[0].prefix).toBe('P')
+  })
+
+  it('returns ok false when upsertAppDataFile throws', async () => {
+    driveService.upsertAppDataFile.mockRejectedValue(new Error('quota exceeded'))
+    const result = await syncService.pushProjects({}, [])
+    expect(result.ok).toBe(false)
+    expect(result.error).toBe('quota exceeded')
   })
 })

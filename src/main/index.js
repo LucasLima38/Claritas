@@ -14,12 +14,16 @@ import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
 import { initAutoUpdater } from './updateService.js'
 import { recognizeDataURL, terminateOcr } from './ocrService.js'
+import { initAuthService, loginWithGoogle, loadStoredSession, logout, getAuthClient } from './authService.js'
+import { uploadFile, shareFileWithEmail } from './driveService.js'
+import { pullProjects, pushProjects } from './syncService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // ── State ─────────────────────────────────────────────────────────────────
 
 const store = new ProjectStore()
+initAuthService(store)
 
 const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
 
@@ -207,6 +211,38 @@ app.whenReady().then(() => {
 
   initAutoUpdater(mainWindow, ipcMain)
 
+  // Restore Google session on startup
+  loadStoredSession().then((user) => {
+    if (!user) return
+    const localState = {
+      updatedAt: store.getProjectsUpdatedAt(),
+      projects: store.getProjects(),
+    }
+    const authClient = getAuthClient()
+    pullProjects(authClient, localState).then((result) => {
+      if (result.action === 'pull' && result.projects) {
+        store.setProjects(result.projects)
+        store.touchProjectsUpdatedAt()
+        mainWindow?.webContents.send('projects-updated', {
+          projects: store.getProjects(),
+          activeProjectId: store.getActiveProjectId(),
+        })
+        result.newProjectNames?.forEach((name) => {
+          mainWindow?.webContents.send('notification', {
+            id: `sync-${Date.now()}`,
+            type: 'info',
+            message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
+            read: false,
+            timestamp: Date.now(),
+          })
+        })
+      }
+      mainWindow?.webContents.send('account-changed', user)
+    }).catch(() => {
+      mainWindow?.webContents.send('account-changed', user)
+    })
+  }).catch(() => {})
+
   // Show window unless startMinimized is set
   if (!store.getSettings().startMinimized) {
     mainWindow.show()
@@ -361,31 +397,40 @@ ipcMain.handle('set-active-project', (_event, { id }) => {
   return { ok: true }
 })
 
-ipcMain.handle('add-project', (_event, project) => {
+ipcMain.handle('add-project', async (_event, project) => {
+  store.touchProjectsUpdatedAt()
   store.addProject(project)
-  // Auto-activate if this is the first (or only) project
-  if (!store.getActiveProjectId()) {
-    store.setActiveProject(project.id)
-  }
+  if (!store.getActiveProjectId()) store.setActiveProject(project.id)
   updateTrayMenu(mainWindow, store)
+  const authClient = getAuthClient()
+  if (authClient) pushProjects(authClient, store.getProjects()).catch(() => {})
   return { projects: store.getProjects(), activeProjectId: store.getActiveProjectId() }
 })
 
-ipcMain.handle('update-project', (_event, { id, updates }) => {
+ipcMain.handle('update-project', async (_event, { id, updates }) => {
+  store.touchProjectsUpdatedAt()
   store.updateProject(id, updates)
   updateTrayMenu(mainWindow, store)
+  const authClient = getAuthClient()
+  if (authClient) pushProjects(authClient, store.getProjects()).catch(() => {})
   return { projects: store.getProjects() }
 })
 
-ipcMain.handle('delete-project', (_event, { id }) => {
+ipcMain.handle('delete-project', async (_event, { id }) => {
+  store.touchProjectsUpdatedAt()
   store.deleteProject(id)
   updateTrayMenu(mainWindow, store)
+  const authClient = getAuthClient()
+  if (authClient) pushProjects(authClient, store.getProjects()).catch(() => {})
   return { projects: store.getProjects(), activeProjectId: store.getActiveProjectId() }
 })
 
-ipcMain.handle('reorder-projects', (_event, { ids }) => {
+ipcMain.handle('reorder-projects', async (_event, { ids }) => {
+  store.touchProjectsUpdatedAt()
   store.reorderProjects(ids)
   updateTrayMenu(mainWindow, store)
+  const authClient = getAuthClient()
+  if (authClient) pushProjects(authClient, store.getProjects()).catch(() => {})
   return { projects: store.getProjects() }
 })
 
@@ -576,6 +621,103 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
     updateTrayMenu(mainWindow, store)
     return { ok: true, filename, fullPath, entry, newCounter }
   } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('google-login', async () => {
+  try {
+    const result = await loginWithGoogle()
+    if (!result.ok) return { ok: false, error: 'Login falhou' }
+    const localState = {
+      updatedAt: store.getProjectsUpdatedAt(),
+      projects: store.getProjects(),
+    }
+    const authClient = getAuthClient()
+    const syncResult = await pullProjects(authClient, localState).catch(() => ({ action: 'none' }))
+    if (syncResult.action === 'pull' && syncResult.projects) {
+      store.setProjects(syncResult.projects)
+      store.touchProjectsUpdatedAt()
+      mainWindow?.webContents.send('projects-updated', {
+        projects: store.getProjects(),
+        activeProjectId: store.getActiveProjectId(),
+      })
+      syncResult.newProjectNames?.forEach((name) => {
+        mainWindow?.webContents.send('notification', {
+          id: `sync-${Date.now()}`,
+          type: 'info',
+          message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
+          read: false,
+          timestamp: Date.now(),
+        })
+      })
+    } else {
+      await pushProjects(authClient, store.getProjects()).catch(() => {})
+    }
+    mainWindow?.webContents.send('account-changed', result.user)
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('google-logout', async () => {
+  const result = await logout()
+  mainWindow?.webContents.send('account-changed', null)
+  return result
+})
+
+ipcMain.handle('sync-projects', async () => {
+  try {
+    const authClient = getAuthClient()
+    if (!authClient) return { ok: false, error: 'Não autenticado' }
+    const localState = {
+      updatedAt: store.getProjectsUpdatedAt(),
+      projects: store.getProjects(),
+    }
+    const result = await pullProjects(authClient, localState)
+    if (result.action === 'pull' && result.projects) {
+      store.setProjects(result.projects)
+      store.touchProjectsUpdatedAt()
+      mainWindow?.webContents.send('projects-updated', {
+        projects: store.getProjects(),
+        activeProjectId: store.getActiveProjectId(),
+      })
+      result.newProjectNames?.forEach((name) => {
+        mainWindow?.webContents.send('notification', {
+          id: `sync-${Date.now()}`,
+          type: 'info',
+          message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
+          read: false,
+          timestamp: Date.now(),
+        })
+      })
+    } else {
+      await pushProjects(authClient, store.getProjects())
+    }
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('share-file', async (_event, { fullPath, email }) => {
+  try {
+    const authClient = getAuthClient()
+    if (!authClient) return { ok: false, error: 'Não autenticado' }
+    const path = await import('node:path')
+    const fs = await import('node:fs')
+    if (!fs.default.existsSync(fullPath)) return { ok: false, error: 'Arquivo não encontrado' }
+    const filename = path.default.basename(fullPath)
+    const ext = path.default.extname(filename).toLowerCase()
+    const mimeTypes = { '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.pdf': 'application/pdf' }
+    const mimeType = mimeTypes[ext] ?? 'application/octet-stream'
+    const uploadResult = await uploadFile(authClient, fullPath, filename, mimeType)
+    if (!uploadResult.ok) return { ok: false, error: 'Falha no upload' }
+    await shareFileWithEmail(authClient, uploadResult.fileId, email)
+    return { ok: true, webViewLink: uploadResult.webViewLink }
+  } catch (err) {
+    if (err.code === 400) return { ok: false, error: 'E-mail inválido' }
     return { ok: false, error: err.message }
   }
 })

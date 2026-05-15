@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 vi.mock('lucide-react', () => ({
-  User: () => <span data-testid="icon-user" />,
   RefreshCw: () => <span data-testid="icon-refresh" />,
   LogOut: () => <span data-testid="icon-logout" />,
 }))
@@ -92,5 +91,16 @@ describe('AccountPanel – logged in', () => {
     render(<AccountPanel open={true} onOpenChange={vi.fn()} />)
     fireEvent.click(screen.getByText(/Sair/i))
     expect(mockActions.googleLogout).toHaveBeenCalled()
+  })
+
+  it('shows syncError message when syncError is set', () => {
+    useApp.mockReturnValue({
+      state: {
+        account: { email: 'user@test.com', name: 'Test User', photo: '', syncing: false, syncError: 'Network error' },
+      },
+      actions: mockActions,
+    })
+    render(<AccountPanel open={true} onOpenChange={vi.fn()} />)
+    expect(screen.getByText('Network error')).toBeInTheDocument()
   })
 })

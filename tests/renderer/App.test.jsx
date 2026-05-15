@@ -65,6 +65,7 @@ beforeEach(() => {
     onShellStatus:             vi.fn(() => () => {}),
     onProjectsUpdated:         vi.fn(() => () => {}),
     onThemeChanged:            vi.fn(() => () => {}),
+    onAccountChanged:          vi.fn(() => () => {}),
     installUpdate:             vi.fn(),
   }
 })

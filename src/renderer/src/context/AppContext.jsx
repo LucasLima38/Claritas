@@ -21,6 +21,7 @@ const initialState = {
   captureData: null,
   captureFormat: 'png',
   notifications: [],
+  account: null,
 }
 
 export function reducer(state, action) {
@@ -185,6 +186,21 @@ export function reducer(state, action) {
     case 'CLEAR_NOTIFICATIONS':
       return { ...state, notifications: [] }
 
+    case 'SET_ACCOUNT':
+      return { ...state, account: action.account }
+
+    case 'SET_SYNCING':
+      return {
+        ...state,
+        account: state.account ? { ...state.account, syncing: action.syncing } : state.account,
+      }
+
+    case 'SET_SYNC_ERROR':
+      return {
+        ...state,
+        account: state.account ? { ...state.account, syncError: action.error } : state.account,
+      }
+
     default:
       return state
   }
@@ -239,6 +255,12 @@ export function AppProvider({ children }) {
       }),
       window.electronAPI.onCaptureCancelled(() => {
         dispatch({ type: 'CAPTURE_CANCELLED' })
+      }),
+      window.electronAPI.onAccountChanged((user) => {
+        dispatch({
+          type: 'SET_ACCOUNT',
+          account: user ? { ...user, syncing: false, syncError: null } : null,
+        })
       }),
       // onNavigateTo is handled in App.jsx — no listener needed here
     ]
@@ -465,6 +487,43 @@ export function AppProvider({ children }) {
     clearNotifications() {
       dispatch({ type: 'CLEAR_NOTIFICATIONS' })
       window.electronAPI.saveNotifications([])
+    },
+
+    async googleLogin() {
+      const result = await window.electronAPI.googleLogin()
+      if (!result.ok) {
+        toast.error(result.error ?? 'Erro ao fazer login')
+      }
+      return result
+    },
+
+    async googleLogout() {
+      await window.electronAPI.googleLogout()
+    },
+
+    async syncProjects() {
+      dispatch({ type: 'SET_SYNCING', syncing: true })
+      dispatch({ type: 'SET_SYNC_ERROR', error: null })
+      const result = await window.electronAPI.syncProjects()
+      dispatch({ type: 'SET_SYNCING', syncing: false })
+      if (!result.ok) {
+        dispatch({ type: 'SET_SYNC_ERROR', error: result.error ?? 'Erro de sincronização' })
+        toast.error(result.error ?? 'Erro de sincronização')
+      }
+    },
+
+    async shareFile({ fullPath, email }) {
+      const result = await window.electronAPI.shareFile({ fullPath, email })
+      if (result.ok) {
+        toast.success(`Compartilhado com ${email}`, {
+          action: result.webViewLink
+            ? { label: 'Copiar link', onClick: () => navigator.clipboard.writeText(result.webViewLink) }
+            : undefined,
+        })
+      } else {
+        toast.error(result.error ?? 'Erro ao compartilhar')
+      }
+      return result
     },
   }
 

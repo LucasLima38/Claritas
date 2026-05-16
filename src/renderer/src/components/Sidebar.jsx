@@ -106,52 +106,54 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden py-2">
+        <div className="flex flex-col overflow-y-auto flex-1">
           {open && <SectionLabel>Workspace</SectionLabel>}
-        <SidebarItem
-          icon={<Clipboard size={14} />}
-          active={screen === 'main'}
-          onClick={() => onNavigate('main')}
-          badge={(state.previewQueue.length + (state.status === 'preview' ? 1 : 0)) || null}
-          collapsed={!open}
-          tooltip="Clipboard"
-        >
-          Clipboard
-        </SidebarItem>
+          <SidebarItem
+            icon={<Clipboard size={14} />}
+            active={screen === 'main'}
+            onClick={() => onNavigate('main')}
+            badge={(state.previewQueue.length + (state.status === 'preview' ? 1 : 0)) || null}
+            collapsed={!open}
+            tooltip="Clipboard"
+          >
+            Clipboard
+          </SidebarItem>
 
-        <SidebarItem
-          icon={<Camera size={14} />}
-          active={screen === 'capture'}
-          onClick={() => onNavigate('capture')}
-          collapsed={!open}
-          tooltip="Captura"
-        >
-          Captura
-        </SidebarItem>
+          <SidebarItem
+            icon={<Camera size={14} />}
+            active={screen === 'capture'}
+            onClick={() => onNavigate('capture')}
+            collapsed={!open}
+            tooltip="Captura"
+          >
+            Captura
+          </SidebarItem>
 
-        <Separator className="mx-3 my-1.5 w-auto" />
-        {open && <SectionLabel>Projetos</SectionLabel>}
+          <Separator className="mx-3 my-1.5 w-auto" />
+          {open && <SectionLabel>Projetos</SectionLabel>}
 
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-            {state.projects.map((p) => (
-              <SortableSidebarItem
-                key={p.id}
-                p={p}
-                activeProjectId={state.activeProjectId}
-                screen={screen}
-                onNavigate={onNavigate}
-                actions={actions}
-                collapsed={!open}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
+              {state.projects.map((p) => (
+                <SortableSidebarItem
+                  key={p.id}
+                  p={p}
+                  activeProjectId={state.activeProjectId}
+                  screen={screen}
+                  onNavigate={onNavigate}
+                  actions={actions}
+                  collapsed={!open}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
 
-        {state.projects.length === 0 && open && (
-          <p className="text-[11px] text-muted-foreground px-3 py-1 italic">Nenhum projeto</p>
-        )}
+          {state.projects.length === 0 && open && (
+            <p className="text-[11px] text-muted-foreground px-3 py-1 italic">Nenhum projeto</p>
+          )}
+        </div>
 
-        <div className="mt-auto">
+        <div>
           <Separator className="mx-3 mb-1.5 w-auto" />
           <SidebarItem
             icon={<Bell size={14} />}

@@ -95,6 +95,7 @@ function ShortcutRecorder({ value, onChange }) {
 }
 
 function DriveFolderBrowser({ onSelectLocation }) {
+  const { state } = useApp()
   const ROOT = { id: null, name: 'Meu Drive' }
   const [stack, setStack] = useState([ROOT])
   const [cache, setCache] = useState({})
@@ -107,10 +108,11 @@ function DriveFolderBrowser({ onSelectLocation }) {
   const loading = loadingKey === cacheKey
 
   useEffect(() => {
-    fetchLevel(null, '__root__')
-  }, [])
+    if (state.account) fetchLevel(null, '__root__')
+  }, [state.account])
 
   async function fetchLevel(parentId, key) {
+    if (!state.account) return
     if (cache[key] !== undefined) return
     setLoadingKey(key)
     setFetchError(null)
@@ -132,12 +134,14 @@ function DriveFolderBrowser({ onSelectLocation }) {
     setStack((s) => s.slice(0, index + 1))
   }
 
+  if (!state.account) return null
+
   return (
     <div className="flex flex-col gap-1.5 rounded-md border border-border bg-background p-2">
       {/* Breadcrumb */}
       <div className="flex items-center gap-0.5 flex-wrap">
         {stack.map((seg, i) => (
-          <span key={i} className="flex items-center gap-0.5">
+          <span key={seg.id ?? '__root__'} className="flex items-center gap-0.5">
             {i > 0 && <ChevronRight size={10} className="text-muted-foreground shrink-0" />}
             <button
               className={cn(
@@ -365,9 +369,11 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               {p.prefix}
             </Badge>
           </div>
-          <p className="text-[10.5px] text-muted-foreground truncate">
+          <p className="text-[10.5px] text-muted-foreground truncate flex items-center gap-0.5">
             {p.outputMode === 'drive'
-              ? (p.driveFolderUrl ? '📁 Drive' : 'Drive — sem pasta')
+              ? (p.driveFolderUrl
+                  ? <><Folder size={10} className="shrink-0" /><span>Drive</span></>
+                  : 'Drive — sem pasta')
               : (p.outputDir || 'Sem pasta')}
           </p>
         </div>
@@ -419,7 +425,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
             <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
             <Button
               size="sm"
-              variant={(form.outputMode ?? 'local') !== 'drive' ? 'default' : 'outline'}
+              variant={form.outputMode !== 'drive' ? 'default' : 'outline'}
               className="h-6 px-2.5 text-xs"
               onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
             >
@@ -427,14 +433,14 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
             </Button>
             <Button
               size="sm"
-              variant={(form.outputMode ?? 'local') === 'drive' ? 'default' : 'outline'}
+              variant={form.outputMode === 'drive' ? 'default' : 'outline'}
               className="h-6 px-2.5 text-xs"
               onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
             >
               Drive
             </Button>
           </div>
-          {(form.outputMode ?? 'local') !== 'drive' && (
+          {form.outputMode !== 'drive' && (
             <div className="flex flex-col gap-1">
               <Label className="text-[10.5px]">Pasta de saída</Label>
               <div className="flex gap-1.5">
@@ -463,7 +469,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               ))}
             </div>
           </div>
-          {(form.outputMode ?? 'local') === 'drive' && (
+          {form.outputMode === 'drive' && (
             <DriveProjectSection projectId={p.id} form={form} setForm={setForm} required />
           )}
           <div className="flex gap-2 pt-1">
@@ -509,12 +515,12 @@ export default function Settings({ onBack }) {
   }
 
   function openEdit(project) {
-    setForm({ ...project })
+    setForm({ outputMode: 'local', ...project })
     setEditingId(project.id)
   }
 
   async function submitForm() {
-    const mode = form.outputMode ?? 'local'
+    const mode = form.outputMode
     if (!form.name || !form.prefix) {
       toast.error('Preencha nome e prefixo')
       return
@@ -528,7 +534,13 @@ export default function Settings({ onBack }) {
       return
     }
     if (editingId === 'new') {
-      await actions.addProject({ ...form, outputMode: mode })
+      await actions.addProject({
+        ...form,
+        outputMode: mode,
+        ...(mode === 'local'
+          ? { driveFolderId: null, driveFolderUrl: null }
+          : { outputDir: '' }),
+      })
     } else {
       const updates = {
         name: form.name,

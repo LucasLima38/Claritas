@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { ChevronLeft, ChevronRight, FileText, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink, FileText, X } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -22,9 +22,13 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
   const isOpen = index !== null && index >= 0 && index < entries.length
   const entry = isOpen ? entries[index] : null
   const isPdf = entry?.filename.endsWith('.pdf')
-  const src = isPdf
-    ? (entry.thumbPath ? toFileUrl(entry.thumbPath) : null)
-    : (entry ? toFileUrl(entry.fullPath) : null)
+  const isDriveOnly = entry ? !entry.fullPath : false
+  const src = (() => {
+    if (!entry) return null
+    // Drive-only and PDF both use thumbPath; local SVG/PNG/JPG use fullPath directly
+    if (isPdf || isDriveOnly) return entry.thumbPath ? toFileUrl(entry.thumbPath) : null
+    return toFileUrl(entry.fullPath)
+  })()
 
   useEffect(() => {
     if (!isOpen) return
@@ -112,12 +116,27 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
             {entry && `${formatTime(entry.timestamp)} · ${formatBytes(entry.sizeBytes)}`}
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCopy}>
-              Copiar arquivo
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleShowInFolder}>
-              Ir para a pasta
-            </Button>
+            {!isDriveOnly && (
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCopy}>
+                Copiar arquivo
+              </Button>
+            )}
+            {!isDriveOnly && (
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleShowInFolder}>
+                Ir para a pasta
+              </Button>
+            )}
+            {entry?.driveFileUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => window.electronAPI.openExternal(entry.driveFileUrl)}
+              >
+                <ExternalLink size={11} />
+                Abrir no Drive
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

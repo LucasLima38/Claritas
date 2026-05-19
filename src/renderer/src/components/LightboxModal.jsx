@@ -21,7 +21,7 @@ function formatTime(isoString) {
 export default function LightboxModal({ entries, index, onClose, onNavigate, onDelete }) {
   const isOpen = index !== null && index >= 0 && index < entries.length
   const entry = isOpen ? entries[index] : null
-  const isPdf = entry?.filename.endsWith('.pdf')
+  const isPdf = entry?.filename?.endsWith('.pdf')
   const isDriveOnly = entry ? !entry.fullPath : false
   const src = (() => {
     if (!entry) return null

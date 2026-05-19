@@ -339,11 +339,11 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
   // ── Drive-only path ────────────────────────────────────────────────────────
   if (mode === 'drive') {
     if (!project.driveFolderId) {
-      return { error: 'NO_DRIVE_FOLDER', message: 'Pasta do Drive não configurada.' }
+      return { ok: false, error: 'NO_DRIVE_FOLDER', message: 'Pasta do Drive não configurada.' }
     }
     const authClient = getAuthClient()
     if (!authClient) {
-      return { error: 'NOT_LOGGED_IN', message: 'Login necessário para salvar no Drive.' }
+      return { ok: false, error: 'NOT_LOGGED_IN', message: 'Login necessário para salvar no Drive.' }
     }
 
     const filename = generateFilenameWithExt(project.prefix, project.counter + 1, format)
@@ -367,7 +367,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
       await fsp.unlink(tmpPath).catch(() => {})
 
       if (!uploadResult.ok) {
-        return { error: 'UPLOAD_FAILED', message: 'Falha ao enviar para o Drive.' }
+        return { ok: false, error: 'UPLOAD_FAILED', message: 'Falha ao enviar para o Drive.' }
       }
 
       const newCounter = store.incrementCounter(projectId)
@@ -376,7 +376,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
         filename,
         fullPath: null,
         thumbPath,
-        driveFileUrl: uploadResult.webViewLink,
+        driveFileUrl: uploadResult.webViewLink ?? `https://drive.google.com/file/d/${uploadResult.fileId}/view`,
         projectId,
         timestamp: new Date().toISOString(),
         sizeBytes,
@@ -387,7 +387,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
       return { ok: true, filename, fullPath: null, entry, newCounter }
     } catch (err) {
       await fsp.unlink(tmpPath).catch(() => {})
-      return { error: 'ERROR', message: err.message }
+      return { ok: false, error: 'EXPORT_FAILED', message: err.message }
     }
   }
 
@@ -709,7 +709,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
         filename,
         fullPath: null,
         thumbPath,
-        driveFileUrl: uploadResult.webViewLink,
+        driveFileUrl: uploadResult.webViewLink ?? `https://drive.google.com/file/d/${uploadResult.fileId}/view`,
         projectId,
         timestamp: new Date().toISOString(),
         sizeBytes,

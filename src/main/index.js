@@ -680,10 +680,11 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
     }
 
     const entryId = crypto.randomUUID()
+    let tmpPath
 
     try {
       // Write image to temp file using the existing saveImage helper
-      const tmpPath = await saveImage(dataURL, os.tmpdir(), filename)
+      tmpPath = await saveImage(dataURL, os.tmpdir(), filename)
 
       // Generate thumbnail from the dataURL (decode base64 image bytes)
       const thumbsDir = path.join(app.getPath('userData'), 'thumbs')
@@ -717,6 +718,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
       updateTrayMenu(mainWindow, store)
       return { ok: true, filename, fullPath: null, entry, newCounter }
     } catch (err) {
+      if (tmpPath) await fsp.unlink(tmpPath).catch(() => {})
       return { ok: false, error: err.message }
     }
   }

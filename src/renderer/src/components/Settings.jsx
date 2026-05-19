@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check } from 'lucide-react'
+import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check, Loader2, Share2, ExternalLink, FolderPlus, Folder, ChevronRight } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -93,6 +94,250 @@ function ShortcutRecorder({ value, onChange }) {
   )
 }
 
+function DriveFolderBrowser({ onSelectLocation }) {
+  const ROOT = { id: null, name: 'Meu Drive' }
+  const [stack, setStack] = useState([ROOT])
+  const [cache, setCache] = useState({})
+  const [loadingKey, setLoadingKey] = useState(null)
+  const [fetchError, setFetchError] = useState(null)
+
+  const current = stack[stack.length - 1]
+  const cacheKey = current.id ?? '__root__'
+  const folders = cache[cacheKey]
+  const loading = loadingKey === cacheKey
+
+  useEffect(() => {
+    fetchLevel(null, '__root__')
+  }, [])
+
+  async function fetchLevel(parentId, key) {
+    if (cache[key] !== undefined) return
+    setLoadingKey(key)
+    setFetchError(null)
+    const result = await window.electronAPI.driveListFolders(parentId)
+    setLoadingKey(null)
+    if (result.ok) {
+      setCache((c) => ({ ...c, [key]: result.folders }))
+    } else {
+      setFetchError(result.error ?? 'Erro ao listar pastas')
+    }
+  }
+
+  function enter(folder) {
+    setStack((s) => [...s, { id: folder.id, name: folder.name }])
+    fetchLevel(folder.id, folder.id)
+  }
+
+  function goTo(index) {
+    setStack((s) => s.slice(0, index + 1))
+  }
+
+  return (
+    <div className="flex flex-col gap-1.5 rounded-md border border-border bg-background p-2">
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-0.5 flex-wrap">
+        {stack.map((seg, i) => (
+          <span key={i} className="flex items-center gap-0.5">
+            {i > 0 && <ChevronRight size={10} className="text-muted-foreground shrink-0" />}
+            <button
+              className={cn(
+                'text-[10px] hover:underline',
+                i === stack.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'
+              )}
+              onClick={() => goTo(i)}
+            >
+              {seg.name}
+            </button>
+          </span>
+        ))}
+      </div>
+      {/* Folder list */}
+      <div className="max-h-[120px] overflow-y-auto flex flex-col gap-0.5">
+        {loading && (
+          <div className="flex items-center justify-center py-2">
+            <Loader2 size={12} className="animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {!loading && fetchError && (
+          <p className="text-[10px] text-destructive text-center py-2">{fetchError}</p>
+        )}
+        {!loading && !fetchError && folders?.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-2">Nenhuma subpasta</p>
+        )}
+        {folders?.map((f) => (
+          <button
+            key={f.id}
+            className="flex items-center gap-1.5 px-1.5 py-1 rounded hover:bg-accent text-left w-full group"
+            onClick={() => enter(f)}
+          >
+            <Folder size={11} className="text-muted-foreground shrink-0" />
+            <span className="text-[11px] flex-1 truncate">{f.name}</span>
+            <ChevronRight size={10} className="text-muted-foreground opacity-0 group-hover:opacity-100 shrink-0" />
+          </button>
+        ))}
+      </div>
+      {/* Action */}
+      <div className="flex items-center justify-between pt-1 border-t border-border">
+        <span className="text-[10px] text-muted-foreground">
+          Em: <span className="font-medium text-foreground">{current.name}</span>
+        </span>
+        <Button
+          size="sm"
+          className="h-6 px-2.5 text-[10.5px] gap-1"
+          onClick={() => onSelectLocation(current)}
+        >
+          <FolderPlus size={10} />
+          Criar pasta aqui
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function DriveProjectSection({ projectId, form, setForm, required = false }) {
+  const { state, actions } = useApp()
+  const [shareEmail, setShareEmail] = useState('')
+  const [sharing, setSharing] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [browsing, setBrowsing] = useState(false)
+  const [pendingParent, setPendingParent] = useState(null)
+
+  if (!state.account) return null
+
+  async function handleConfirmCreate() {
+    setCreating(true)
+    const result = await actions.driveCreateProjectFolder(projectId, pendingParent.id)
+    setCreating(false)
+    if (result.ok) {
+      setForm((f) => ({ ...f, driveFolderId: result.folderId, driveFolderUrl: result.folderUrl }))
+      setBrowsing(false)
+      setPendingParent(null)
+      toast.success('Pasta criada no Drive')
+    } else {
+      toast.error(result.error ?? 'Erro ao criar pasta no Drive')
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 pt-1">
+      <Separator />
+      {form.driveFolderId ? (
+        browsing ? (
+          <>
+            <Label className="text-[10.5px]">Escolher nova localização</Label>
+            <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} />
+            {pendingParent && (
+              <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+                <span className="text-[10.5px]">
+                  Criar em <span className="font-medium">{pendingParent.name}</span>?
+                </span>
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                    onClick={() => setPendingParent(null)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                    disabled={creating} onClick={handleConfirmCreate}>
+                    {creating && <Loader2 size={10} className="animate-spin" />}
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs self-start px-1 text-muted-foreground"
+              onClick={() => { setBrowsing(false); setPendingParent(null) }}
+            >
+              Cancelar
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Folder size={11} className="text-muted-foreground shrink-0" />
+                <span className="text-[10.5px] text-muted-foreground">Pasta no Drive vinculada</span>
+                <button
+                  className="text-[10.5px] text-primary flex items-center gap-0.5 hover:underline"
+                  onClick={() => window.electronAPI.openExternal(form.driveFolderUrl)}
+                >
+                  Abrir <ExternalLink size={9} />
+                </button>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 px-2 text-[10.5px]"
+                onClick={() => setBrowsing(true)}
+              >
+                Trocar
+              </Button>
+            </div>
+            <Label className="text-[10.5px]">Compartilhar com colaborador</Label>
+            <div className="flex gap-1.5">
+              <Input
+                className="h-7 text-xs flex-1"
+                placeholder="colaborador@empresa.com"
+                value={shareEmail}
+                onChange={(e) => setShareEmail(e.target.value)}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2.5 text-xs shrink-0"
+                disabled={sharing || !shareEmail}
+                onClick={async () => {
+                  setSharing(true)
+                  const result = await actions.driveShareProjectFolder(projectId, shareEmail)
+                  setSharing(false)
+                  if (result.ok) {
+                    toast.success(`Pasta compartilhada com ${shareEmail}`, {
+                      action: result.webViewLink
+                        ? { label: 'Copiar link', onClick: () => navigator.clipboard.writeText(result.webViewLink) }
+                        : undefined,
+                    })
+                    setShareEmail('')
+                  } else {
+                    toast.error(result.error ?? 'Erro ao compartilhar')
+                  }
+                }}
+              >
+                {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+                <span className="ml-1">Compartilhar</span>
+              </Button>
+            </div>
+          </>
+        )
+      ) : (
+        <>
+          <Label className="text-[10.5px]">Pasta no Google Drive{!required && ' (opcional)'}</Label>
+          <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} />
+          {pendingParent && (
+            <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+              <span className="text-[10.5px]">
+                Criar em <span className="font-medium">{pendingParent.name}</span>?
+              </span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                  onClick={() => setPendingParent(null)}>
+                  Cancelar
+                </Button>
+                <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                  disabled={creating} onClick={handleConfirmCreate}>
+                  {creating && <Loader2 size={10} className="animate-spin" />}
+                  Criar
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDelete, onSetActive, setForm, chooseDir, submitForm, setEditingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id })
   const style = {
@@ -120,7 +365,11 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               {p.prefix}
             </Badge>
           </div>
-          <p className="text-[10.5px] text-muted-foreground truncate">{p.outputDir || 'Sem pasta'}</p>
+          <p className="text-[10.5px] text-muted-foreground truncate">
+            {p.outputMode === 'drive'
+              ? (p.driveFolderUrl ? '📁 Drive' : 'Drive — sem pasta')
+              : (p.outputDir || 'Sem pasta')}
+          </p>
         </div>
         <div className="flex gap-1.5 shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
           {p.id === activeProjectId && (
@@ -166,20 +415,41 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               />
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-[10.5px]">Pasta de saída</Label>
-            <div className="flex gap-1.5">
-              <Input
-                className="h-7 text-xs flex-1"
-                placeholder="D:\Projetos\..."
-                value={form.outputDir}
-                onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
-              />
-              <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                <FolderOpen size={12} className="mr-1" /> Explorar
-              </Button>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
+            <Button
+              size="sm"
+              variant={(form.outputMode ?? 'local') !== 'drive' ? 'default' : 'outline'}
+              className="h-6 px-2.5 text-xs"
+              onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
+            >
+              Local
+            </Button>
+            <Button
+              size="sm"
+              variant={(form.outputMode ?? 'local') === 'drive' ? 'default' : 'outline'}
+              className="h-6 px-2.5 text-xs"
+              onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
+            >
+              Drive
+            </Button>
           </div>
+          {(form.outputMode ?? 'local') !== 'drive' && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10.5px]">Pasta de saída</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  className="h-7 text-xs flex-1"
+                  placeholder="D:\Projetos\..."
+                  value={form.outputDir}
+                  onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
+                />
+                <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
+                  <FolderOpen size={12} className="mr-1" /> Explorar
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10.5px]">Cor</Label>
             <div className="flex gap-2 mt-0.5">
@@ -193,6 +463,9 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               ))}
             </div>
           </div>
+          {(form.outputMode ?? 'local') === 'drive' && (
+            <DriveProjectSection projectId={p.id} form={form} setForm={setForm} required />
+          )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
               Salvar
@@ -231,7 +504,7 @@ export default function Settings({ onBack }) {
   }
 
   function openAdd() {
-    setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', counter: 0, color: PROJECT_COLORS[0] })
+    setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', outputMode: 'local', counter: 0, color: PROJECT_COLORS[0] })
     setEditingId('new')
   }
 
@@ -241,11 +514,32 @@ export default function Settings({ onBack }) {
   }
 
   async function submitForm() {
-    if (!form.name || !form.prefix || !form.outputDir) return
+    const mode = form.outputMode ?? 'local'
+    if (!form.name || !form.prefix) {
+      toast.error('Preencha nome e prefixo')
+      return
+    }
+    if (mode === 'local' && !form.outputDir) {
+      toast.error('Preencha a pasta de saída')
+      return
+    }
+    if (mode === 'drive' && !form.driveFolderId) {
+      toast.error('Configure a pasta do Drive antes de salvar')
+      return
+    }
     if (editingId === 'new') {
-      await actions.addProject(form)
+      await actions.addProject({ ...form, outputMode: mode })
     } else {
-      await actions.updateProject(editingId, { name: form.name, prefix: form.prefix, outputDir: form.outputDir, color: form.color })
+      const updates = {
+        name: form.name,
+        prefix: form.prefix,
+        color: form.color,
+        outputMode: mode,
+        ...(mode === 'local'
+          ? { outputDir: form.outputDir, driveFolderId: null, driveFolderUrl: null }
+          : { outputDir: '', driveFolderId: form.driveFolderId, driveFolderUrl: form.driveFolderUrl }),
+      }
+      await actions.updateProject(editingId, updates)
     }
     setEditingId(null)
     setForm(null)
@@ -335,6 +629,8 @@ export default function Settings({ onBack }) {
                     />
                   </div>
                 </div>
+                {/* New projects always start in local mode — drive mode requires an
+                    existing projectId so the DriveProjectSection can link folders. */}
                 <div className="flex flex-col gap-1">
                   <Label className="text-[10.5px]">Pasta de saída</Label>
                   <div className="flex gap-1.5">

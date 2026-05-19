@@ -3,14 +3,15 @@ import http from 'node:http'
 import { google } from 'googleapis'
 import { safeStorage, shell } from 'electron'
 
-const CLIENT_ID = ''
-const CLIENT_SECRET = ''
+const CLIENT_ID = '87201199145-mvkp4v791tbtp1joekhac8lpp546cr6g.apps.googleusercontent.com'
+const CLIENT_SECRET = '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'
 const SCOPES = [
   'openid',
   'email',
   'profile',
   'https://www.googleapis.com/auth/drive.appdata',
   'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
 ]
 const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 

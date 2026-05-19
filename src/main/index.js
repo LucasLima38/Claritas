@@ -5,6 +5,8 @@ import os from 'os'
 import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
+import _StoreLib from 'electron-store'
+const _AuthStoreClass = _StoreLib.default ?? _StoreLib
 import { readEMF } from './clipboardService.js'
 import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat, generateThumbnail } from './conversionService.js'
 import { Libemf2svgShell } from './libemf2svgShell.js'
@@ -24,7 +26,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // ── State ─────────────────────────────────────────────────────────────────
 
 const store = new ProjectStore()
-initAuthService(store)
+const authStore = new _AuthStoreClass({ name: 'auth' })
+initAuthService(authStore)
 
 const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
 

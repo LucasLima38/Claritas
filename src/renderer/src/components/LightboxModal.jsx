@@ -78,7 +78,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
 
         {/* Image area */}
         <div className="flex-1 min-h-0 relative flex items-center justify-center px-12 py-4 overflow-hidden lightbox-preview-bg">
-          {isPdf && !src ? (
+          {(isPdf || isDriveOnly) && !src ? (
             <FileText size={64} className="text-muted-foreground/40" />
           ) : (
             <img
@@ -113,7 +113,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t shrink-0">
           <span className="text-xs text-muted-foreground">
-            {entry && `${formatTime(entry.timestamp)} · ${formatBytes(entry.sizeBytes)}`}
+            {entry && `${formatTime(entry.timestamp)}${entry.sizeBytes != null ? ` · ${formatBytes(entry.sizeBytes)}` : ''}`}
           </span>
           <div className="flex gap-2">
             {!isDriveOnly && (

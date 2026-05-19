@@ -1,4 +1,4 @@
-import { FileText, RefreshCw, Share2 } from 'lucide-react'
+import { ExternalLink, FileText, RefreshCw, Share2 } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
@@ -118,7 +118,8 @@ export default function ClipGrid() {
 
 function ClipCard({ entry, onOpen, onDelete }) {
   const isPdf = entry.filename.endsWith('.pdf')
-  const fileUrl = toFileUrl(entry.fullPath)
+  const isDriveOnly = !entry.fullPath
+  const fileUrl = isDriveOnly ? null : toFileUrl(entry.fullPath)
   const thumbUrl = entry.thumbPath ? toFileUrl(entry.thumbPath) : null
   const { state, actions } = useApp()
   const [shareOpen, setShareOpen] = useState(false)
@@ -155,12 +156,12 @@ function ClipCard({ entry, onOpen, onDelete }) {
           <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0" onClick={onOpen}>
             {/* Thumbnail */}
             <div className="relative h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
-              {isPdf && !thumbUrl ? (
+              {(isPdf || isDriveOnly) && !thumbUrl ? (
                 <FileText size={28} className="text-muted-foreground/50" />
               ) : (
                 <>
                   <img
-                    src={isPdf ? thumbUrl : fileUrl}
+                    src={(isPdf || isDriveOnly) ? thumbUrl : fileUrl}
                     alt={entry.filename}
                     className="w-full h-full object-contain p-1"
                     style={{ imageRendering: 'crisp-edges' }}
@@ -185,17 +186,27 @@ function ClipCard({ entry, onOpen, onDelete }) {
         </ContextMenuTrigger>
 
         <ContextMenuContent>
-          <ContextMenuItem onClick={handleCopy}>
-            Copiar arquivo
-          </ContextMenuItem>
-          <ContextMenuItem onClick={handleShowInFolder}>
-            Ir para a pasta
-          </ContextMenuItem>
+          {!isDriveOnly && (
+            <ContextMenuItem onClick={handleCopy}>
+              Copiar arquivo
+            </ContextMenuItem>
+          )}
+          {!isDriveOnly && (
+            <ContextMenuItem onClick={handleShowInFolder}>
+              Ir para a pasta
+            </ContextMenuItem>
+          )}
+          {entry.driveFileUrl && (
+            <ContextMenuItem onClick={() => window.electronAPI.openExternal(entry.driveFileUrl)}>
+              <ExternalLink size={13} />
+              Abrir no Drive
+            </ContextMenuItem>
+          )}
           <ContextMenuSeparator />
           <ContextMenuItem onClick={() => onDelete(entry)} className="text-destructive focus:text-destructive">
             Deletar arquivo
           </ContextMenuItem>
-          {state.account && (
+          {state.account && !isDriveOnly && (
             <>
               <ContextMenuSeparator />
               <ContextMenuItem onClick={() => setShareOpen(true)}>

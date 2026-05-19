@@ -130,6 +130,10 @@ export async function loadStoredSession() {
   }
 }
 
+export function getStoredUser() {
+  return _store?.get('googleUser') ?? null
+}
+
 export async function logout() {
   try {
     const tokens = loadTokens()

@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, nativeTheme, dialog, globalShortcut, shell, clipboard, protocol } from 'electron'
 import { promises as fsp } from 'fs'
 import path from 'path'
+import os from 'os'
 import { fileURLToPath } from 'url'
 import { is } from '@electron-toolkit/utils'
 import { ProjectStore } from './projectStore.js'
@@ -14,8 +15,8 @@ import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
 import { initAutoUpdater } from './updateService.js'
 import { recognizeDataURL, terminateOcr } from './ocrService.js'
-import { initAuthService, loginWithGoogle, loadStoredSession, logout, getAuthClient } from './authService.js'
-import { uploadFile, shareFileWithEmail } from './driveService.js'
+import { initAuthService, loginWithGoogle, loadStoredSession, logout, getAuthClient, getStoredUser } from './authService.js'
+import { uploadFile, shareFileWithEmail, listDriveFolders, createDriveFolder, uploadFileToDriveFolder, shareFolderWithEmail } from './driveService.js'
 import { pullProjects, pushProjects } from './syncService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -26,6 +27,13 @@ const store = new ProjectStore()
 initAuthService(store)
 
 const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
+
+function mimeTypeForExt(ext) {
+  if (ext === 'pdf') return 'application/pdf'
+  if (ext === 'svg') return 'image/svg+xml'
+  if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg'
+  return 'image/png'
+}
 
 // ── Conversion shell ──────────────────────────────────────────────────────
 
@@ -326,6 +334,64 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
 
+  const mode = project.outputMode ?? 'local'
+
+  // ── Drive-only path ────────────────────────────────────────────────────────
+  if (mode === 'drive') {
+    if (!project.driveFolderId) {
+      return { error: 'NO_DRIVE_FOLDER', message: 'Pasta do Drive não configurada.' }
+    }
+    const authClient = getAuthClient()
+    if (!authClient) {
+      return { error: 'NOT_LOGGED_IN', message: 'Login necessário para salvar no Drive.' }
+    }
+
+    const filename = generateFilenameWithExt(project.prefix, project.counter + 1, format)
+    const tmpPath = path.join(os.tmpdir(), filename)
+    const entryId = crypto.randomUUID()
+
+    try {
+      await exportToFormat(pendingSVG.svgContent, format, tmpPath)
+
+      // Always generate a thumbnail for drive-only entries (no local file to display)
+      const thumbsDir = path.join(app.getPath('userData'), 'thumbs')
+      await fsp.mkdir(thumbsDir, { recursive: true })
+      const thumbPath = path.join(thumbsDir, `${entryId}.png`)
+      const thumbBuffer = await generateThumbnail(pendingSVG.svgContent)
+      await fsp.writeFile(thumbPath, thumbBuffer)
+
+      const { size: sizeBytes } = await fsp.stat(tmpPath)
+      const uploadResult = await uploadFileToDriveFolder(
+        authClient, tmpPath, filename, mimeTypeForExt(format), project.driveFolderId
+      )
+      await fsp.unlink(tmpPath).catch(() => {})
+
+      if (!uploadResult.ok) {
+        return { error: 'UPLOAD_FAILED', message: 'Falha ao enviar para o Drive.' }
+      }
+
+      const newCounter = store.incrementCounter(projectId)
+      const entry = {
+        id: entryId,
+        filename,
+        fullPath: null,
+        thumbPath,
+        driveFileUrl: uploadResult.webViewLink,
+        projectId,
+        timestamp: new Date().toISOString(),
+        sizeBytes,
+      }
+      store.addHistoryEntry(entry)
+      pendingQueue.shift()
+      updateTrayMenu(mainWindow, store)
+      return { ok: true, filename, fullPath: null, entry, newCounter }
+    } catch (err) {
+      await fsp.unlink(tmpPath).catch(() => {})
+      return { error: 'ERROR', message: err.message }
+    }
+  }
+
+  // ── Local path (default) ───────────────────────────────────────────────────
   const dirCheck = await checkOutputDir(project.outputDir)
   if (!dirCheck.exists) {
     return { dirMissing: true, outputDir: project.outputDir }
@@ -503,6 +569,7 @@ ipcMain.handle('get-init-data', () => {
     settings: store.getSettings(),
     history: store.getHistory(),
     notifications: store.getNotifications(),
+    account: getStoredUser(),
     shellStatus: 'ready',
   }
 })
@@ -598,13 +665,67 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
 
+  const mode = project.outputMode ?? 'local'
+  const ext = format === 'jpg' ? 'jpg' : 'png'
+  const filename = generateFilenameWithExt(project.prefix, project.counter + 1, ext)
+
+  // ── Drive-only path ────────────────────────────────────────────────────────
+  if (mode === 'drive') {
+    if (!project.driveFolderId) {
+      return { ok: false, error: 'NO_DRIVE_FOLDER', message: 'Pasta do Drive não configurada.' }
+    }
+    const authClient = getAuthClient()
+    if (!authClient) {
+      return { ok: false, error: 'NOT_LOGGED_IN', message: 'Login necessário para salvar no Drive.' }
+    }
+
+    const entryId = crypto.randomUUID()
+
+    try {
+      // Write image to temp file using the existing saveImage helper
+      const tmpPath = await saveImage(dataURL, os.tmpdir(), filename)
+
+      // Generate thumbnail from the dataURL (decode base64 image bytes)
+      const thumbsDir = path.join(app.getPath('userData'), 'thumbs')
+      await fsp.mkdir(thumbsDir, { recursive: true })
+      const thumbPath = path.join(thumbsDir, `${entryId}.png`)
+      const base64Data = dataURL.replace(/^data:image\/\w+;base64,/, '')
+      await fsp.writeFile(thumbPath, Buffer.from(base64Data, 'base64'))
+
+      const { size: sizeBytes } = await fsp.stat(tmpPath)
+      const uploadResult = await uploadFileToDriveFolder(
+        authClient, tmpPath, filename, mimeTypeForExt(ext), project.driveFolderId
+      )
+      await fsp.unlink(tmpPath).catch(() => {})
+
+      if (!uploadResult.ok) {
+        return { ok: false, error: 'UPLOAD_FAILED', message: 'Falha ao enviar para o Drive.' }
+      }
+
+      const newCounter = store.incrementCounter(projectId)
+      const entry = {
+        id: entryId,
+        filename,
+        fullPath: null,
+        thumbPath,
+        driveFileUrl: uploadResult.webViewLink,
+        projectId,
+        timestamp: new Date().toISOString(),
+        sizeBytes,
+      }
+      store.addHistoryEntry(entry)
+      updateTrayMenu(mainWindow, store)
+      return { ok: true, filename, fullPath: null, entry, newCounter }
+    } catch (err) {
+      return { ok: false, error: err.message }
+    }
+  }
+
+  // ── Local path (default) ───────────────────────────────────────────────────
   const dirCheck = await checkOutputDir(project.outputDir)
   if (!dirCheck.exists) {
     return { ok: false, dirMissing: true, outputDir: project.outputDir }
   }
-
-  const ext = format === 'jpg' ? 'jpg' : 'png'
-  const filename = generateFilenameWithExt(project.prefix, project.counter + 1, ext)
 
   try {
     const fullPath = await saveImage(dataURL, project.outputDir, filename)
@@ -722,6 +843,43 @@ ipcMain.handle('share-file', async (_event, { fullPath, email }) => {
     return { ok: true, webViewLink: uploadResult.webViewLink }
   } catch (err) {
     if (err.code === 400) return { ok: false, error: 'E-mail inválido' }
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('drive-list-folders', async (_e, { parentId } = {}) => {
+  const authClient = getAuthClient()
+  if (!authClient) return { ok: false, error: 'NOT_LOGGED_IN' }
+  try {
+    const folders = await listDriveFolders(authClient, parentId)
+    return { ok: true, folders }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('drive-create-project-folder', async (_e, { projectId, parentId }) => {
+  const authClient = getAuthClient()
+  if (!authClient) return { ok: false, error: 'NOT_LOGGED_IN' }
+  const project = store.getProjects().find((p) => p.id === projectId)
+  if (!project) return { ok: false, error: 'PROJECT_NOT_FOUND' }
+  try {
+    const folder = await createDriveFolder(authClient, project.name, parentId)
+    store.updateProject(projectId, { driveFolderId: folder.id, driveFolderUrl: folder.webViewLink })
+    return { ok: true, folderId: folder.id, folderUrl: folder.webViewLink, projects: store.getProjects() }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('drive-share-project-folder', async (_e, { projectId, email }) => {
+  const authClient = getAuthClient()
+  if (!authClient) return { ok: false, error: 'NOT_LOGGED_IN' }
+  const project = store.getProjects().find((p) => p.id === projectId)
+  if (!project?.driveFolderId) return { ok: false, error: 'NO_DRIVE_FOLDER' }
+  try {
+    return await shareFolderWithEmail(authClient, project.driveFolderId, email)
+  } catch (err) {
     return { ok: false, error: err.message }
   }
 })

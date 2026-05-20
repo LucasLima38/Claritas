@@ -28,12 +28,14 @@ export function CaptureTab() {
   }
 
   return (
-    <div className="flex flex-col flex-1">
-      <CaptureControls
-        onCapture={({ mode, delay }) => actions.startCapture({ mode, delay })}
-        disabled={captureStatus === 'capture-countdown'}
-      />
-      <ClipGrid filter="capture" />
+    <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-4">
+        <CaptureControls
+          onCapture={({ mode, delay }) => actions.startCapture({ mode, delay })}
+          disabled={captureStatus === 'capture-countdown'}
+        />
+        <ClipGrid filter="capture" />
+      </div>
     </div>
   )
 }

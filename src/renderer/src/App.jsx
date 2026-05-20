@@ -183,7 +183,7 @@ export default function App() {
               <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
                 <div className="w-full max-w-5xl mx-auto flex flex-col gap-4">
                   <ClipboardArea />
-                  <ClipGrid />
+                  <ClipGrid filter="clipboard" />
                 </div>
               </div>
               <StatusBar />

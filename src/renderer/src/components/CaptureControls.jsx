@@ -23,17 +23,24 @@ const DELAYS = [
   { value: '10', label: '10 segundos' },
 ]
 
+const RESOLUTIONS = [
+  { value: 'low',    label: 'Baixa' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'high',   label: 'Alta' },
+]
+
 /**
  * Props:
- *   onCapture({ mode, delay }) — called when user clicks Capturar agora
+ *   onCapture({ mode, delay, resolution }) — called when user clicks Capturar agora
  *   disabled — true while countdown is running
  */
 export function CaptureControls({ onCapture, disabled = false }) {
   const [mode, setMode] = useState('fullscreen')
   const [delay, setDelay] = useState('0')
+  const [resolution, setResolution] = useState('normal')
 
   const handleCapture = () => {
-    onCapture({ mode, delay: Number(delay) })
+    onCapture({ mode, delay: Number(delay), resolution })
   }
 
   return (
@@ -72,6 +79,26 @@ export function CaptureControls({ onCapture, disabled = false }) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Resolução</span>
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+            {RESOLUTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setResolution(value)}
+                className={[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  resolution === value
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                ].join(' ')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <Button

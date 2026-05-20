@@ -20,6 +20,7 @@ const initialState = {
   captureStatus: 'capture-idle',
   captureData: null,
   captureFormat: 'png',
+  captureResolution: 'normal',
   notifications: [],
   account: null,
   saveToast: null,
@@ -172,6 +173,9 @@ export function reducer(state, action) {
 
     case 'SET_CAPTURE_FORMAT':
       return { ...state, captureFormat: action.format }
+
+    case 'SET_CAPTURE_RESOLUTION':
+      return { ...state, captureResolution: action.resolution }
 
     case 'CAPTURE_COUNTDOWN_START':
       return { ...state, captureStatus: 'capture-countdown' }
@@ -461,7 +465,8 @@ export function AppProvider({ children }) {
       dispatch({ type: 'SYNC_HISTORY', history: result.history })
     },
 
-    async startCapture({ mode, delay }) {
+    async startCapture({ mode, delay, resolution }) {
+      dispatch({ type: 'SET_CAPTURE_RESOLUTION', resolution: resolution ?? 'normal' })
       dispatch({ type: 'CAPTURE_COUNTDOWN_START' })
       await window.electronAPI.captureScreen({ mode, delay })
     },

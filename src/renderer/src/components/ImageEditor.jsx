@@ -129,7 +129,7 @@ function AnnotationShape({ shape }) {
 
 export function ImageEditor() {
   const { state, actions } = useApp()
-  const { captureData, captureFormat } = state
+  const { captureData, captureFormat, captureResolution } = state
 
   const [image] = useImage(captureData?.dataURL ?? '')
   const [activeTool, setActiveTool] = useState('select')
@@ -146,7 +146,6 @@ export function ImageEditor() {
   const [ocrCroppedDataURL, setOcrCroppedDataURL] = useState(null)
   const [ocrAutoRunKey, setOcrAutoRunKey] = useState(0)
   const [ocrPanelWidth, setOcrPanelWidth] = useState(288)
-  const [resolution, setResolution] = useState('normal')
   const ocrRegionStartRef = useRef(null)
 
   const isDrawingRef = useRef(false)
@@ -253,8 +252,8 @@ export function ImageEditor() {
     const scale = stageRef.current.scaleX()
     const pixelRatio = scale > 0 ? 1 / scale : 1
     const dataURL = stageRef.current.toDataURL({ mimeType, pixelRatio, quality: 0.92 })
-    actions.saveCapture({ dataURL, format: captureFormat, resolution })
-  }, [captureFormat, resolution, actions])
+    actions.saveCapture({ dataURL, format: captureFormat, resolution: captureResolution })
+  }, [captureFormat, captureResolution, actions])
 
   useEffect(() => {
     if (textEditing) {
@@ -574,30 +573,6 @@ export function ImageEditor() {
           {captureData ? `${captureData.width} × ${captureData.height}px` : ''}
         </span>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">Resolução</span>
-            <div className="flex bg-muted rounded-md p-0.5 gap-0.5">
-              {[
-                { value: 'low', label: 'Baixa' },
-                { value: 'normal', label: 'Normal' },
-                { value: 'high', label: 'Alta' },
-              ].map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  aria-pressed={resolution === value}
-                  onClick={() => setResolution(value)}
-                  className={`text-[11px] font-semibold px-2 py-1 rounded transition-all ${
-                    resolution === value
-                      ? 'bg-background text-green-600 shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
           <Button
             variant="ghost"
             size="sm"

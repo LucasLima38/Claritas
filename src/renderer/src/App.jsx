@@ -13,6 +13,7 @@ import { CaptureTab } from './components/CaptureTab.jsx'
 import About from './components/About.jsx'
 import NotificationsDialog from './components/NotificationsDialog.jsx'
 import AccountPanel from './components/AccountPanel.jsx'
+import SaveToast from './components/SaveToast.jsx'
 
 export default function App() {
   const { state, actions } = useApp()
@@ -207,6 +208,7 @@ export default function App() {
       <About open={aboutOpen} onOpenChange={setAboutOpen} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />
       <AccountPanel open={accountOpen} onOpenChange={setAccountOpen} />
       <Toaster richColors position="bottom-center" />
+      <SaveToast />
     </div>
   )
 }

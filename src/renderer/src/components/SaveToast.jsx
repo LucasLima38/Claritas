@@ -19,17 +19,19 @@ export default function SaveToast() {
 
   if (!toast) return null
 
-  const bgColor =
-    toast.type === 'success' ? 'bg-green-600'
-      : toast.type === 'error' ? 'bg-red-600'
-      : 'bg-gray-900'
+  const toastStyle =
+    toast.type === 'success'
+      ? { backgroundColor: 'hsl(var(--primary))', color: 'hsl(var(--primary-foreground))' }
+      : toast.type === 'error'
+      ? { backgroundColor: 'hsl(var(--destructive))', color: 'hsl(var(--destructive-foreground))' }
+      : { backgroundColor: 'hsl(var(--muted))', color: 'hsl(var(--foreground))' }
 
   const icon = toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : null
 
   return (
     <div
-      className={`fixed bottom-4 right-4 z-50 flex items-start gap-2 rounded-lg px-4 py-3 text-white shadow-lg ${bgColor}`}
-      style={{ minWidth: '220px', maxWidth: '320px' }}
+      className="fixed bottom-4 right-4 z-50 flex items-start gap-2 rounded-lg px-4 py-3 shadow-lg"
+      style={{ minWidth: '220px', maxWidth: '320px', ...toastStyle }}
     >
       {toast.type === 'saving' && (
         <svg className="mt-0.5 h-4 w-4 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24">

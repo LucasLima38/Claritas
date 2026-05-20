@@ -380,6 +380,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
         fullPath: null,
         thumbPath,
         driveFileUrl: uploadResult.webViewLink ?? `https://drive.google.com/file/d/${uploadResult.fileId}/view`,
+        driveFolderUrl: project.driveFolderUrl ?? null,
         projectId,
         timestamp: new Date().toISOString(),
         sizeBytes,
@@ -586,6 +587,11 @@ ipcMain.handle('sync-history', async () => {
   const entries = store.getHistory()
   const surviving = []
   for (const entry of entries) {
+    if (!entry.fullPath) {
+      // Drive-only entry — no local file to check, always keep
+      surviving.push(entry)
+      continue
+    }
     try {
       await fsp.access(entry.fullPath)
       surviving.push(entry)
@@ -598,10 +604,12 @@ ipcMain.handle('sync-history', async () => {
 })
 
 ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath, thumbPath }) => {
-  try {
-    await fsp.unlink(fullPath)
-  } catch (err) {
-    if (err.code !== 'ENOENT') return { error: err.message }
+  if (fullPath) {
+    try {
+      await fsp.unlink(fullPath)
+    } catch (err) {
+      if (err.code !== 'ENOENT') return { error: err.message }
+    }
   }
   if (thumbPath) await fsp.unlink(thumbPath).catch(() => {})
   store.deleteHistoryEntry(entryId)
@@ -713,6 +721,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
         fullPath: null,
         thumbPath,
         driveFileUrl: uploadResult.webViewLink ?? `https://drive.google.com/file/d/${uploadResult.fileId}/view`,
+        driveFolderUrl: project.driveFolderUrl ?? null,
         projectId,
         timestamp: new Date().toISOString(),
         sizeBytes,
@@ -892,8 +901,8 @@ ipcMain.handle('drive-create-project-folder', async (_e, { projectId, parentId }
   if (!project) return { ok: false, error: 'PROJECT_NOT_FOUND' }
   try {
     const folder = await createDriveFolder(authClient, project.name, parentId)
-    store.updateProject(projectId, { driveFolderId: folder.id, driveFolderUrl: folder.webViewLink })
-    return { ok: true, folderId: folder.id, folderUrl: folder.webViewLink, projects: store.getProjects() }
+    store.updateProject(projectId, { driveFolderId: folder.id, driveFolderUrl: folder.webViewLink, driveFolderName: project.name })
+    return { ok: true, folderId: folder.id, folderUrl: folder.webViewLink, folderName: project.name, projects: store.getProjects() }
   } catch (err) {
     return { ok: false, error: err.message }
   }

@@ -439,6 +439,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
   const [creating, setCreating] = useState(false)
   const [browsing, setBrowsing] = useState(false)
   const [pendingParent, setPendingParent] = useState(null)
+  const [pendingSelect, setPendingSelect] = useState(null)
 
   if (!state.account) return null
 
@@ -447,7 +448,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
     const result = await actions.driveCreateProjectFolder(projectId, pendingParent.id)
     setCreating(false)
     if (result.ok) {
-      setForm((f) => ({ ...f, driveFolderId: result.folderId, driveFolderUrl: result.folderUrl }))
+      setForm((f) => ({ ...f, driveFolderId: result.folderId, driveFolderUrl: result.folderUrl, driveFolderName: result.folderName }))
       setBrowsing(false)
       setPendingParent(null)
       toast.success('Pasta criada no Drive')
@@ -457,9 +458,14 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
   }
 
   function handleSelectExisting(folder) {
-    setForm((f) => ({ ...f, driveFolderId: folder.id, driveFolderUrl: folder.webViewLink }))
+    setPendingSelect(folder)
+  }
+
+  function handleConfirmSelect() {
+    setForm((f) => ({ ...f, driveFolderId: pendingSelect.id, driveFolderUrl: pendingSelect.webViewLink, driveFolderName: pendingSelect.name }))
     setBrowsing(false)
     setPendingParent(null)
+    setPendingSelect(null)
     toast.success('Pasta vinculada ao projeto')
   }
 
@@ -470,8 +476,25 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
         browsing ? (
           <>
             <Label className="text-[10.5px]">Escolher nova localização</Label>
-            <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} onSelectExisting={handleSelectExisting} />
-            {pendingParent && (
+            <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />
+            {pendingSelect && (
+              <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+                <span className="text-[10.5px]">
+                  Salvar arquivos em <span className="font-medium">{pendingSelect.name}</span>?
+                </span>
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                    onClick={() => setPendingSelect(null)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                    onClick={handleConfirmSelect}>
+                    Confirmar
+                  </Button>
+                </div>
+              </div>
+            )}
+            {pendingParent && !pendingSelect && (
               <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
                 <span className="text-[10.5px]">
                   Criar em <span className="font-medium">{pendingParent.name}</span>?
@@ -493,7 +516,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
               size="sm"
               variant="ghost"
               className="h-6 text-xs self-start px-1 text-muted-foreground"
-              onClick={() => { setBrowsing(false); setPendingParent(null) }}
+              onClick={() => { setBrowsing(false); setPendingParent(null); setPendingSelect(null) }}
             >
               Cancelar
             </Button>
@@ -503,7 +526,10 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
                 <Folder size={11} className="text-muted-foreground shrink-0" />
-                <span className="text-[10.5px] text-muted-foreground">Pasta no Drive vinculada</span>
+                {form.driveFolderName
+                  ? <span className="text-[10.5px] font-medium truncate max-w-[140px]" title={form.driveFolderName}>{form.driveFolderName}</span>
+                  : <span className="text-[10.5px] text-muted-foreground">Pasta no Drive vinculada</span>
+                }
                 <button
                   className="text-[10.5px] text-primary flex items-center gap-0.5 hover:underline"
                   onClick={() => window.electronAPI.openExternal(form.driveFolderUrl)}
@@ -558,8 +584,25 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
       ) : (
         <>
           <Label className="text-[10.5px]">Pasta no Google Drive{!required && ' (opcional)'}</Label>
-          <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} onSelectExisting={handleSelectExisting} />
-          {pendingParent && (
+          <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />
+          {pendingSelect && (
+            <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+              <span className="text-[10.5px]">
+                Salvar arquivos em <span className="font-medium">{pendingSelect.name}</span>?
+              </span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                  onClick={() => setPendingSelect(null)}>
+                  Cancelar
+                </Button>
+                <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                  onClick={handleConfirmSelect}>
+                  Confirmar
+                </Button>
+              </div>
+            </div>
+          )}
+          {pendingParent && !pendingSelect && (
             <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
               <span className="text-[10.5px]">
                 Criar em <span className="font-medium">{pendingParent.name}</span>?
@@ -613,7 +656,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
           <p className="text-[10.5px] text-muted-foreground truncate flex items-center gap-0.5">
             {p.outputMode === 'drive'
               ? (p.driveFolderUrl
-                  ? <><Folder size={10} className="shrink-0" /><span>Drive</span></>
+                  ? <><Folder size={10} className="shrink-0" /><span className="truncate">{p.driveFolderName || 'Drive'}</span></>
                   : 'Drive — sem pasta')
               : (p.outputDir || 'Sem pasta')}
           </p>
@@ -779,7 +822,7 @@ export default function Settings({ onBack }) {
         ...form,
         outputMode: mode,
         ...(mode === 'local'
-          ? { driveFolderId: null, driveFolderUrl: null }
+          ? { driveFolderId: null, driveFolderUrl: null, driveFolderName: null }
           : { outputDir: '' }),
       })
     } else {
@@ -789,8 +832,8 @@ export default function Settings({ onBack }) {
         color: form.color,
         outputMode: mode,
         ...(mode === 'local'
-          ? { outputDir: form.outputDir, driveFolderId: null, driveFolderUrl: null }
-          : { outputDir: '', driveFolderId: form.driveFolderId, driveFolderUrl: form.driveFolderUrl }),
+          ? { outputDir: form.outputDir, driveFolderId: null, driveFolderUrl: null, driveFolderName: null }
+          : { outputDir: '', driveFolderId: form.driveFolderId, driveFolderUrl: form.driveFolderUrl, driveFolderName: form.driveFolderName ?? null }),
       }
       await actions.updateProject(editingId, updates)
     }

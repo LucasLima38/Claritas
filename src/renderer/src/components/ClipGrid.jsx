@@ -196,8 +196,8 @@ function ClipCard({ entry, onOpen, onDelete }) {
               Ir para a pasta
             </ContextMenuItem>
           )}
-          {entry.driveFileUrl && (
-            <ContextMenuItem onClick={() => window.electronAPI.openExternal(entry.driveFileUrl)}>
+          {(entry.driveFolderUrl || entry.driveFileUrl) && (
+            <ContextMenuItem onClick={() => window.electronAPI.openExternal(entry.driveFolderUrl ?? entry.driveFileUrl)}>
               <ExternalLink size={13} />
               Abrir no Drive
             </ContextMenuItem>

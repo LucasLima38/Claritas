@@ -22,6 +22,7 @@ const initialState = {
   captureFormat: 'png',
   notifications: [],
   account: null,
+  saveToast: null,
 }
 
 export function reducer(state, action) {
@@ -186,6 +187,12 @@ export function reducer(state, action) {
     case 'CLEAR_NOTIFICATIONS':
       return { ...state, notifications: [] }
 
+    case 'SHOW_SAVE_TOAST':
+      return { ...state, saveToast: action.payload }
+
+    case 'HIDE_SAVE_TOAST':
+      return { ...state, saveToast: null }
+
     case 'SET_ACCOUNT':
       return { ...state, account: action.account }
 
@@ -295,12 +302,24 @@ export function AppProvider({ children }) {
         toast.error('Nenhum projeto ativo. Selecione um projeto nas configurações.')
         return
       }
+      const driveEnabled = activeProject.outputMode === 'drive'
+      dispatch({
+        type: 'SHOW_SAVE_TOAST',
+        payload: {
+          message: 'Salvando…',
+          subMessage: driveEnabled ? 'Enviando para o Drive' : undefined,
+          type: 'saving',
+        },
+      })
       dispatch({ type: 'SAVE_START' })
       let result
       try {
         result = await window.electronAPI.saveSVG({ projectId: state.activeProjectId, format: state.exportFormat })
       } catch (err) {
-        toast.error(`Erro de comunicação: ${err.message}`)
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: err?.message ?? 'Erro ao salvar', type: 'error' },
+        })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
@@ -312,7 +331,10 @@ export function AppProvider({ children }) {
         return
       }
       if (!result) {
-        toast.error('Resposta inválida do processo principal.')
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: 'Resposta inválida do processo principal.', type: 'error' },
+        })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
@@ -325,7 +347,10 @@ export function AppProvider({ children }) {
       }
       if (result.ok) {
         dispatch({ type: 'SAVE_SUCCESS', filename: result.filename, entry: result.entry, newCounter: result.newCounter })
-        toast.success(`Salvo: ${result.filename}`)
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: 'Salvo!', type: 'success' },
+        })
       } else if (result.dirMissing) {
         dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
         actions.addNotification({
@@ -336,7 +361,10 @@ export function AppProvider({ children }) {
           timestamp: Date.now(),
         })
       } else if (result.error === 'EACCES') {
-        toast.error('Sem permissão de escrita na pasta de destino.')
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: 'Sem permissão de escrita na pasta de destino.', type: 'error' },
+        })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
@@ -346,7 +374,10 @@ export function AppProvider({ children }) {
           timestamp: Date.now(),
         })
       } else {
-        toast.error(result.message || 'Erro desconhecido ao salvar.')
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: result.message ?? 'Erro ao salvar', type: 'error' },
+        })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
@@ -439,19 +470,32 @@ export function AppProvider({ children }) {
       dispatch({ type: 'CAPTURE_DISCARD' })
     },
 
-    async saveCapture({ dataURL, format }) {
+    async saveCapture({ dataURL, format, resolution }) {
       const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
       if (!activeProject) {
         toast.error('Selecione um projeto antes de salvar.')
         return
       }
+      const driveEnabled = activeProject.outputMode === 'drive'
+      dispatch({
+        type: 'SHOW_SAVE_TOAST',
+        payload: {
+          message: 'Salvando…',
+          subMessage: driveEnabled ? 'Enviando para o Drive' : undefined,
+          type: 'saving',
+        },
+      })
       const result = await window.electronAPI.saveImage({
         dataURL,
         projectId: state.activeProjectId,
         format,
+        resolution,
       })
       if (result.ok) {
-        toast.success(`Salvo: ${result.filename}`)
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: 'Salvo!', type: 'success' },
+        })
         dispatch({
           type: 'CAPTURE_SAVE_SUCCESS',
           projectId: state.activeProjectId,
@@ -466,7 +510,10 @@ export function AppProvider({ children }) {
       } else if (result.dirMissing) {
         dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
       } else {
-        toast.error(result.message || 'Erro ao salvar imagem.')
+        dispatch({
+          type: 'SHOW_SAVE_TOAST',
+          payload: { message: result?.message ?? 'Erro ao capturar', type: 'error' },
+        })
       }
     },
 

@@ -36,3 +36,31 @@ describe('SET_SYNC_ERROR', () => {
     expect(next.account.syncError).toBe('Network error')
   })
 })
+
+describe('saveToast actions', () => {
+  it('SHOW_SAVE_TOAST sets saveToast payload', () => {
+    const state = { saveToast: null }
+    const payload = { message: 'Salvando…', type: 'saving' }
+    const next = reducer(state, { type: 'SHOW_SAVE_TOAST', payload })
+    expect(next.saveToast).toEqual(payload)
+  })
+
+  it('SHOW_SAVE_TOAST with subMessage', () => {
+    const state = { saveToast: null }
+    const payload = { message: 'Salvando…', subMessage: 'Enviando para o Drive', type: 'saving' }
+    const next = reducer(state, { type: 'SHOW_SAVE_TOAST', payload })
+    expect(next.saveToast).toEqual(payload)
+  })
+
+  it('HIDE_SAVE_TOAST sets saveToast to null', () => {
+    const state = { saveToast: { message: 'Salvo!', type: 'success' } }
+    const next = reducer(state, { type: 'HIDE_SAVE_TOAST' })
+    expect(next.saveToast).toBeNull()
+  })
+
+  it('HIDE_SAVE_TOAST when already null is a no-op', () => {
+    const state = { saveToast: null }
+    const next = reducer(state, { type: 'HIDE_SAVE_TOAST' })
+    expect(next.saveToast).toBeNull()
+  })
+})

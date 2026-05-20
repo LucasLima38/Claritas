@@ -36,6 +36,7 @@ const baseState = {
   captureData: null,
   captureFormat: 'png',
   notifications: [],
+  saveToast: null,
 }
 
 describe('reducer — notifications', () => {

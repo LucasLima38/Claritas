@@ -18,7 +18,7 @@ import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tra
 import { initAutoUpdater } from './updateService.js'
 import { recognizeDataURL, terminateOcr } from './ocrService.js'
 import { initAuthService, loginWithGoogle, loadStoredSession, logout, getAuthClient, getStoredUser } from './authService.js'
-import { uploadFile, shareFileWithEmail, listDriveFolders, createDriveFolder, uploadFileToDriveFolder, shareFolderWithEmail } from './driveService.js'
+import { uploadFile, shareFileWithEmail, listDriveFolders, createDriveFolder, deleteDriveFolder, uploadFileToDriveFolder, shareFolderWithEmail } from './driveService.js'
 import { pullProjects, pushProjects } from './syncService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -869,6 +869,17 @@ ipcMain.handle('drive-create-folder', async (_e, { parentId, name }) => {
   try {
     const folder = await createDriveFolder(authClient, name, parentId)
     return { ok: true, folderId: folder.id, folderUrl: folder.webViewLink }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
+ipcMain.handle('drive-delete-folder', async (_e, { folderId }) => {
+  const authClient = getAuthClient()
+  if (!authClient) return { ok: false, error: 'NOT_LOGGED_IN' }
+  try {
+    await deleteDriveFolder(authClient, folderId)
+    return { ok: true }
   } catch (err) {
     return { ok: false, error: err.message }
   }

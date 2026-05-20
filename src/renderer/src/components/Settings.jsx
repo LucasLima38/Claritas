@@ -94,7 +94,7 @@ function ShortcutRecorder({ value, onChange }) {
   )
 }
 
-function DriveFolderBrowser({ onSelectLocation }) {
+function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
   const { state } = useApp()
   const ROOT = { id: null, name: 'Meu Drive' }
   const [stack, setStack] = useState([ROOT])
@@ -106,6 +106,8 @@ function DriveFolderBrowser({ onSelectLocation }) {
   const [creating, setCreating] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
   const [savingFolder, setSavingFolder] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
 
   const current = stack[stack.length - 1]
   const cacheKey = current.id ?? '__root__'
@@ -197,6 +199,32 @@ function DriveFolderBrowser({ onSelectLocation }) {
     }
   }
 
+  async function handleDeleteFolder(folderId) {
+    setDeletingId(folderId)
+    try {
+      const result = await window.electronAPI.driveDeleteFolder(folderId)
+      if (result.ok) {
+        setCache((c) => {
+          const next = { ...c }
+          delete next[cacheKey]
+          return next
+        })
+        setConfirmDeleteId(null)
+        setLoadingKey(cacheKey)
+        const res = await window.electronAPI.driveListFolders(current.id)
+        setLoadingKey(null)
+        if (res.ok) setCache((c) => ({ ...c, [cacheKey]: res.folders }))
+        toast.success('Pasta excluída')
+      } else {
+        toast.error(result.error ?? 'Erro ao excluir pasta')
+      }
+    } catch {
+      toast.error('Erro ao excluir pasta')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   function formatDate(iso) {
     if (!iso) return '—'
     try {
@@ -279,17 +307,62 @@ function DriveFolderBrowser({ onSelectLocation }) {
           <p className="text-[10px] text-muted-foreground text-center py-3">Nenhuma pasta</p>
         )}
         {folders?.map((f) => (
-          <button
-            key={f.id}
-            className="flex items-center gap-1.5 px-2 py-1 hover:bg-accent text-left w-full"
-            onClick={() => enter(f)}
-          >
-            <Folder size={11} className="text-muted-foreground shrink-0" />
-            <span className="text-[11px] flex-1 truncate">{f.name}</span>
-            <span className="text-[10px] text-muted-foreground w-[90px] text-right shrink-0">
-              {formatDate(f.modifiedTime)}
-            </span>
-          </button>
+          <div key={f.id} className="group flex items-center gap-1.5 px-2 py-1 hover:bg-accent">
+            {confirmDeleteId === f.id ? (
+              <>
+                <Trash2 size={11} className="text-destructive shrink-0" />
+                <span className="text-[10.5px] flex-1 text-destructive truncate min-w-0">
+                  Excluir &quot;{f.name}&quot;?
+                </span>
+                <button
+                  onClick={() => handleDeleteFolder(f.id)}
+                  disabled={deletingId === f.id}
+                  className="text-[10px] text-destructive hover:underline shrink-0 disabled:opacity-50"
+                >
+                  {deletingId === f.id
+                    ? <Loader2 size={10} className="animate-spin" />
+                    : 'Confirmar'}
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="text-[10px] text-muted-foreground hover:text-foreground shrink-0 ml-1"
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
+                  onClick={() => enter(f)}
+                >
+                  <Folder size={11} className="text-muted-foreground shrink-0" />
+                  <span className="text-[11px] flex-1 truncate">{f.name}</span>
+                </button>
+                <span className="text-[10px] text-muted-foreground w-[70px] text-right shrink-0 group-hover:hidden">
+                  {formatDate(f.modifiedTime)}
+                </span>
+                <div className="hidden group-hover:flex items-center gap-1 shrink-0">
+                  {onSelectExisting && (
+                    <button
+                      onClick={() => onSelectExisting(f)}
+                      className="text-[9.5px] text-primary hover:underline px-1 shrink-0"
+                      title="Selecionar esta pasta"
+                    >
+                      Selecionar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setConfirmDeleteId(f.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-0.5 rounded"
+                    title="Excluir pasta"
+                  >
+                    <Trash2 size={10} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         ))}
       </div>
 
@@ -383,6 +456,13 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
     }
   }
 
+  function handleSelectExisting(folder) {
+    setForm((f) => ({ ...f, driveFolderId: folder.id, driveFolderUrl: folder.webViewLink }))
+    setBrowsing(false)
+    setPendingParent(null)
+    toast.success('Pasta vinculada ao projeto')
+  }
+
   return (
     <div className="flex flex-col gap-2 pt-1">
       <Separator />
@@ -390,7 +470,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
         browsing ? (
           <>
             <Label className="text-[10.5px]">Escolher nova localização</Label>
-            <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} />
+            <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} onSelectExisting={handleSelectExisting} />
             {pendingParent && (
               <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
                 <span className="text-[10.5px]">
@@ -478,7 +558,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
       ) : (
         <>
           <Label className="text-[10.5px]">Pasta no Google Drive{!required && ' (opcional)'}</Label>
-          <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} />
+          <DriveFolderBrowser onSelectLocation={(f) => setPendingParent(f)} onSelectExisting={handleSelectExisting} />
           {pendingParent && (
             <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
               <span className="text-[10.5px]">

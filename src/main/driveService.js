@@ -93,6 +93,12 @@ export async function createDriveFolder(authClient, name, parentId) {
   return { id: res.data.id, webViewLink: res.data.webViewLink }
 }
 
+export async function deleteDriveFolder(authClient, folderId) {
+  const drive = getDrive(authClient)
+  await drive.files.delete({ fileId: folderId })
+  return { ok: true }
+}
+
 export async function shareFolderWithEmail(authClient, folderId, email) {
   const drive = getDrive(authClient)
   await drive.permissions.create({

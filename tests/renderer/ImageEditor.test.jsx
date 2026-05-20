@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { forwardRef } from 'react'
 import { ImageEditor } from '../../src/renderer/src/components/ImageEditor'
 import * as AppContext from '../../src/renderer/src/context/AppContext'
 
@@ -17,16 +18,27 @@ vi.mock('../../src/renderer/src/components/EditorToolbar', () => ({
 
 // Mock react-konva — canvas can't render in jsdom
 vi.mock('react-konva', () => ({
-  Stage: ({ children, onMouseDown, onMouseMove, onMouseUp }) => (
-    <div
-      data-testid="konva-stage"
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-    >
-      {children}
-    </div>
-  ),
+  Stage: forwardRef(({ children, onMouseDown, onMouseMove, onMouseUp }, ref) => {
+    // Expose a minimal Konva-like API so handleSave can call toDataURL
+    if (ref) {
+      const fakeStage = {
+        toDataURL: () => 'data:image/png;base64,fake',
+        scaleX: () => 1,
+      }
+      if (typeof ref === 'function') ref(fakeStage)
+      else ref.current = fakeStage
+    }
+    return (
+      <div
+        data-testid="konva-stage"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        {children}
+      </div>
+    )
+  }),
   Layer: ({ children }) => <div data-testid="konva-layer">{children}</div>,
   Image: (props) => <div data-testid="konva-image" />,
   Arrow: (props) => <div data-testid="konva-arrow" />,
@@ -122,5 +134,103 @@ describe('ImageEditor', () => {
     const ocrBtn = screen.getByRole('button', { name: /ocr/i })
     fireEvent.click(ocrBtn)
     expect(screen.getByText(/texto extraído/i)).toBeInTheDocument()
+  })
+
+  describe('Resolution picker', () => {
+    it('renders three resolution pill buttons: Baixa, Normal, Alta', () => {
+      render(<ImageEditor />)
+      expect(screen.getByRole('button', { name: 'Baixa' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Normal' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Alta' })).toBeInTheDocument()
+    })
+
+    it('"Normal" is selected by default (aria-pressed="true")', () => {
+      render(<ImageEditor />)
+      expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByRole('button', { name: 'Baixa' })).toHaveAttribute('aria-pressed', 'false')
+      expect(screen.getByRole('button', { name: 'Alta' })).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('clicking "Baixa" selects it and deselects "Normal"', () => {
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByRole('button', { name: 'Baixa' }))
+      expect(screen.getByRole('button', { name: 'Baixa' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('clicking "Alta" selects it and deselects "Normal"', () => {
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByRole('button', { name: 'Alta' }))
+      expect(screen.getByRole('button', { name: 'Alta' })).toHaveAttribute('aria-pressed', 'true')
+      expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('aria-pressed', 'false')
+    })
+
+    it('saveCapture is called with resolution: "normal" by default', () => {
+      const mockSave = vi.fn()
+      vi.mocked(AppContext.useApp).mockReturnValue({
+        state: {
+          captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
+          captureFormat: 'png',
+          projects: [],
+          activeProjectId: null,
+        },
+        actions: {
+          discardCapture: vi.fn(),
+          saveCapture: mockSave,
+          setCaptureFormat: vi.fn(),
+        },
+      })
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByText(/salvar/i))
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution: 'normal' })
+      )
+    })
+
+    it('saveCapture is called with resolution: "low" after clicking Baixa', () => {
+      const mockSave = vi.fn()
+      vi.mocked(AppContext.useApp).mockReturnValue({
+        state: {
+          captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
+          captureFormat: 'png',
+          projects: [],
+          activeProjectId: null,
+        },
+        actions: {
+          discardCapture: vi.fn(),
+          saveCapture: mockSave,
+          setCaptureFormat: vi.fn(),
+        },
+      })
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByRole('button', { name: 'Baixa' }))
+      fireEvent.click(screen.getByText(/salvar/i))
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution: 'low' })
+      )
+    })
+
+    it('saveCapture is called with resolution: "high" after clicking Alta', () => {
+      const mockSave = vi.fn()
+      vi.mocked(AppContext.useApp).mockReturnValue({
+        state: {
+          captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
+          captureFormat: 'png',
+          projects: [],
+          activeProjectId: null,
+        },
+        actions: {
+          discardCapture: vi.fn(),
+          saveCapture: mockSave,
+          setCaptureFormat: vi.fn(),
+        },
+      })
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByRole('button', { name: 'Alta' }))
+      fireEvent.click(screen.getByText(/salvar/i))
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution: 'high' })
+      )
+    })
   })
 })

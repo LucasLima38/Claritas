@@ -35,15 +35,23 @@ function toFileUrl(fullPath) {
   return `localfile:///${fullPath.replace(/\\/g, '/')}`
 }
 
-export default function ClipGrid() {
+export default function ClipGrid({ filter }) {
   const { state, actions } = useApp()
   const [syncing, setSyncing] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(null)
 
+  const entries = filter
+    ? state.history.filter((e) =>
+        filter === 'capture'
+          ? /\.(png|jpe?g|webp)$/i.test(e.filename)
+          : /\.(svg|pdf)$/i.test(e.filename)
+      )
+    : state.history
+
   async function handleLightboxDelete(entry) {
-    const idx = state.history.findIndex((e) => e.id === entry.id)
+    const idx = entries.findIndex((e) => e.id === entry.id)
     if (idx === -1) { setSelectedIndex(null); return }
-    const lengthBefore = state.history.length
+    const lengthBefore = entries.length
     const ok = await actions.deleteHistoryEntry(entry)
     if (!ok) { toast.error('Não foi possível remover o arquivo'); return }
     toast.success(`${entry.filename} removido`)
@@ -59,7 +67,7 @@ export default function ClipGrid() {
     ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.svg`
     : null
 
-  if (state.history.length === 0 && !nextName) return null
+  if (entries.length === 0 && (filter === 'capture' || !nextName)) return null
 
   return (
     <div className="flex flex-col gap-2">
@@ -68,9 +76,9 @@ export default function ClipGrid() {
           Recentes
         </p>
         <div className="flex items-center gap-2">
-          {state.history.length > 0 && (
+          {entries.length > 0 && (
             <p className="text-[10.5px] text-muted-foreground">
-              {state.history.length} arquivo{state.history.length !== 1 ? 's' : ''} nesta sessão
+              {entries.length} arquivo{entries.length !== 1 ? 's' : ''} nesta sessão
             </p>
           )}
           <Button
@@ -91,11 +99,11 @@ export default function ClipGrid() {
       </div>
 
       <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
-        {state.history.map((entry, i) => (
+        {entries.map((entry, i) => (
           <ClipCard key={entry.id} entry={entry} onOpen={() => setSelectedIndex(i)} onDelete={handleLightboxDelete} />
         ))}
 
-        {nextName && (
+        {!filter && nextName && (
           <Card className="border-dashed bg-muted/30 flex items-center justify-center min-h-[80px]">
             <div className="text-center px-2">
               <p className="text-[10px] text-muted-foreground">próximo</p>
@@ -106,7 +114,7 @@ export default function ClipGrid() {
       </div>
 
       <LightboxModal
-        entries={state.history}
+        entries={entries}
         index={selectedIndex}
         onClose={() => setSelectedIndex(null)}
         onNavigate={setSelectedIndex}

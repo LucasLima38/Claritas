@@ -23,6 +23,10 @@ vi.mock('lucide-react', () => ({
   Loader2: ({ size, className }) => <div data-testid="loader" data-size={size} className={className} />,
 }))
 
+vi.mock('../../src/renderer/src/components/ClipGrid', () => ({
+  default: () => null,
+}))
+
 import { CaptureTab } from '../../src/renderer/src/components/CaptureTab'
 
 const mockActions = {

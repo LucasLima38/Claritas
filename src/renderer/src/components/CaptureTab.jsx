@@ -2,6 +2,7 @@ import { useApp } from '@/context/AppContext'
 import { CaptureControls } from './CaptureControls'
 import { ImageEditor } from './ImageEditor'
 import { Loader2 } from 'lucide-react'
+import ClipGrid from './ClipGrid'
 
 export function CaptureTab() {
   const { state, actions } = useApp()
@@ -32,6 +33,7 @@ export function CaptureTab() {
         onCapture={({ mode, delay }) => actions.startCapture({ mode, delay })}
         disabled={captureStatus === 'capture-countdown'}
       />
+      <ClipGrid filter="capture" />
     </div>
   )
 }

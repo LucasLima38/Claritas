@@ -99,6 +99,12 @@ export async function deleteDriveFolder(authClient, folderId) {
   return { ok: true }
 }
 
+export async function deleteDriveFile(authClient, fileId) {
+  const drive = getDrive(authClient)
+  await drive.files.delete({ fileId })
+  return { ok: true }
+}
+
 export async function shareFolderWithEmail(authClient, folderId, email) {
   const drive = getDrive(authClient)
   await drive.permissions.create({

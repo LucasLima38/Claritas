@@ -415,7 +415,7 @@ export function AppProvider({ children }) {
     },
 
     async deleteHistoryEntry(entry) {
-      const result = await window.electronAPI.deleteHistoryFile({ entryId: entry.id, fullPath: entry.fullPath, thumbPath: entry.thumbPath })
+      const result = await window.electronAPI.deleteHistoryFile({ entryId: entry.id, fullPath: entry.fullPath, thumbPath: entry.thumbPath, driveFileId: entry.driveFileId ?? null })
       if (result.ok) dispatch({ type: 'DELETE_HISTORY_ENTRY', entryId: entry.id })
       return result.ok
     },

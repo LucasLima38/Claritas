@@ -18,7 +18,7 @@ import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tra
 import { initAutoUpdater } from './updateService.js'
 import { recognizeDataURL, terminateOcr } from './ocrService.js'
 import { initAuthService, loginWithGoogle, loadStoredSession, logout, getAuthClient, getStoredUser } from './authService.js'
-import { uploadFile, shareFileWithEmail, listDriveFolders, createDriveFolder, deleteDriveFolder, uploadFileToDriveFolder, shareFolderWithEmail } from './driveService.js'
+import { uploadFile, shareFileWithEmail, listDriveFolders, createDriveFolder, deleteDriveFolder, deleteDriveFile, uploadFileToDriveFolder, shareFolderWithEmail } from './driveService.js'
 import { pullProjects, pushProjects } from './syncService.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -379,6 +379,7 @@ ipcMain.handle('save-svg', async (_event, { projectId, format = 'svg' }) => {
         filename,
         fullPath: null,
         thumbPath,
+        driveFileId: uploadResult.fileId,
         driveFileUrl: uploadResult.webViewLink ?? `https://drive.google.com/file/d/${uploadResult.fileId}/view`,
         driveFolderUrl: project.driveFolderUrl ?? null,
         projectId,
@@ -603,7 +604,7 @@ ipcMain.handle('sync-history', async () => {
   return { history: surviving }
 })
 
-ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath, thumbPath }) => {
+ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath, thumbPath, driveFileId }) => {
   if (fullPath) {
     try {
       await fsp.unlink(fullPath)
@@ -612,6 +613,12 @@ ipcMain.handle('delete-history-file', async (_event, { entryId, fullPath, thumbP
     }
   }
   if (thumbPath) await fsp.unlink(thumbPath).catch(() => {})
+  if (driveFileId) {
+    const authClient = getAuthClient()
+    if (authClient) {
+      await deleteDriveFile(authClient, driveFileId).catch(() => {})
+    }
+  }
   store.deleteHistoryEntry(entryId)
   updateTrayMenu(mainWindow, store)
   return { ok: true }
@@ -720,6 +727,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
         filename,
         fullPath: null,
         thumbPath,
+        driveFileId: uploadResult.fileId,
         driveFileUrl: uploadResult.webViewLink ?? `https://drive.google.com/file/d/${uploadResult.fileId}/view`,
         driveFolderUrl: project.driveFolderUrl ?? null,
         projectId,

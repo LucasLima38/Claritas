@@ -75,8 +75,7 @@ export async function listDriveFolders(authClient, parentId) {
   const q = `${parentClause}mimeType = 'application/vnd.google-apps.folder' and trashed = false`
   const res = await drive.files.list({
     q,
-    fields: 'files(id,name,webViewLink)',
-    orderBy: 'name',
+    fields: 'files(id,name,modifiedTime,webViewLink)',
     pageSize: 100,
   })
   return res.data.files ?? []

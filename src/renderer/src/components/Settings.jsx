@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check, Loader2, Share2, ExternalLink, FolderPlus, Folder, ChevronRight } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check, Loader2, Share2, ExternalLink, FolderPlus, Folder, ChevronRight, HardDrive, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -101,11 +101,27 @@ function DriveFolderBrowser({ onSelectLocation }) {
   const [cache, setCache] = useState({})
   const [loadingKey, setLoadingKey] = useState(null)
   const [fetchError, setFetchError] = useState(null)
+  const [sortBy, setSortBy] = useState('name')
+  const [sortDir, setSortDir] = useState('asc')
+  const [creating, setCreating] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [savingFolder, setSavingFolder] = useState(false)
 
   const current = stack[stack.length - 1]
   const cacheKey = current.id ?? '__root__'
-  const folders = cache[cacheKey]
+  const rawFolders = cache[cacheKey]
   const loading = loadingKey === cacheKey
+
+  const folders = useMemo(() => {
+    if (!rawFolders) return rawFolders
+    return [...rawFolders].sort((a, b) => {
+      const cmp =
+        sortBy === 'name'
+          ? a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+          : (a.modifiedTime ?? '').localeCompare(b.modifiedTime ?? '')
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [rawFolders, sortBy, sortDir])
 
   useEffect(() => {
     if (state.account) fetchLevel(null, '__root__')
@@ -133,69 +149,209 @@ function DriveFolderBrowser({ onSelectLocation }) {
   function enter(folder) {
     setStack((s) => [...s, { id: folder.id, name: folder.name }])
     fetchLevel(folder.id, folder.id)
+    setCreating(false)
+    setNewFolderName('')
   }
 
-  function goTo(index) {
-    setStack((s) => s.slice(0, index + 1))
+  function goBack() {
+    if (stack.length <= 1) return
+    setStack((s) => s.slice(0, -1))
+    setCreating(false)
+    setNewFolderName('')
+  }
+
+  function toggleSort(col) {
+    if (sortBy === col) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortBy(col)
+      setSortDir('asc')
+    }
+  }
+
+  async function handleCreateFolder() {
+    const name = newFolderName.trim()
+    if (!name) return
+    setSavingFolder(true)
+    try {
+      const result = await window.electronAPI.driveCreateFolder(current.id, name)
+      if (result.ok) {
+        setCache((c) => {
+          const next = { ...c }
+          delete next[cacheKey]
+          return next
+        })
+        setCreating(false)
+        setNewFolderName('')
+        setLoadingKey(cacheKey)
+        const res = await window.electronAPI.driveListFolders(current.id)
+        setLoadingKey(null)
+        if (res.ok) setCache((c) => ({ ...c, [cacheKey]: res.folders }))
+      } else {
+        toast.error(result.error ?? 'Erro ao criar pasta')
+      }
+    } catch {
+      toast.error('Erro ao criar pasta')
+    } finally {
+      setSavingFolder(false)
+    }
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—'
+    try {
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(new Date(iso))
+    } catch {
+      return '—'
+    }
+  }
+
+  function SortIcon({ col }) {
+    if (sortBy !== col)
+      return <ChevronsUpDown size={9} className="text-muted-foreground/50 ml-0.5 shrink-0" />
+    return sortDir === 'asc' ? (
+      <ChevronUp size={9} className="text-foreground ml-0.5 shrink-0" />
+    ) : (
+      <ChevronDown size={9} className="text-foreground ml-0.5 shrink-0" />
+    )
   }
 
   if (!state.account) return null
 
   return (
-    <div className="flex flex-col gap-1.5 rounded-md border border-border bg-background p-2">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-0.5 flex-wrap">
-        {stack.map((seg, i) => (
-          <span key={seg.id ?? '__root__'} className="flex items-center gap-0.5">
-            {i > 0 && <ChevronRight size={10} className="text-muted-foreground shrink-0" />}
-            <button
-              className={cn(
-                'text-[10px] hover:underline',
-                i === stack.length - 1 ? 'font-medium text-foreground' : 'text-muted-foreground'
-              )}
-              onClick={() => goTo(i)}
-            >
-              {seg.name}
-            </button>
-          </span>
-        ))}
+    <div className="flex flex-col rounded-md border border-border bg-background overflow-hidden">
+      {/* Header: back + current location */}
+      <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border bg-muted/30">
+        <button
+          className={cn(
+            'flex items-center justify-center h-5 w-5 rounded hover:bg-accent transition-colors',
+            stack.length <= 1 && 'opacity-30 pointer-events-none'
+          )}
+          onClick={goBack}
+          disabled={stack.length <= 1}
+        >
+          <ArrowLeft size={11} />
+        </button>
+        <HardDrive size={11} className="text-muted-foreground shrink-0" />
+        <span className="text-[11px] font-medium text-foreground truncate flex-1">{current.name}</span>
       </div>
-      {/* Folder list */}
-      <div className="max-h-[120px] overflow-y-auto flex flex-col gap-0.5">
+
+      {/* Section label */}
+      <div className="px-2 pt-1.5 pb-0.5">
+        <span className="text-[9.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Meu Drive
+        </span>
+      </div>
+
+      {/* Column headers */}
+      <div className="flex items-center px-2 py-0.5 border-b border-border/50">
+        <button
+          className="flex items-center flex-1 text-[9.5px] text-muted-foreground hover:text-foreground font-medium"
+          onClick={() => toggleSort('name')}
+        >
+          Nome
+          <SortIcon col="name" />
+        </button>
+        <button
+          className="flex items-center text-[9.5px] text-muted-foreground hover:text-foreground font-medium w-[90px] justify-end"
+          onClick={() => toggleSort('modifiedTime')}
+        >
+          <SortIcon col="modifiedTime" />
+          Modificado
+        </button>
+      </div>
+
+      {/* Folder rows */}
+      <div className="max-h-[140px] overflow-y-auto flex flex-col">
         {loading && (
-          <div className="flex items-center justify-center py-2">
-            <Loader2 size={12} className="animate-spin text-muted-foreground" />
+          <div className="flex items-center justify-center py-3">
+            <Loader2 size={13} className="animate-spin text-muted-foreground" />
           </div>
         )}
         {!loading && fetchError && (
-          <p className="text-[10px] text-destructive text-center py-2">{fetchError}</p>
+          <p className="text-[10px] text-destructive text-center py-3">{fetchError}</p>
         )}
         {!loading && !fetchError && folders?.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-2">Nenhuma subpasta</p>
+          <p className="text-[10px] text-muted-foreground text-center py-3">Nenhuma pasta</p>
         )}
         {folders?.map((f) => (
           <button
             key={f.id}
-            className="flex items-center gap-1.5 px-1.5 py-1 rounded hover:bg-accent text-left w-full group"
+            className="flex items-center gap-1.5 px-2 py-1 hover:bg-accent text-left w-full"
             onClick={() => enter(f)}
           >
             <Folder size={11} className="text-muted-foreground shrink-0" />
             <span className="text-[11px] flex-1 truncate">{f.name}</span>
-            <ChevronRight size={10} className="text-muted-foreground opacity-0 group-hover:opacity-100 shrink-0" />
+            <span className="text-[10px] text-muted-foreground w-[90px] text-right shrink-0">
+              {formatDate(f.modifiedTime)}
+            </span>
           </button>
         ))}
       </div>
-      {/* Action */}
-      <div className="flex items-center justify-between pt-1 border-t border-border">
-        <span className="text-[10px] text-muted-foreground">
-          Em: <span className="font-medium text-foreground">{current.name}</span>
-        </span>
+
+      {/* Inline new folder input */}
+      {creating && (
+        <div className="flex items-center gap-1.5 px-2 py-1 border-t border-border/50">
+          <Folder size={11} className="text-muted-foreground shrink-0" />
+          <input
+            autoFocus
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateFolder()
+              if (e.key === 'Escape') {
+                setCreating(false)
+                setNewFolderName('')
+              }
+            }}
+            placeholder="Nome da pasta"
+            className="flex-1 text-[11px] bg-transparent border-none outline-none placeholder:text-muted-foreground/60 min-w-0"
+          />
+          {savingFolder ? (
+            <Loader2 size={11} className="animate-spin text-muted-foreground shrink-0" />
+          ) : (
+            <button
+              onClick={handleCreateFolder}
+              disabled={!newFolderName.trim()}
+              className="text-[10px] text-primary hover:underline shrink-0 disabled:opacity-40"
+            >
+              Criar
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setCreating(false)
+              setNewFolderName('')
+            }}
+            className="text-[10px] text-muted-foreground hover:text-foreground shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Footer actions */}
+      <div className="flex items-center justify-between px-2 py-1.5 border-t border-border">
+        <button
+          className="flex items-center gap-1 text-[10.5px] text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => {
+            setCreating(true)
+            setNewFolderName('')
+          }}
+        >
+          <FolderPlus size={11} />
+          Nova pasta
+        </button>
         <Button
           size="sm"
           className="h-6 px-2.5 text-[10.5px] gap-1"
           onClick={() => onSelectLocation(current)}
         >
-          <FolderPlus size={10} />
+          <Check size={10} />
           Criar pasta aqui
         </Button>
       </div>

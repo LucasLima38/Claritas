@@ -863,6 +863,17 @@ ipcMain.handle('drive-list-folders', async (_e, { parentId } = {}) => {
   }
 })
 
+ipcMain.handle('drive-create-folder', async (_e, { parentId, name }) => {
+  const authClient = getAuthClient()
+  if (!authClient) return { ok: false, error: 'NOT_LOGGED_IN' }
+  try {
+    const folder = await createDriveFolder(authClient, name, parentId)
+    return { ok: true, folderId: folder.id, folderUrl: folder.webViewLink }
+  } catch (err) {
+    return { ok: false, error: err.message }
+  }
+})
+
 ipcMain.handle('drive-create-project-folder', async (_e, { projectId, parentId }) => {
   const authClient = getAuthClient()
   if (!authClient) return { ok: false, error: 'NOT_LOGGED_IN' }

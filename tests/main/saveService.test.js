@@ -114,14 +114,7 @@ describe('dirMissing signal', () => {
     const { promises: fsp } = await import('fs')
     fsp.access.mockRejectedValue(new Error('ENOENT'))
     const result = await checkOutputDir('D:\\nonexistent')
-    // In save-svg handler: if (!result.exists) return { dirMissing: true, outputDir }
     expect(result.exists).toBe(false)
-    // Simulate handler response
-    const handlerResponse = !result.exists
-      ? { dirMissing: true, outputDir: 'D:\\nonexistent' }
-      : { ok: true }
-    expect(handlerResponse.dirMissing).toBe(true)
-    expect(handlerResponse.outputDir).toBe('D:\\nonexistent')
   })
 })
 
@@ -149,27 +142,27 @@ describe('applyResolution', () => {
 
   it('returns the buffer unchanged when resolution is "normal"', async () => {
     const buf = Buffer.from('data')
-    const result = await applyResolution(buf, 'image/png', 'normal')
+    const result = await applyResolution(buf, 'normal')
     expect(result).toBe(buf)
   })
 
   it('returns the buffer unchanged when resolution is null', async () => {
     const buf = Buffer.from('data')
-    const result = await applyResolution(buf, 'image/png', null)
+    const result = await applyResolution(buf, null)
     expect(result).toBe(buf)
   })
 
   it('returns the buffer unchanged when resolution is undefined', async () => {
     const buf = Buffer.from('data')
-    const result = await applyResolution(buf, 'image/png', undefined)
+    const result = await applyResolution(buf, undefined)
     expect(result).toBe(buf)
   })
 
   it('calls sharp().resize() with width*0.5 and height*0.5 for "low"', async () => {
     const sharp = (await import('sharp')).default
     const buf = Buffer.from('data')
-    // sharp mock returns width=100, height=80
-    await applyResolution(buf, 'image/png', 'low')
+    // sharp is called twice: once for metadata(), once for resize chain
+    await applyResolution(buf, 'low')
     const instance = sharp.mock.results[1].value
     expect(instance.resize).toHaveBeenCalledWith(50, 40)
   })
@@ -177,8 +170,8 @@ describe('applyResolution', () => {
   it('calls sharp().resize() with width*2 and height*2 for "high"', async () => {
     const sharp = (await import('sharp')).default
     const buf = Buffer.from('data')
-    // sharp mock returns width=100, height=80
-    await applyResolution(buf, 'image/png', 'high')
+    // sharp is called twice: once for metadata(), once for resize chain
+    await applyResolution(buf, 'high')
     const instance = sharp.mock.results[1].value
     expect(instance.resize).toHaveBeenCalledWith(200, 160)
   })
@@ -193,7 +186,7 @@ describe('applyResolution', () => {
     }
     sharp.mockReturnValueOnce(mockInstance).mockReturnValueOnce(mockInstance)
     const buf = Buffer.from('data')
-    await applyResolution(buf, 'image/png', 'low')
+    await applyResolution(buf, 'low')
     // 101 * 0.5 = 50.5 → Math.round → 51, 81 * 0.5 = 40.5 → Math.round → 41
     expect(mockInstance.resize).toHaveBeenCalledWith(51, 41)
   })

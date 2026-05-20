@@ -77,7 +77,7 @@ export async function saveBuffer(buffer, outputDir, filename) {
  * - 'high': resizes to 2× dimensions
  * @returns {Promise<Buffer>} The processed (or original) buffer.
  */
-export async function applyResolution(buffer, mimeType, resolution) {
+export async function applyResolution(buffer, resolution) {
   if (resolution === 'normal' || !resolution) return buffer
   const factor = resolution === 'high' ? 2 : 0.5
   const metadata = await sharp(buffer).metadata()

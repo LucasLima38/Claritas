@@ -704,7 +704,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format, resolu
       // Decode raw buffer and apply resolution scaling for the uploaded file
       const base64Data = dataURL.replace(/^data:image\/\w+;base64,/, '')
       const rawBuffer = Buffer.from(base64Data, 'base64')
-      const processedBuffer = await applyResolution(rawBuffer, `image/${ext}`, resolution)
+      const processedBuffer = await applyResolution(rawBuffer, resolution)
       tmpPath = await saveBuffer(processedBuffer, os.tmpdir(), filename)
 
       // Generate thumbnail from the raw dataURL (do NOT apply resolution scaling to thumbnails)
@@ -754,7 +754,7 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format, resolu
   try {
     const base64Data = dataURL.replace(/^data:image\/\w+;base64,/, '')
     const rawBuffer = Buffer.from(base64Data, 'base64')
-    const processedBuffer = await applyResolution(rawBuffer, `image/${ext}`, resolution)
+    const processedBuffer = await applyResolution(rawBuffer, resolution)
     const fullPath = await saveBuffer(processedBuffer, project.outputDir, filename)
     const { size: sizeBytes } = await fsp.stat(fullPath)
     const newCounter = store.incrementCounter(projectId)

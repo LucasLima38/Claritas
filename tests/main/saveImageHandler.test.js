@@ -36,11 +36,11 @@ const { saveBuffer, applyResolution } = await import('../../src/main/saveService
 describe('save-image handler wiring: applyResolution + saveBuffer', () => {
   beforeEach(() => vi.clearAllMocks())
 
-  it('applyResolution is called with correct buffer, mimeType, and resolution', async () => {
+  it('applyResolution is called with correct buffer and resolution', async () => {
     const sharp = (await import('sharp')).default
     const rawBuffer = Buffer.from('raw-image')
 
-    await applyResolution(rawBuffer, 'image/png', 'low')
+    await applyResolution(rawBuffer, 'low')
 
     // sharp called once for metadata
     expect(sharp).toHaveBeenCalledWith(rawBuffer)
@@ -56,7 +56,7 @@ describe('save-image handler wiring: applyResolution + saveBuffer', () => {
     const rawBuffer = Buffer.from('raw-image')
 
     // applyResolution with 'high' returns a different buffer
-    const processedBuffer = await applyResolution(rawBuffer, 'image/png', 'high')
+    const processedBuffer = await applyResolution(rawBuffer, 'high')
     await saveBuffer(processedBuffer, 'D:\\out', 'img.png')
 
     const [, writtenBuffer] = fsp.writeFile.mock.calls[0]
@@ -69,7 +69,7 @@ describe('save-image handler wiring: applyResolution + saveBuffer', () => {
     const { promises: fsp } = await import('fs')
     const rawBuffer = Buffer.from('original-data')
 
-    const processedBuffer = await applyResolution(rawBuffer, 'image/png', 'normal')
+    const processedBuffer = await applyResolution(rawBuffer, 'normal')
     // Should be the exact same reference
     expect(processedBuffer).toBe(rawBuffer)
 
@@ -80,7 +80,7 @@ describe('save-image handler wiring: applyResolution + saveBuffer', () => {
 
   it('undefined resolution (backward compat) passes the original buffer unchanged', async () => {
     const rawBuffer = Buffer.from('original-data')
-    const processedBuffer = await applyResolution(rawBuffer, 'image/png', undefined)
+    const processedBuffer = await applyResolution(rawBuffer, undefined)
     expect(processedBuffer).toBe(rawBuffer)
   })
 })

@@ -352,6 +352,7 @@ export function AppProvider({ children }) {
           payload: { message: 'Salvo!', type: 'success' },
         })
       } else if (result.dirMissing) {
+        dispatch({ type: 'HIDE_SAVE_TOAST' })
         dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
         actions.addNotification({
           id: crypto.randomUUID(),
@@ -427,6 +428,10 @@ export function AppProvider({ children }) {
         const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
         applyTheme(settings.theme, systemIsDark)
       }
+    },
+
+    hideSaveToast() {
+      dispatch({ type: 'HIDE_SAVE_TOAST' })
     },
 
     clearDirMissing() {
@@ -508,6 +513,7 @@ export function AppProvider({ children }) {
           },
         })
       } else if (result.dirMissing) {
+        dispatch({ type: 'HIDE_SAVE_TOAST' })
         dispatch({ type: 'DIR_MISSING', outputDir: result.outputDir ?? null })
       } else {
         dispatch({

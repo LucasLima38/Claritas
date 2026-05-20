@@ -8,7 +8,7 @@ const mockDispatch = vi.fn()
 let mockToast = null
 
 vi.mock('../../src/renderer/src/context/AppContext', () => ({
-  useApp: () => ({ state: { saveToast: mockToast }, dispatch: mockDispatch }),
+  useApp: () => ({ state: { saveToast: mockToast }, actions: { hideSaveToast: mockDispatch } }),
 }))
 
 describe('SaveToast', () => {
@@ -52,14 +52,14 @@ describe('SaveToast', () => {
     mockToast = { message: 'Salvo!', type: 'success' }
     render(<SaveToast />)
     act(() => { vi.advanceTimersByTime(2000) })
-    expect(mockDispatch).toHaveBeenCalledWith({ type: 'HIDE_SAVE_TOAST' })
+    expect(mockDispatch).toHaveBeenCalled()
   })
 
   it('auto-dismisses error after 4000ms', () => {
     mockToast = { message: 'Erro!', type: 'error' }
     render(<SaveToast />)
     act(() => { vi.advanceTimersByTime(4000) })
-    expect(mockDispatch).toHaveBeenCalledWith({ type: 'HIDE_SAVE_TOAST' })
+    expect(mockDispatch).toHaveBeenCalled()
   })
 
   it('does not auto-dismiss saving state', () => {

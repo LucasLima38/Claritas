@@ -2,17 +2,17 @@ import { useEffect } from 'react'
 import { useApp } from '../context/AppContext'
 
 export default function SaveToast() {
-  const { state, dispatch } = useApp()
+  const { state, actions } = useApp()
   const toast = state.saveToast
 
   useEffect(() => {
     if (!toast) return
     if (toast.type === 'success') {
-      const t = setTimeout(() => dispatch({ type: 'HIDE_SAVE_TOAST' }), 2000)
+      const t = setTimeout(() => actions.hideSaveToast(), 2000)
       return () => clearTimeout(t)
     }
     if (toast.type === 'error') {
-      const t = setTimeout(() => dispatch({ type: 'HIDE_SAVE_TOAST' }), 4000)
+      const t = setTimeout(() => actions.hideSaveToast(), 4000)
       return () => clearTimeout(t)
     }
   }, [toast])

@@ -10,7 +10,7 @@ const _AuthStoreClass = _StoreLib.default ?? _StoreLib
 import { readEMF } from './clipboardService.js'
 import { convert, setShell, isValidSVG, getSVGMetadata, exportToFormat, generateThumbnail } from './conversionService.js'
 import { Libemf2svgShell } from './libemf2svgShell.js'
-import { generateFilenameWithExt, checkOutputDir, saveImage } from './saveService.js'
+import { generateFilenameWithExt, checkOutputDir, saveImage, saveBuffer, applyResolution } from './saveService.js'
 import { captureFullscreen, captureWindow, captureRegion } from './screenshotService.js'
 import { showCountdown, hideCountdown } from './countdownOverlay.js'
 import { ClipboardMonitor } from './clipboardMonitor.js'
@@ -679,7 +679,7 @@ ipcMain.handle('cancel-capture', async () => {
   return { ok: true }
 })
 
-ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
+ipcMain.handle('save-image', async (_event, { dataURL, projectId, format, resolution }) => {
   const project = store.getProjects().find((p) => p.id === projectId)
   if (!project) return { error: 'PROJECT_NOT_FOUND', message: 'Projeto não encontrado.' }
 
@@ -701,14 +701,16 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
     let tmpPath
 
     try {
-      // Write image to temp file using the existing saveImage helper
-      tmpPath = await saveImage(dataURL, os.tmpdir(), filename)
+      // Decode raw buffer and apply resolution scaling for the uploaded file
+      const base64Data = dataURL.replace(/^data:image\/\w+;base64,/, '')
+      const rawBuffer = Buffer.from(base64Data, 'base64')
+      const processedBuffer = await applyResolution(rawBuffer, `image/${ext}`, resolution)
+      tmpPath = await saveBuffer(processedBuffer, os.tmpdir(), filename)
 
-      // Generate thumbnail from the dataURL (decode base64 image bytes)
+      // Generate thumbnail from the raw dataURL (do NOT apply resolution scaling to thumbnails)
       const thumbsDir = path.join(app.getPath('userData'), 'thumbs')
       await fsp.mkdir(thumbsDir, { recursive: true })
       const thumbPath = path.join(thumbsDir, `${entryId}.png`)
-      const base64Data = dataURL.replace(/^data:image\/\w+;base64,/, '')
       await fsp.writeFile(thumbPath, Buffer.from(base64Data, 'base64'))
 
       const { size: sizeBytes } = await fsp.stat(tmpPath)
@@ -750,7 +752,10 @@ ipcMain.handle('save-image', async (_event, { dataURL, projectId, format }) => {
   }
 
   try {
-    const fullPath = await saveImage(dataURL, project.outputDir, filename)
+    const base64Data = dataURL.replace(/^data:image\/\w+;base64,/, '')
+    const rawBuffer = Buffer.from(base64Data, 'base64')
+    const processedBuffer = await applyResolution(rawBuffer, `image/${ext}`, resolution)
+    const fullPath = await saveBuffer(processedBuffer, project.outputDir, filename)
     const { size: sizeBytes } = await fsp.stat(fullPath)
     const newCounter = store.incrementCounter(projectId)
     const entry = {

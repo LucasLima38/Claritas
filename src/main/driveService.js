@@ -71,7 +71,8 @@ export async function uploadFileToDriveFolder(authClient, fullPath, filename, mi
 
 export async function listDriveFolders(authClient, parentId) {
   const drive = getDrive(authClient)
-  const parentClause = parentId ? `'${parentId}' in parents and ` : ''
+  const resolvedParent = parentId ?? 'root'
+  const parentClause = `'${resolvedParent}' in parents and `
   const q = `${parentClause}mimeType = 'application/vnd.google-apps.folder' and trashed = false`
   const res = await drive.files.list({
     q,

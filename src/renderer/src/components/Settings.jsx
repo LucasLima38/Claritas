@@ -116,12 +116,17 @@ function DriveFolderBrowser({ onSelectLocation }) {
     if (cache[key] !== undefined) return
     setLoadingKey(key)
     setFetchError(null)
-    const result = await window.electronAPI.driveListFolders(parentId)
-    setLoadingKey(null)
-    if (result.ok) {
-      setCache((c) => ({ ...c, [key]: result.folders }))
-    } else {
-      setFetchError(result.error ?? 'Erro ao listar pastas')
+    try {
+      const result = await window.electronAPI.driveListFolders(parentId)
+      setLoadingKey(null)
+      if (result.ok) {
+        setCache((c) => ({ ...c, [key]: result.folders }))
+      } else {
+        setFetchError(result.error ?? 'Erro ao listar pastas')
+      }
+    } catch {
+      setLoadingKey(null)
+      setFetchError('Erro ao listar pastas')
     }
   }
 

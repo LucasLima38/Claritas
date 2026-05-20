@@ -525,6 +525,14 @@ export function AppProvider({ children }) {
       }
       return result
     },
+
+    async driveCreateProjectFolder(projectId, parentId) {
+      return window.electronAPI.driveCreateProjectFolder(projectId, parentId)
+    },
+
+    async driveShareProjectFolder(projectId, email) {
+      return window.electronAPI.driveShareProjectFolder(projectId, email)
+    },
   }
 
   return (

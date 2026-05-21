@@ -1,0 +1,40 @@
+appId: com.claritas.app
+productName: Claritas
+copyright: Copyright © 2026
+
+directories:
+  output: dist
+  buildResources: assets
+
+files:
+  - out/**/*
+
+asarUnpack:
+  - resources/**
+
+extraResources:
+  - from: resources/icon.png
+    to: icon.png
+  - from: resources/libemf2svg
+    to: libemf2svg
+    filter:
+      - "**/*"
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: assets/icon.png
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Claritas
+
+npmRebuild: true
+publish:
+  provider: github
+  owner: LucasLima38
+  repo: Claritas

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100vw; height: 100vh;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .countdown {
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 120px;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 0 40px rgba(0,0,0,0.8), 0 4px 20px rgba(0,0,0,0.6);
+      letter-spacing: -4px;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.08); opacity: 0.85; }
+    }
+    .hint {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    }
+    /* Dark theme vars (fallback) */
+    :root { --primary: #3b82f6; }
+    .dark .countdown { color: #e2e8f0; }
+    .theme-snnabb .countdown { color: #e5c07b; }
+  </style>
+</head>
+<body>
+  <div class="countdown" id="count">3</div>
+  <div class="hint">ESC para cancelar</div>
+  <script>
+    const countEl = document.getElementById('count')
+
+    window.overlayAPI.getSettings().then(({ theme }) => {
+      const classes = ['dark','theme-snnabb','theme-charcoal','theme-black-moon','theme-blue-moon','theme-claritas']
+      classes.forEach(c => document.documentElement.classList.remove(c))
+      if (theme === 'dark') document.documentElement.classList.add('dark')
+      else if (theme !== 'light' && theme !== 'system') {
+        document.documentElement.classList.add('theme-' + theme)
+      }
+    })
+
+    window.overlayAPI.onCountdownTick(({ remaining }) => {
+      countEl.textContent = remaining
+    })
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.overlayAPI.sendCancelCapture()
+    })
+  </script>
+</body>
+</html>

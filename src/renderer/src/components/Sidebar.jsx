@@ -16,14 +16,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 import { useApp } from '../context/AppContext.jsx'
 import logoUrl from '../assets/logo.png'
@@ -172,36 +164,23 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
           >
             Conta
           </SidebarItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                title={!open ? 'Configurações' : undefined}
-                className={cn(
-                  'app-region-no-drag justify-start gap-2 mx-1.5 px-2.5 h-7 text-[12.5px] w-[calc(100%-12px)] font-normal',
-                  screen === 'settings' && 'bg-accent font-medium text-accent-foreground',
-                  !open && 'justify-center px-0'
-                )}
-              >
-                <span className="flex items-center justify-center w-4 shrink-0">
-                  <Settings size={14} />
-                </span>
-                {open && <span className="flex-1 truncate text-left">Configurações</span>}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="top" align="start" className="w-48">
-              <DropdownMenuLabel>Geral</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onNavigate('settings')}>
-                <Settings size={13} />
-                Configurações
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onOpenAbout}>
-                <Info size={13} />
-                Sobre
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <SidebarItem
+            icon={<Settings size={14} />}
+            active={screen === 'settings'}
+            onClick={() => onNavigate('settings')}
+            collapsed={!open}
+            tooltip="Configurações"
+          >
+            Configurações
+          </SidebarItem>
+          <SidebarItem
+            icon={<Info size={14} />}
+            onClick={onOpenAbout}
+            collapsed={!open}
+            tooltip="Sobre"
+          >
+            Sobre
+          </SidebarItem>
         </div>
       </div>
 

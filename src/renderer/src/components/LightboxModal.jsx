@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { ChevronLeft, ChevronRight, FileText, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ExternalLink, FileText, X } from 'lucide-react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -21,10 +21,14 @@ function formatTime(isoString) {
 export default function LightboxModal({ entries, index, onClose, onNavigate, onDelete }) {
   const isOpen = index !== null && index >= 0 && index < entries.length
   const entry = isOpen ? entries[index] : null
-  const isPdf = entry?.filename.endsWith('.pdf')
-  const src = isPdf
-    ? (entry.thumbPath ? toFileUrl(entry.thumbPath) : null)
-    : (entry ? toFileUrl(entry.fullPath) : null)
+  const isPdf = entry?.filename?.endsWith('.pdf')
+  const isDriveOnly = entry ? !entry.fullPath : false
+  const src = (() => {
+    if (!entry) return null
+    // Drive-only and PDF both use thumbPath; local SVG/PNG/JPG use fullPath directly
+    if (isPdf || isDriveOnly) return entry.thumbPath ? toFileUrl(entry.thumbPath) : null
+    return toFileUrl(entry.fullPath)
+  })()
 
   useEffect(() => {
     if (!isOpen) return
@@ -74,7 +78,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
 
         {/* Image area */}
         <div className="flex-1 min-h-0 relative flex items-center justify-center px-12 py-4 overflow-hidden lightbox-preview-bg">
-          {isPdf && !src ? (
+          {(isPdf || isDriveOnly) && !src ? (
             <FileText size={64} className="text-muted-foreground/40" />
           ) : (
             <img
@@ -109,15 +113,30 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-3 border-t shrink-0">
           <span className="text-xs text-muted-foreground">
-            {entry && `${formatTime(entry.timestamp)} · ${formatBytes(entry.sizeBytes)}`}
+            {entry && `${formatTime(entry.timestamp)}${entry.sizeBytes != null ? ` · ${formatBytes(entry.sizeBytes)}` : ''}`}
           </span>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCopy}>
-              Copiar arquivo
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleShowInFolder}>
-              Ir para a pasta
-            </Button>
+            {!isDriveOnly && (
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCopy}>
+                Copiar arquivo
+              </Button>
+            )}
+            {!isDriveOnly && (
+              <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleShowInFolder}>
+                Ir para a pasta
+              </Button>
+            )}
+            {entry?.driveFileUrl && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => window.electronAPI.openExternal(entry.driveFileUrl)}
+              >
+                <ExternalLink size={11} />
+                Abrir no Drive
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"

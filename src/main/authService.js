@@ -14,6 +14,7 @@ const SCOPES = [
   'profile',
   'https://www.googleapis.com/auth/drive.appdata',
   'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.metadata.readonly',
 ]
 const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 
@@ -129,6 +130,10 @@ export async function loadStoredSession() {
     _store.delete('googleTokensPlain')
     return null
   }
+}
+
+export function getStoredUser() {
+  return _store?.get('googleUser') ?? null
 }
 
 export async function logout() {

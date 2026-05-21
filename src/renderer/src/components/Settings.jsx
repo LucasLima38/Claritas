@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check, Loader2, Share2, ExternalLink, FolderPlus, Folder, ChevronRight, HardDrive, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -93,6 +94,538 @@ function ShortcutRecorder({ value, onChange }) {
   )
 }
 
+function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
+  const { state } = useApp()
+  const ROOT = { id: null, name: 'Meu Drive' }
+  const [stack, setStack] = useState([ROOT])
+  const [cache, setCache] = useState({})
+  const [loadingKey, setLoadingKey] = useState(null)
+  const [fetchError, setFetchError] = useState(null)
+  const [sortBy, setSortBy] = useState('name')
+  const [sortDir, setSortDir] = useState('asc')
+  const [creating, setCreating] = useState(false)
+  const [newFolderName, setNewFolderName] = useState('')
+  const [savingFolder, setSavingFolder] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+
+  const current = stack[stack.length - 1]
+  const cacheKey = current.id ?? '__root__'
+  const rawFolders = cache[cacheKey]
+  const loading = loadingKey === cacheKey
+
+  const folders = useMemo(() => {
+    if (!rawFolders) return rawFolders
+    return [...rawFolders].sort((a, b) => {
+      const cmp =
+        sortBy === 'name'
+          ? a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+          : (a.modifiedTime ?? '').localeCompare(b.modifiedTime ?? '')
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+  }, [rawFolders, sortBy, sortDir])
+
+  useEffect(() => {
+    if (state.account) fetchLevel(null, '__root__')
+  }, [state.account])
+
+  async function fetchLevel(parentId, key) {
+    if (!state.account) return
+    if (cache[key] !== undefined) return
+    setLoadingKey(key)
+    setFetchError(null)
+    try {
+      const result = await window.electronAPI.driveListFolders(parentId)
+      setLoadingKey(null)
+      if (result.ok) {
+        setCache((c) => ({ ...c, [key]: result.folders }))
+      } else {
+        setFetchError(result.error ?? 'Erro ao listar pastas')
+      }
+    } catch {
+      setLoadingKey(null)
+      setFetchError('Erro ao listar pastas')
+    }
+  }
+
+  function enter(folder) {
+    setStack((s) => [...s, { id: folder.id, name: folder.name }])
+    fetchLevel(folder.id, folder.id)
+    setCreating(false)
+    setNewFolderName('')
+  }
+
+  function goBack() {
+    if (stack.length <= 1) return
+    setStack((s) => s.slice(0, -1))
+    setCreating(false)
+    setNewFolderName('')
+  }
+
+  function toggleSort(col) {
+    if (sortBy === col) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortBy(col)
+      setSortDir('asc')
+    }
+  }
+
+  async function handleCreateFolder() {
+    const name = newFolderName.trim()
+    if (!name) return
+    setSavingFolder(true)
+    try {
+      const result = await window.electronAPI.driveCreateFolder(current.id, name)
+      if (result.ok) {
+        setCache((c) => {
+          const next = { ...c }
+          delete next[cacheKey]
+          return next
+        })
+        setCreating(false)
+        setNewFolderName('')
+        setLoadingKey(cacheKey)
+        const res = await window.electronAPI.driveListFolders(current.id)
+        setLoadingKey(null)
+        if (res.ok) setCache((c) => ({ ...c, [cacheKey]: res.folders }))
+      } else {
+        toast.error(result.error ?? 'Erro ao criar pasta')
+      }
+    } catch {
+      toast.error('Erro ao criar pasta')
+    } finally {
+      setSavingFolder(false)
+    }
+  }
+
+  async function handleDeleteFolder(folderId) {
+    setDeletingId(folderId)
+    try {
+      const result = await window.electronAPI.driveDeleteFolder(folderId)
+      if (result.ok) {
+        setCache((c) => {
+          const next = { ...c }
+          delete next[cacheKey]
+          return next
+        })
+        setConfirmDeleteId(null)
+        setLoadingKey(cacheKey)
+        const res = await window.electronAPI.driveListFolders(current.id)
+        setLoadingKey(null)
+        if (res.ok) setCache((c) => ({ ...c, [cacheKey]: res.folders }))
+        toast.success('Pasta excluída')
+      } else {
+        toast.error(result.error ?? 'Erro ao excluir pasta')
+      }
+    } catch {
+      toast.error('Erro ao excluir pasta')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  function formatDate(iso) {
+    if (!iso) return '—'
+    try {
+      return new Intl.DateTimeFormat('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(new Date(iso))
+    } catch {
+      return '—'
+    }
+  }
+
+  function SortIcon({ col }) {
+    if (sortBy !== col)
+      return <ChevronsUpDown size={9} className="text-muted-foreground/50 ml-0.5 shrink-0" />
+    return sortDir === 'asc' ? (
+      <ChevronUp size={9} className="text-foreground ml-0.5 shrink-0" />
+    ) : (
+      <ChevronDown size={9} className="text-foreground ml-0.5 shrink-0" />
+    )
+  }
+
+  if (!state.account) return null
+
+  return (
+    <div className="flex flex-col rounded-md border border-border bg-background overflow-hidden">
+      {/* Header: back + current location */}
+      <div className="flex items-center gap-1.5 px-2 py-1.5 border-b border-border bg-muted/30">
+        <button
+          className={cn(
+            'flex items-center justify-center h-5 w-5 rounded hover:bg-accent transition-colors',
+            stack.length <= 1 && 'opacity-30 pointer-events-none'
+          )}
+          onClick={goBack}
+          disabled={stack.length <= 1}
+        >
+          <ArrowLeft size={11} />
+        </button>
+        <HardDrive size={11} className="text-muted-foreground shrink-0" />
+        <span className="text-[11px] font-medium text-foreground truncate flex-1">{current.name}</span>
+      </div>
+
+      {/* Section label */}
+      <div className="px-2 pt-1.5 pb-0.5">
+        <span className="text-[9.5px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Meu Drive
+        </span>
+      </div>
+
+      {/* Column headers */}
+      <div className="flex items-center px-2 py-0.5 border-b border-border/50">
+        <button
+          className="flex items-center flex-1 text-[9.5px] text-muted-foreground hover:text-foreground font-medium"
+          onClick={() => toggleSort('name')}
+        >
+          Nome
+          <SortIcon col="name" />
+        </button>
+        <button
+          className="flex items-center text-[9.5px] text-muted-foreground hover:text-foreground font-medium w-[90px] justify-end"
+          onClick={() => toggleSort('modifiedTime')}
+        >
+          <SortIcon col="modifiedTime" />
+          Modificado
+        </button>
+      </div>
+
+      {/* Folder rows */}
+      <div className="max-h-[140px] overflow-y-auto flex flex-col">
+        {loading && (
+          <div className="flex items-center justify-center py-3">
+            <Loader2 size={13} className="animate-spin text-muted-foreground" />
+          </div>
+        )}
+        {!loading && fetchError && (
+          <p className="text-[10px] text-destructive text-center py-3">{fetchError}</p>
+        )}
+        {!loading && !fetchError && folders?.length === 0 && (
+          <p className="text-[10px] text-muted-foreground text-center py-3">Nenhuma pasta</p>
+        )}
+        {folders?.map((f) => (
+          <div key={f.id} className="group flex items-center gap-1.5 px-2 py-1 hover:bg-accent">
+            {confirmDeleteId === f.id ? (
+              <>
+                <Trash2 size={11} className="text-destructive shrink-0" />
+                <span className="text-[10.5px] flex-1 text-destructive truncate min-w-0">
+                  Excluir &quot;{f.name}&quot;?
+                </span>
+                <button
+                  onClick={() => handleDeleteFolder(f.id)}
+                  disabled={deletingId === f.id}
+                  className="text-[10px] text-destructive hover:underline shrink-0 disabled:opacity-50"
+                >
+                  {deletingId === f.id
+                    ? <Loader2 size={10} className="animate-spin" />
+                    : 'Confirmar'}
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteId(null)}
+                  className="text-[10px] text-muted-foreground hover:text-foreground shrink-0 ml-1"
+                >
+                  Cancelar
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
+                  onClick={() => enter(f)}
+                >
+                  <Folder size={11} className="text-muted-foreground shrink-0" />
+                  <span className="text-[11px] flex-1 truncate">{f.name}</span>
+                </button>
+                <span className="text-[10px] text-muted-foreground w-[70px] text-right shrink-0 group-hover:hidden">
+                  {formatDate(f.modifiedTime)}
+                </span>
+                <div className="hidden group-hover:flex items-center gap-1 shrink-0">
+                  {onSelectExisting && (
+                    <button
+                      onClick={() => onSelectExisting(f)}
+                      className="text-[9.5px] text-primary hover:underline px-1 shrink-0"
+                      title="Selecionar esta pasta"
+                    >
+                      Selecionar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setConfirmDeleteId(f.id)}
+                    className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-0.5 rounded"
+                    title="Excluir pasta"
+                  >
+                    <Trash2 size={10} />
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Inline new folder input */}
+      {creating && (
+        <div className="flex items-center gap-1.5 px-2 py-1 border-t border-border/50">
+          <Folder size={11} className="text-muted-foreground shrink-0" />
+          <input
+            autoFocus
+            value={newFolderName}
+            onChange={(e) => setNewFolderName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleCreateFolder()
+              if (e.key === 'Escape') {
+                setCreating(false)
+                setNewFolderName('')
+              }
+            }}
+            placeholder="Nome da pasta"
+            className="flex-1 text-[11px] bg-transparent border-none outline-none placeholder:text-muted-foreground/60 min-w-0"
+          />
+          {savingFolder ? (
+            <Loader2 size={11} className="animate-spin text-muted-foreground shrink-0" />
+          ) : (
+            <button
+              onClick={handleCreateFolder}
+              disabled={!newFolderName.trim()}
+              className="text-[10px] text-primary hover:underline shrink-0 disabled:opacity-40"
+            >
+              Criar
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setCreating(false)
+              setNewFolderName('')
+            }}
+            className="text-[10px] text-muted-foreground hover:text-foreground shrink-0"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Footer actions */}
+      <div className="flex items-center justify-between px-2 py-1.5 border-t border-border">
+        <button
+          className="flex items-center gap-1 text-[10.5px] text-muted-foreground hover:text-foreground transition-colors"
+          onClick={() => {
+            setCreating(true)
+            setNewFolderName('')
+          }}
+        >
+          <FolderPlus size={11} />
+          Nova pasta
+        </button>
+        <Button
+          size="sm"
+          className="h-6 px-2.5 text-[10.5px] gap-1"
+          onClick={() => onSelectLocation(current)}
+        >
+          <Check size={10} />
+          Criar pasta aqui
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+function DriveProjectSection({ projectId, form, setForm, required = false }) {
+  const { state, actions } = useApp()
+  const [shareEmail, setShareEmail] = useState('')
+  const [sharing, setSharing] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [browsing, setBrowsing] = useState(false)
+  const [pendingParent, setPendingParent] = useState(null)
+  const [pendingSelect, setPendingSelect] = useState(null)
+
+  if (!state.account) return null
+
+  async function handleConfirmCreate() {
+    setCreating(true)
+    const result = await actions.driveCreateProjectFolder(projectId, pendingParent.id)
+    setCreating(false)
+    if (result.ok) {
+      setForm((f) => ({ ...f, driveFolderId: result.folderId, driveFolderUrl: result.folderUrl, driveFolderName: result.folderName }))
+      setBrowsing(false)
+      setPendingParent(null)
+      toast.success('Pasta criada no Drive')
+    } else {
+      toast.error(result.error ?? 'Erro ao criar pasta no Drive')
+    }
+  }
+
+  function handleSelectExisting(folder) {
+    setPendingSelect(folder)
+  }
+
+  function handleConfirmSelect() {
+    setForm((f) => ({ ...f, driveFolderId: pendingSelect.id, driveFolderUrl: pendingSelect.webViewLink, driveFolderName: pendingSelect.name }))
+    setBrowsing(false)
+    setPendingParent(null)
+    setPendingSelect(null)
+    toast.success('Pasta vinculada ao projeto')
+  }
+
+  return (
+    <div className="flex flex-col gap-2 pt-1">
+      <Separator />
+      {form.driveFolderId ? (
+        browsing ? (
+          <>
+            <Label className="text-[10.5px]">Escolher nova localização</Label>
+            <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />
+            {pendingSelect && (
+              <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+                <span className="text-[10.5px]">
+                  Salvar arquivos em <span className="font-medium">{pendingSelect.name}</span>?
+                </span>
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                    onClick={() => setPendingSelect(null)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                    onClick={handleConfirmSelect}>
+                    Confirmar
+                  </Button>
+                </div>
+              </div>
+            )}
+            {pendingParent && !pendingSelect && (
+              <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+                <span className="text-[10.5px]">
+                  Criar em <span className="font-medium">{pendingParent.name}</span>?
+                </span>
+                <div className="flex gap-1.5">
+                  <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                    onClick={() => setPendingParent(null)}>
+                    Cancelar
+                  </Button>
+                  <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                    disabled={creating} onClick={handleConfirmCreate}>
+                    {creating && <Loader2 size={10} className="animate-spin" />}
+                    Criar
+                  </Button>
+                </div>
+              </div>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-6 text-xs self-start px-1 text-muted-foreground"
+              onClick={() => { setBrowsing(false); setPendingParent(null); setPendingSelect(null) }}
+            >
+              Cancelar
+            </Button>
+          </>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <Folder size={11} className="text-muted-foreground shrink-0" />
+                {form.driveFolderName
+                  ? <span className="text-[10.5px] font-medium truncate max-w-[140px]" title={form.driveFolderName}>{form.driveFolderName}</span>
+                  : <span className="text-[10.5px] text-muted-foreground">Pasta no Drive vinculada</span>
+                }
+                <button
+                  className="text-[10.5px] text-primary flex items-center gap-0.5 hover:underline"
+                  onClick={() => window.electronAPI.openExternal(form.driveFolderUrl)}
+                >
+                  Abrir <ExternalLink size={9} />
+                </button>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 px-2 text-[10.5px]"
+                onClick={() => setBrowsing(true)}
+              >
+                Trocar
+              </Button>
+            </div>
+            <Label className="text-[10.5px]">Compartilhar com colaborador</Label>
+            <div className="flex gap-1.5">
+              <Input
+                className="h-7 text-xs flex-1"
+                placeholder="colaborador@empresa.com"
+                value={shareEmail}
+                onChange={(e) => setShareEmail(e.target.value)}
+              />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 px-2.5 text-xs shrink-0"
+                disabled={sharing || !shareEmail}
+                onClick={async () => {
+                  setSharing(true)
+                  const result = await actions.driveShareProjectFolder(projectId, shareEmail)
+                  setSharing(false)
+                  if (result.ok) {
+                    toast.success(`Pasta compartilhada com ${shareEmail}`, {
+                      action: result.webViewLink
+                        ? { label: 'Copiar link', onClick: () => navigator.clipboard.writeText(result.webViewLink) }
+                        : undefined,
+                    })
+                    setShareEmail('')
+                  } else {
+                    toast.error(result.error ?? 'Erro ao compartilhar')
+                  }
+                }}
+              >
+                {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
+                <span className="ml-1">Compartilhar</span>
+              </Button>
+            </div>
+          </>
+        )
+      ) : (
+        <>
+          <Label className="text-[10.5px]">Pasta no Google Drive{!required && ' (opcional)'}</Label>
+          <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />
+          {pendingSelect && (
+            <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+              <span className="text-[10.5px]">
+                Salvar arquivos em <span className="font-medium">{pendingSelect.name}</span>?
+              </span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                  onClick={() => setPendingSelect(null)}>
+                  Cancelar
+                </Button>
+                <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                  onClick={handleConfirmSelect}>
+                  Confirmar
+                </Button>
+              </div>
+            </div>
+          )}
+          {pendingParent && !pendingSelect && (
+            <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
+              <span className="text-[10.5px]">
+                Criar em <span className="font-medium">{pendingParent.name}</span>?
+              </span>
+              <div className="flex gap-1.5">
+                <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
+                  onClick={() => setPendingParent(null)}>
+                  Cancelar
+                </Button>
+                <Button size="sm" className="h-6 px-2 text-xs gap-1"
+                  disabled={creating} onClick={handleConfirmCreate}>
+                  {creating && <Loader2 size={10} className="animate-spin" />}
+                  Criar
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDelete, onSetActive, setForm, chooseDir, submitForm, setEditingId }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id })
   const style = {
@@ -120,7 +653,13 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               {p.prefix}
             </Badge>
           </div>
-          <p className="text-[10.5px] text-muted-foreground truncate">{p.outputDir || 'Sem pasta'}</p>
+          <p className="text-[10.5px] text-muted-foreground truncate flex items-center gap-0.5">
+            {p.outputMode === 'drive'
+              ? (p.driveFolderUrl
+                  ? <><Folder size={10} className="shrink-0" /><span className="truncate">{p.driveFolderName || 'Drive'}</span></>
+                  : 'Drive — sem pasta')
+              : (p.outputDir || 'Sem pasta')}
+          </p>
         </div>
         <div className="flex gap-1.5 shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
           {p.id === activeProjectId && (
@@ -166,20 +705,41 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               />
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-[10.5px]">Pasta de saída</Label>
-            <div className="flex gap-1.5">
-              <Input
-                className="h-7 text-xs flex-1"
-                placeholder="D:\Projetos\..."
-                value={form.outputDir}
-                onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
-              />
-              <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                <FolderOpen size={12} className="mr-1" /> Explorar
-              </Button>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
+            <Button
+              size="sm"
+              variant={form.outputMode !== 'drive' ? 'default' : 'outline'}
+              className="h-6 px-2.5 text-xs"
+              onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
+            >
+              Local
+            </Button>
+            <Button
+              size="sm"
+              variant={form.outputMode === 'drive' ? 'default' : 'outline'}
+              className="h-6 px-2.5 text-xs"
+              onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
+            >
+              Drive
+            </Button>
           </div>
+          {form.outputMode !== 'drive' && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-[10.5px]">Pasta de saída</Label>
+              <div className="flex gap-1.5">
+                <Input
+                  className="h-7 text-xs flex-1"
+                  placeholder="D:\Projetos\..."
+                  value={form.outputDir}
+                  onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
+                />
+                <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
+                  <FolderOpen size={12} className="mr-1" /> Explorar
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10.5px]">Cor</Label>
             <div className="flex gap-2 mt-0.5">
@@ -193,6 +753,9 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               ))}
             </div>
           </div>
+          {form.outputMode === 'drive' && (
+            <DriveProjectSection projectId={p.id} form={form} setForm={setForm} required />
+          )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
               Salvar
@@ -231,21 +794,48 @@ export default function Settings({ onBack }) {
   }
 
   function openAdd() {
-    setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', counter: 0, color: PROJECT_COLORS[0] })
+    setForm({ id: crypto.randomUUID(), name: '', prefix: '', outputDir: '', outputMode: 'local', counter: 0, color: PROJECT_COLORS[0] })
     setEditingId('new')
   }
 
   function openEdit(project) {
-    setForm({ ...project })
+    setForm({ outputMode: 'local', ...project })
     setEditingId(project.id)
   }
 
   async function submitForm() {
-    if (!form.name || !form.prefix || !form.outputDir) return
+    const mode = form.outputMode
+    if (!form.name || !form.prefix) {
+      toast.error('Preencha nome e prefixo')
+      return
+    }
+    if (mode === 'local' && !form.outputDir) {
+      toast.error('Preencha a pasta de saída')
+      return
+    }
+    if (mode === 'drive' && !form.driveFolderId) {
+      toast.error('Configure a pasta do Drive antes de salvar')
+      return
+    }
     if (editingId === 'new') {
-      await actions.addProject(form)
+      await actions.addProject({
+        ...form,
+        outputMode: mode,
+        ...(mode === 'local'
+          ? { driveFolderId: null, driveFolderUrl: null, driveFolderName: null }
+          : { outputDir: '' }),
+      })
     } else {
-      await actions.updateProject(editingId, { name: form.name, prefix: form.prefix, outputDir: form.outputDir, color: form.color })
+      const updates = {
+        name: form.name,
+        prefix: form.prefix,
+        color: form.color,
+        outputMode: mode,
+        ...(mode === 'local'
+          ? { outputDir: form.outputDir, driveFolderId: null, driveFolderUrl: null, driveFolderName: null }
+          : { outputDir: '', driveFolderId: form.driveFolderId, driveFolderUrl: form.driveFolderUrl, driveFolderName: form.driveFolderName ?? null }),
+      }
+      await actions.updateProject(editingId, updates)
     }
     setEditingId(null)
     setForm(null)
@@ -335,20 +925,44 @@ export default function Settings({ onBack }) {
                     />
                   </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10.5px]">Pasta de saída</Label>
-                  <div className="flex gap-1.5">
-                    <Input
-                      className="h-7 text-xs flex-1"
-                      placeholder="D:\Projetos\..."
-                      value={form.outputDir}
-                      onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
-                    />
-                    <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                      <FolderOpen size={12} className="mr-1" /> Explorar
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
+                  <Button
+                    size="sm"
+                    variant={form.outputMode !== 'drive' ? 'default' : 'outline'}
+                    className="h-6 px-2.5 text-xs"
+                    onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
+                  >
+                    Local
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={form.outputMode === 'drive' ? 'default' : 'outline'}
+                    className="h-6 px-2.5 text-xs"
+                    onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
+                  >
+                    Drive
+                  </Button>
                 </div>
+                {form.outputMode !== 'drive' && (
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10.5px]">Pasta de saída</Label>
+                    <div className="flex gap-1.5">
+                      <Input
+                        className="h-7 text-xs flex-1"
+                        placeholder="D:\Projetos\..."
+                        value={form.outputDir}
+                        onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
+                      />
+                      <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
+                        <FolderOpen size={12} className="mr-1" /> Explorar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {form.outputMode === 'drive' && (
+                  <DriveProjectSection projectId={form.id} form={form} setForm={setForm} />
+                )}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10.5px]">Cor</Label>
                   <div className="flex gap-2 mt-0.5">

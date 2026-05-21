@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { forwardRef } from 'react'
 import { ImageEditor } from '../../src/renderer/src/components/ImageEditor'
 import * as AppContext from '../../src/renderer/src/context/AppContext'
 
@@ -17,16 +18,27 @@ vi.mock('../../src/renderer/src/components/EditorToolbar', () => ({
 
 // Mock react-konva — canvas can't render in jsdom
 vi.mock('react-konva', () => ({
-  Stage: ({ children, onMouseDown, onMouseMove, onMouseUp }) => (
-    <div
-      data-testid="konva-stage"
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseUp={onMouseUp}
-    >
-      {children}
-    </div>
-  ),
+  Stage: forwardRef(({ children, onMouseDown, onMouseMove, onMouseUp }, ref) => {
+    // Expose a minimal Konva-like API so handleSave can call toDataURL
+    if (ref) {
+      const fakeStage = {
+        toDataURL: () => 'data:image/png;base64,fake',
+        scaleX: () => 1,
+      }
+      if (typeof ref === 'function') ref(fakeStage)
+      else ref.current = fakeStage
+    }
+    return (
+      <div
+        data-testid="konva-stage"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+      >
+        {children}
+      </div>
+    )
+  }),
   Layer: ({ children }) => <div data-testid="konva-layer">{children}</div>,
   Image: (props) => <div data-testid="konva-image" />,
   Arrow: (props) => <div data-testid="konva-arrow" />,
@@ -58,6 +70,7 @@ vi.mock('../../src/renderer/src/context/AppContext', () => ({
     state: {
       captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
       captureFormat: 'png',
+      captureResolution: 'normal',
       projects: [{ id: '1', name: 'Test', prefix: 'TEST_', counter: 0 }],
       activeProjectId: '1',
     },
@@ -122,5 +135,79 @@ describe('ImageEditor', () => {
     const ocrBtn = screen.getByRole('button', { name: /ocr/i })
     fireEvent.click(ocrBtn)
     expect(screen.getByText(/texto extraído/i)).toBeInTheDocument()
+  })
+
+  describe('Resolution', () => {
+    // The resolution picker UI lives in CaptureTab (pre-capture selection).
+    // ImageEditor reads captureResolution from the store and forwards it to saveCapture.
+
+    it('saveCapture is called with the resolution value from the store', () => {
+      const mockSave = vi.fn()
+      vi.mocked(AppContext.useApp).mockReturnValue({
+        state: {
+          captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
+          captureFormat: 'png',
+          captureResolution: 'normal',
+          projects: [],
+          activeProjectId: null,
+        },
+        actions: {
+          discardCapture: vi.fn(),
+          saveCapture: mockSave,
+          setCaptureFormat: vi.fn(),
+        },
+      })
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByText(/salvar/i))
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution: 'normal' })
+      )
+    })
+
+    it('saveCapture forwards a "low" resolution when store says so', () => {
+      const mockSave = vi.fn()
+      vi.mocked(AppContext.useApp).mockReturnValue({
+        state: {
+          captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
+          captureFormat: 'png',
+          captureResolution: 'low',
+          projects: [],
+          activeProjectId: null,
+        },
+        actions: {
+          discardCapture: vi.fn(),
+          saveCapture: mockSave,
+          setCaptureFormat: vi.fn(),
+        },
+      })
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByText(/salvar/i))
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution: 'low' })
+      )
+    })
+
+    it('saveCapture forwards a "high" resolution when store says so', () => {
+      const mockSave = vi.fn()
+      vi.mocked(AppContext.useApp).mockReturnValue({
+        state: {
+          captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
+          captureFormat: 'png',
+          captureResolution: 'high',
+          projects: [],
+          activeProjectId: null,
+        },
+        actions: {
+          discardCapture: vi.fn(),
+          saveCapture: mockSave,
+          setCaptureFormat: vi.fn(),
+        },
+      })
+      render(<ImageEditor />)
+      fireEvent.click(screen.getByText(/salvar/i))
+      expect(mockSave).toHaveBeenCalledWith(
+        expect.objectContaining({ resolution: 'high' })
+      )
+    })
   })
 })

@@ -23,48 +23,54 @@ const DELAYS = [
   { value: '10', label: '10 segundos' },
 ]
 
+const RESOLUTIONS = [
+  { value: 'low',    label: 'Baixa' },
+  { value: 'normal', label: 'Normal' },
+  { value: 'high',   label: 'Alta' },
+]
+
 /**
  * Props:
- *   onCapture({ mode, delay }) — called when user clicks Capturar agora
+ *   onCapture({ mode, delay, resolution }) — called when user clicks Capturar agora
  *   disabled — true while countdown is running
  */
 export function CaptureControls({ onCapture, disabled = false }) {
   const [mode, setMode] = useState('fullscreen')
   const [delay, setDelay] = useState('0')
+  const [resolution, setResolution] = useState('normal')
 
   const handleCapture = () => {
-    onCapture({ mode, delay: Number(delay) })
+    onCapture({ mode, delay: Number(delay), resolution })
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-8 flex-1 py-12">
-      <div className="flex flex-col items-center gap-3">
-        <span className="text-sm font-medium text-muted-foreground">Modo de captura</span>
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
-          {MODES.map(({ value, label, icon: Icon }) => (
-            <button
-              key={value}
-              onClick={() => setMode(value)}
-              className={[
-                'flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-colors',
-                mode === value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground',
-              ].join(' ')}
-            >
-              <Icon size={15} />
-              {label}
-            </button>
-          ))}
+    <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-6 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Modo de captura</span>
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+            {MODES.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => setMode(value)}
+                className={[
+                  'flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  mode === value
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                ].join(' ')}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col items-center gap-3">
-        <span className="text-sm font-medium text-muted-foreground">Delay</span>
         <div className="flex items-center gap-2">
-          <Timer size={16} className="text-muted-foreground" />
+          <Timer size={14} className="text-muted-foreground" />
           <Select value={delay} onValueChange={setDelay}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -74,17 +80,36 @@ export function CaptureControls({ onCapture, disabled = false }) {
             </SelectContent>
           </Select>
         </div>
-      </div>
 
-      <Button
-        size="lg"
-        onClick={handleCapture}
-        disabled={disabled}
-        className="gap-2 px-8"
-      >
-        <Camera size={18} />
-        {disabled ? 'Capturando…' : 'Capturar agora'}
-      </Button>
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-sm font-medium text-muted-foreground">Resolução</span>
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+            {RESOLUTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setResolution(value)}
+                className={[
+                  'px-3 py-1 rounded-md text-sm font-medium transition-colors',
+                  resolution === value
+                    ? 'bg-background text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
+                ].join(' ')}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <Button
+          onClick={handleCapture}
+          disabled={disabled}
+          className="gap-2"
+        >
+          <Camera size={16} />
+          {disabled ? 'Capturando…' : 'Capturar agora'}
+        </Button>
+      </div>
     </div>
   )
 }

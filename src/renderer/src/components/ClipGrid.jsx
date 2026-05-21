@@ -1,4 +1,4 @@
-import { FileText, RefreshCw, Share2 } from 'lucide-react'
+import { ExternalLink, FileText, RefreshCw, Share2 } from 'lucide-react'
 import { useApp } from '../context/AppContext.jsx'
 import { toast } from 'sonner'
 import { Card } from '@/components/ui/card'
@@ -27,23 +27,38 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatTime(isoString) {
-  return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+function formatDateTime(isoString) {
+  const date = new Date(isoString)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (isToday) return `Hoje · ${time}`
+  const day = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  return `${day} · ${time}`
 }
 
 function toFileUrl(fullPath) {
   return `localfile:///${fullPath.replace(/\\/g, '/')}`
 }
 
-export default function ClipGrid() {
+export default function ClipGrid({ filter }) {
   const { state, actions } = useApp()
   const [syncing, setSyncing] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(null)
 
+  const entries = (filter
+    ? state.history.filter((e) =>
+        filter === 'capture'
+          ? /\.(png|jpe?g|webp)$/i.test(e.filename)
+          : /\.(svg|pdf)$/i.test(e.filename)
+      )
+    : state.history
+  ).slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+
   async function handleLightboxDelete(entry) {
-    const idx = state.history.findIndex((e) => e.id === entry.id)
+    const idx = entries.findIndex((e) => e.id === entry.id)
     if (idx === -1) { setSelectedIndex(null); return }
-    const lengthBefore = state.history.length
+    const lengthBefore = entries.length
     const ok = await actions.deleteHistoryEntry(entry)
     if (!ok) { toast.error('Não foi possível remover o arquivo'); return }
     toast.success(`${entry.filename} removido`)
@@ -59,7 +74,7 @@ export default function ClipGrid() {
     ? `${activeProject.prefix}${String(activeProject.counter + 1).padStart(3, '0')}.svg`
     : null
 
-  if (state.history.length === 0 && !nextName) return null
+  if (entries.length === 0 && (filter === 'capture' || !nextName)) return null
 
   return (
     <div className="flex flex-col gap-2">
@@ -68,9 +83,9 @@ export default function ClipGrid() {
           Recentes
         </p>
         <div className="flex items-center gap-2">
-          {state.history.length > 0 && (
+          {entries.length > 0 && (
             <p className="text-[10.5px] text-muted-foreground">
-              {state.history.length} arquivo{state.history.length !== 1 ? 's' : ''} nesta sessão
+              {entries.length} arquivo{entries.length !== 1 ? 's' : ''} nesta sessão
             </p>
           )}
           <Button
@@ -91,11 +106,11 @@ export default function ClipGrid() {
       </div>
 
       <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
-        {state.history.map((entry, i) => (
+        {entries.map((entry, i) => (
           <ClipCard key={entry.id} entry={entry} onOpen={() => setSelectedIndex(i)} onDelete={handleLightboxDelete} />
         ))}
 
-        {nextName && (
+        {!filter && nextName && (
           <Card className="border-dashed bg-muted/30 flex items-center justify-center min-h-[80px]">
             <div className="text-center px-2">
               <p className="text-[10px] text-muted-foreground">próximo</p>
@@ -106,7 +121,7 @@ export default function ClipGrid() {
       </div>
 
       <LightboxModal
-        entries={state.history}
+        entries={entries}
         index={selectedIndex}
         onClose={() => setSelectedIndex(null)}
         onNavigate={setSelectedIndex}
@@ -118,7 +133,8 @@ export default function ClipGrid() {
 
 function ClipCard({ entry, onOpen, onDelete }) {
   const isPdf = entry.filename.endsWith('.pdf')
-  const fileUrl = toFileUrl(entry.fullPath)
+  const isDriveOnly = !entry.fullPath
+  const fileUrl = isDriveOnly ? null : toFileUrl(entry.fullPath)
   const thumbUrl = entry.thumbPath ? toFileUrl(entry.thumbPath) : null
   const { state, actions } = useApp()
   const [shareOpen, setShareOpen] = useState(false)
@@ -155,12 +171,12 @@ function ClipCard({ entry, onOpen, onDelete }) {
           <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer p-0" onClick={onOpen}>
             {/* Thumbnail */}
             <div className="relative h-[72px] bg-[#f5f4ef] border-b border-border flex items-center justify-center overflow-hidden">
-              {isPdf && !thumbUrl ? (
+              {(isPdf || isDriveOnly) && !thumbUrl ? (
                 <FileText size={28} className="text-muted-foreground/50" />
               ) : (
                 <>
                   <img
-                    src={isPdf ? thumbUrl : fileUrl}
+                    src={(isPdf || isDriveOnly) ? thumbUrl : fileUrl}
                     alt={entry.filename}
                     className="w-full h-full object-contain p-1"
                     style={{ imageRendering: 'crisp-edges' }}
@@ -178,24 +194,34 @@ function ClipCard({ entry, onOpen, onDelete }) {
             <div className="px-2 py-1.5">
               <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
               <p className="text-[10px] text-muted-foreground">
-                {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
+                {formatDateTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
               </p>
             </div>
           </Card>
         </ContextMenuTrigger>
 
         <ContextMenuContent>
-          <ContextMenuItem onClick={handleCopy}>
-            Copiar arquivo
-          </ContextMenuItem>
-          <ContextMenuItem onClick={handleShowInFolder}>
-            Ir para a pasta
-          </ContextMenuItem>
+          {!isDriveOnly && (
+            <ContextMenuItem onClick={handleCopy}>
+              Copiar arquivo
+            </ContextMenuItem>
+          )}
+          {!isDriveOnly && (
+            <ContextMenuItem onClick={handleShowInFolder}>
+              Ir para a pasta
+            </ContextMenuItem>
+          )}
+          {(entry.driveFolderUrl || entry.driveFileUrl) && (
+            <ContextMenuItem onClick={() => window.electronAPI.openExternal(entry.driveFolderUrl ?? entry.driveFileUrl)}>
+              <ExternalLink size={13} />
+              Abrir no Drive
+            </ContextMenuItem>
+          )}
           <ContextMenuSeparator />
           <ContextMenuItem onClick={() => onDelete(entry)} className="text-destructive focus:text-destructive">
             Deletar arquivo
           </ContextMenuItem>
-          {state.account && (
+          {state.account && !isDriveOnly && (
             <>
               <ContextMenuSeparator />
               <ContextMenuItem onClick={() => setShareOpen(true)}>

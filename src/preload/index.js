@@ -109,6 +109,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   googleLogout: () => ipcRenderer.invoke('google-logout'),
   syncProjects: () => ipcRenderer.invoke('sync-projects'),
   shareFile: (payload) => ipcRenderer.invoke('share-file', payload),
+  driveListFolders: (parentId) => ipcRenderer.invoke('drive-list-folders', { parentId }),
+  driveCreateFolder: (parentId, name) => ipcRenderer.invoke('drive-create-folder', { parentId, name }),
+  driveDeleteFolder: (folderId) => ipcRenderer.invoke('drive-delete-folder', { folderId }),
+  driveCreateProjectFolder: (projectId, parentId) => ipcRenderer.invoke('drive-create-project-folder', { projectId, parentId }),
+  driveShareProjectFolder: (projectId, email) => ipcRenderer.invoke('drive-share-project-folder', { projectId, email }),
   onAccountChanged: (cb) => {
     const handler = (_e, data) => cb(data)
     ipcRenderer.on('account-changed', handler)

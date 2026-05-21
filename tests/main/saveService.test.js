@@ -16,7 +16,16 @@ vi.mock('fs', async (importOriginal) => {
   }
 })
 
-const { generateFilename, generateFilenameWithExt, saveSVG, checkOutputDir, saveImage } = await import('../../src/main/saveService.js')
+vi.mock('sharp', () => {
+  const sharpMock = vi.fn(() => ({
+    metadata: vi.fn().mockResolvedValue({ width: 100, height: 80 }),
+    resize: vi.fn().mockReturnThis(),
+    toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized')),
+  }))
+  return { default: sharpMock }
+})
+
+const { generateFilename, generateFilenameWithExt, saveSVG, checkOutputDir, saveImage, saveBuffer, applyResolution } = await import('../../src/main/saveService.js')
 
 describe('SaveService', () => {
   beforeEach(() => vi.clearAllMocks())
@@ -105,14 +114,81 @@ describe('dirMissing signal', () => {
     const { promises: fsp } = await import('fs')
     fsp.access.mockRejectedValue(new Error('ENOENT'))
     const result = await checkOutputDir('D:\\nonexistent')
-    // In save-svg handler: if (!result.exists) return { dirMissing: true, outputDir }
     expect(result.exists).toBe(false)
-    // Simulate handler response
-    const handlerResponse = !result.exists
-      ? { dirMissing: true, outputDir: 'D:\\nonexistent' }
-      : { ok: true }
-    expect(handlerResponse.dirMissing).toBe(true)
-    expect(handlerResponse.outputDir).toBe('D:\\nonexistent')
+  })
+})
+
+describe('saveBuffer', () => {
+  beforeEach(() => vi.resetAllMocks())
+
+  it('creates output directory and writes file, returning the full path', async () => {
+    const buf = Buffer.from('hello')
+    const result = await saveBuffer(buf, 'D:\\out', 'img.png')
+    expect(fsp.mkdir).toHaveBeenCalledWith('D:\\out', { recursive: true })
+    expect(fsp.writeFile).toHaveBeenCalledWith(path.join('D:\\out', 'img.png'), buf)
+    expect(result).toBe(path.join('D:\\out', 'img.png'))
+  })
+
+  it('throws an error with the OS error code when writeFile fails', async () => {
+    const err = new Error('permission denied')
+    err.code = 'EACCES'
+    fsp.writeFile.mockRejectedValueOnce(err)
+    await expect(saveBuffer(Buffer.from('x'), 'D:\\out', 'img.png')).rejects.toThrow('EACCES')
+  })
+})
+
+describe('applyResolution', () => {
+  beforeEach(() => vi.resetAllMocks())
+
+  it('returns the buffer unchanged when resolution is "normal"', async () => {
+    const buf = Buffer.from('data')
+    const result = await applyResolution(buf, 'normal')
+    expect(result).toBe(buf)
+  })
+
+  it('returns the buffer unchanged when resolution is null', async () => {
+    const buf = Buffer.from('data')
+    const result = await applyResolution(buf, null)
+    expect(result).toBe(buf)
+  })
+
+  it('returns the buffer unchanged when resolution is undefined', async () => {
+    const buf = Buffer.from('data')
+    const result = await applyResolution(buf, undefined)
+    expect(result).toBe(buf)
+  })
+
+  it('calls sharp().resize() with width*0.5 and height*0.5 for "low"', async () => {
+    const sharp = (await import('sharp')).default
+    const buf = Buffer.from('data')
+    // sharp is called twice: once for metadata(), once for resize chain
+    await applyResolution(buf, 'low')
+    const instance = sharp.mock.results[1].value
+    expect(instance.resize).toHaveBeenCalledWith(50, 40)
+  })
+
+  it('calls sharp().resize() with width*2 and height*2 for "high"', async () => {
+    const sharp = (await import('sharp')).default
+    const buf = Buffer.from('data')
+    // sharp is called twice: once for metadata(), once for resize chain
+    await applyResolution(buf, 'high')
+    const instance = sharp.mock.results[1].value
+    expect(instance.resize).toHaveBeenCalledWith(200, 160)
+  })
+
+  it('uses Math.round() on the scaled dimensions', async () => {
+    const sharp = (await import('sharp')).default
+    // Override metadata to return non-integer-friendly values
+    const mockInstance = {
+      metadata: vi.fn().mockResolvedValue({ width: 101, height: 81 }),
+      resize: vi.fn().mockReturnThis(),
+      toBuffer: vi.fn().mockResolvedValue(Buffer.from('resized')),
+    }
+    sharp.mockReturnValueOnce(mockInstance).mockReturnValueOnce(mockInstance)
+    const buf = Buffer.from('data')
+    await applyResolution(buf, 'low')
+    // 101 * 0.5 = 50.5 → Math.round → 51, 81 * 0.5 = 40.5 → Math.round → 41
+    expect(mockInstance.resize).toHaveBeenCalledWith(51, 41)
   })
 })
 

@@ -129,7 +129,7 @@ function AnnotationShape({ shape }) {
 
 export function ImageEditor() {
   const { state, actions } = useApp()
-  const { captureData, captureFormat } = state
+  const { captureData, captureFormat, captureResolution } = state
 
   const [image] = useImage(captureData?.dataURL ?? '')
   const [activeTool, setActiveTool] = useState('select')
@@ -252,8 +252,8 @@ export function ImageEditor() {
     const scale = stageRef.current.scaleX()
     const pixelRatio = scale > 0 ? 1 / scale : 1
     const dataURL = stageRef.current.toDataURL({ mimeType, pixelRatio, quality: 0.92 })
-    actions.saveCapture({ dataURL, format: captureFormat })
-  }, [captureFormat, actions])
+    actions.saveCapture({ dataURL, format: captureFormat, resolution: captureResolution })
+  }, [captureFormat, captureResolution, actions])
 
   useEffect(() => {
     if (textEditing) {

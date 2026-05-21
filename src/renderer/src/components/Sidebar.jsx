@@ -157,7 +157,11 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
             Notificações
           </SidebarItem>
           <SidebarItem
-            icon={<User size={14} />}
+            icon={
+              state.account?.photo
+                ? <img src={state.account.photo} alt={state.account.name} className="w-4 h-4 rounded-full object-cover" />
+                : <User size={14} />
+            }
             onClick={onOpenAccount}
             collapsed={!open}
             tooltip="Conta"

@@ -197,6 +197,25 @@
   -webkit-app-region: no-drag;
 }
 
+/* ── Themed scrollbar ──────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 /* Lightbox image area: always light so dark-line schematics are visible */
 .lightbox-preview-bg { background-color: hsl(0 0% 97%); }
 .dark              .lightbox-preview-bg { background-color: hsl(0 0% 92%); }

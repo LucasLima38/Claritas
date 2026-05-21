@@ -9,14 +9,18 @@ Claritas is a Windows desktop app for engineers that monitors the clipboard for 
 ### Clipboard Mode
 - **Auto-monitoring** — detects schematics on the clipboard automatically
 - **Multiple export formats** — save as SVG, PNG, JPG or PDF
-- **EMF → SVG via Inkscape** — accurate vector rendering using Inkscape's engine
+- **EMF → SVG via libemf2svg** — accurate vector rendering with no external dependencies
 - **Preview queue** — copy multiple schematics; each queues up after save or discard
 - **Annotation tools** — draw, highlight and annotate before saving
+- **Save indicator** — animated confirmation toast on every save
 
 ### Capture Mode
-- **Screenshot capture** — take a screenshot of any area of your screen
+- **Screenshot capture** — region selection, active window, or full screen
+- **Delay timer** — capture after 0, 3, 5 or 10 seconds
 - **Full annotation editor** — draw, highlight, add text, undo/redo
-- **Resolution selector** — choose low/high output resolution before saving
+- **OCR** — select any region to extract text using the Windows built-in engine (no download required)
+- **Resolution selector** — choose low/normal/high output resolution before saving
+- **Save indicator** — animated confirmation toast on every save
 - **Recentes panel** — thumbnail gallery of your recent captures
 
 ### Google Drive Integration
@@ -27,6 +31,7 @@ Claritas is a Windows desktop app for engineers that monitors the clipboard for 
 
 ### App
 - **Project organization** — group files by project (`BLDC_001.svg`, `BLDC_002.svg`, …)
+- **Output mode per project** — save locally, to Google Drive, or both
 - **8 themes** — System, Black Moon, Blue Moon, Charcoal, Claritas, Light, Dark, Snnabb
 - **Auto-update** — checks for updates automatically; installs on restart
 - **System tray** — stays out of your way; blinks when a new capture is ready
@@ -58,8 +63,8 @@ npm test
 npm run dist
 ```
 
-> **Inkscape:** The EMF conversion feature requires Inkscape portable bundled in `resources/inkscape/`.
-> Run `npm run setup-inkscape` if you need to set it up locally.
+> **libemf2svg:** The EMF conversion feature requires the `libemf2svg` binaries bundled in `resources/libemf2svg/`.
+> These are included in the repository and no extra setup is needed.
 
 ## Google OAuth
 
@@ -72,7 +77,7 @@ The `CLIENT_ID` in `src/main/authService.js` is intentionally public.
 - [React](https://react.dev/) + [Vite](https://vitejs.dev/) — renderer
 - [shadcn/ui](https://ui.shadcn.com/) + [Tailwind CSS](https://tailwindcss.com/) — UI
 - [Google APIs](https://github.com/googleapis/google-api-nodejs-client) — Drive + OAuth
-- [Inkscape CLI](https://inkscape.org/) — EMF → SVG conversion
+- [libemf2svg](https://github.com/kakwa/libemf2svg) — EMF → SVG conversion
 - [electron-store](https://github.com/sindresorhus/electron-store) — persistent settings
 - [electron-updater](https://www.electron.build/auto-update) — auto-update via GitHub Releases
 - [Vitest](https://vitest.dev/) — unit tests

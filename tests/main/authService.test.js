@@ -1,6 +1,20 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// mockStore is declared here so the electron-store factory can close over it.
+// It gets reassigned in beforeEach before each import, so the constructor always
+// returns the freshly-created mock object for that test.
+let mockStore
+
+// Mock electron-store so the module-level `new Store({ name: 'auth' })` in
+// authService.js doesn't try to locate an Electron app data path (which fails
+// in Node/Vitest with "Please specify the `projectName` option").
+vi.mock('electron-store', () => ({
+  default: function MockStore() {
+    return mockStore
+  },
+}))
+
 // Must mock before import
 vi.mock('googleapis', () => {
   const mockOAuth2 = vi.fn().mockImplementation(function () {
@@ -63,7 +77,6 @@ vi.mock('node:http', () => {
 })
 
 let authService
-let mockStore
 
 beforeEach(async () => {
   vi.resetModules()
@@ -72,9 +85,10 @@ beforeEach(async () => {
     set: vi.fn(),
     delete: vi.fn(),
   }
-  // Re-import fresh module after resetModules
+  // Re-import fresh module after resetModules.
+  // The electron-store mock above ensures the module-level Store instantiation
+  // returns mockStore instead of trying to create a real store.
   authService = await import('../../src/main/authService.js')
-  authService.initAuthService(mockStore)
 })
 
 describe('initAuthService', () => {

@@ -70,6 +70,7 @@ vi.mock('../../src/renderer/src/context/AppContext', () => ({
     state: {
       captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
       captureFormat: 'png',
+      captureResolution: 'normal',
       projects: [{ id: '1', name: 'Test', prefix: 'TEST_', counter: 0 }],
       activeProjectId: '1',
     },
@@ -136,41 +137,17 @@ describe('ImageEditor', () => {
     expect(screen.getByText(/texto extraído/i)).toBeInTheDocument()
   })
 
-  describe('Resolution picker', () => {
-    it('renders three resolution pill buttons: Baixa, Normal, Alta', () => {
-      render(<ImageEditor />)
-      expect(screen.getByRole('button', { name: 'Baixa' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Normal' })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: 'Alta' })).toBeInTheDocument()
-    })
+  describe('Resolution', () => {
+    // The resolution picker UI lives in CaptureTab (pre-capture selection).
+    // ImageEditor reads captureResolution from the store and forwards it to saveCapture.
 
-    it('"Normal" is selected by default (aria-pressed="true")', () => {
-      render(<ImageEditor />)
-      expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('aria-pressed', 'true')
-      expect(screen.getByRole('button', { name: 'Baixa' })).toHaveAttribute('aria-pressed', 'false')
-      expect(screen.getByRole('button', { name: 'Alta' })).toHaveAttribute('aria-pressed', 'false')
-    })
-
-    it('clicking "Baixa" selects it and deselects "Normal"', () => {
-      render(<ImageEditor />)
-      fireEvent.click(screen.getByRole('button', { name: 'Baixa' }))
-      expect(screen.getByRole('button', { name: 'Baixa' })).toHaveAttribute('aria-pressed', 'true')
-      expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('aria-pressed', 'false')
-    })
-
-    it('clicking "Alta" selects it and deselects "Normal"', () => {
-      render(<ImageEditor />)
-      fireEvent.click(screen.getByRole('button', { name: 'Alta' }))
-      expect(screen.getByRole('button', { name: 'Alta' })).toHaveAttribute('aria-pressed', 'true')
-      expect(screen.getByRole('button', { name: 'Normal' })).toHaveAttribute('aria-pressed', 'false')
-    })
-
-    it('saveCapture is called with resolution: "normal" by default', () => {
+    it('saveCapture is called with the resolution value from the store', () => {
       const mockSave = vi.fn()
       vi.mocked(AppContext.useApp).mockReturnValue({
         state: {
           captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
           captureFormat: 'png',
+          captureResolution: 'normal',
           projects: [],
           activeProjectId: null,
         },
@@ -187,12 +164,13 @@ describe('ImageEditor', () => {
       )
     })
 
-    it('saveCapture is called with resolution: "low" after clicking Baixa', () => {
+    it('saveCapture forwards a "low" resolution when store says so', () => {
       const mockSave = vi.fn()
       vi.mocked(AppContext.useApp).mockReturnValue({
         state: {
           captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
           captureFormat: 'png',
+          captureResolution: 'low',
           projects: [],
           activeProjectId: null,
         },
@@ -203,19 +181,19 @@ describe('ImageEditor', () => {
         },
       })
       render(<ImageEditor />)
-      fireEvent.click(screen.getByRole('button', { name: 'Baixa' }))
       fireEvent.click(screen.getByText(/salvar/i))
       expect(mockSave).toHaveBeenCalledWith(
         expect.objectContaining({ resolution: 'low' })
       )
     })
 
-    it('saveCapture is called with resolution: "high" after clicking Alta', () => {
+    it('saveCapture forwards a "high" resolution when store says so', () => {
       const mockSave = vi.fn()
       vi.mocked(AppContext.useApp).mockReturnValue({
         state: {
           captureData: { dataURL: 'data:image/png;base64,abc=', width: 800, height: 600 },
           captureFormat: 'png',
+          captureResolution: 'high',
           projects: [],
           activeProjectId: null,
         },
@@ -226,7 +204,6 @@ describe('ImageEditor', () => {
         },
       })
       render(<ImageEditor />)
-      fireEvent.click(screen.getByRole('button', { name: 'Alta' }))
       fireEvent.click(screen.getByText(/salvar/i))
       expect(mockSave).toHaveBeenCalledWith(
         expect.objectContaining({ resolution: 'high' })

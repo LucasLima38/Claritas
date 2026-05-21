@@ -27,8 +27,14 @@ function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function formatTime(isoString) {
-  return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+function formatDateTime(isoString) {
+  const date = new Date(isoString)
+  const now = new Date()
+  const isToday = date.toDateString() === now.toDateString()
+  const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  if (isToday) return `Hoje · ${time}`
+  const day = date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })
+  return `${day} · ${time}`
 }
 
 function toFileUrl(fullPath) {
@@ -40,13 +46,14 @@ export default function ClipGrid({ filter }) {
   const [syncing, setSyncing] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(null)
 
-  const entries = filter
+  const entries = (filter
     ? state.history.filter((e) =>
         filter === 'capture'
           ? /\.(png|jpe?g|webp)$/i.test(e.filename)
           : /\.(svg|pdf)$/i.test(e.filename)
       )
     : state.history
+  ).slice().sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 
   async function handleLightboxDelete(entry) {
     const idx = entries.findIndex((e) => e.id === entry.id)
@@ -187,7 +194,7 @@ function ClipCard({ entry, onOpen, onDelete }) {
             <div className="px-2 py-1.5">
               <p className="text-[11px] font-semibold truncate">{entry.filename}</p>
               <p className="text-[10px] text-muted-foreground">
-                {formatTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
+                {formatDateTime(entry.timestamp)} · {formatBytes(entry.sizeBytes)}
               </p>
             </div>
           </Card>

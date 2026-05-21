@@ -2,9 +2,12 @@ import crypto from 'node:crypto'
 import http from 'node:http'
 import { google } from 'googleapis'
 import { safeStorage, shell } from 'electron'
+import _Store from 'electron-store'
 
-const CLIENT_ID = ''
-const CLIENT_SECRET = ''
+const Store = _Store.default ?? _Store
+
+const CLIENT_ID = '87201199145-mvkp4v791tbtp1joekhac8lpp546cr6g.apps.googleusercontent.com'
+const CLIENT_SECRET = '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'
 const SCOPES = [
   'openid',
   'email',
@@ -14,11 +17,9 @@ const SCOPES = [
 ]
 const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 
-let _store = null
+const _store = new Store({ name: 'auth' })
 
-export function initAuthService(store) {
-  _store = store
-}
+export function initAuthService() {}
 
 function generatePKCE() {
   const codeVerifier = crypto.randomBytes(32).toString('base64url')

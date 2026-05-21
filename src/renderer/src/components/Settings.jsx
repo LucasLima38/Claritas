@@ -925,22 +925,44 @@ export default function Settings({ onBack }) {
                     />
                   </div>
                 </div>
-                {/* New projects always start in local mode — drive mode requires an
-                    existing projectId so the DriveProjectSection can link folders. */}
-                <div className="flex flex-col gap-1">
-                  <Label className="text-[10.5px]">Pasta de saída</Label>
-                  <div className="flex gap-1.5">
-                    <Input
-                      className="h-7 text-xs flex-1"
-                      placeholder="D:\Projetos\..."
-                      value={form.outputDir}
-                      onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
-                    />
-                    <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                      <FolderOpen size={12} className="mr-1" /> Explorar
-                    </Button>
-                  </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
+                  <Button
+                    size="sm"
+                    variant={form.outputMode !== 'drive' ? 'default' : 'outline'}
+                    className="h-6 px-2.5 text-xs"
+                    onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
+                  >
+                    Local
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={form.outputMode === 'drive' ? 'default' : 'outline'}
+                    className="h-6 px-2.5 text-xs"
+                    onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
+                  >
+                    Drive
+                  </Button>
                 </div>
+                {form.outputMode !== 'drive' && (
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-[10.5px]">Pasta de saída</Label>
+                    <div className="flex gap-1.5">
+                      <Input
+                        className="h-7 text-xs flex-1"
+                        placeholder="D:\Projetos\..."
+                        value={form.outputDir}
+                        onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
+                      />
+                      <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
+                        <FolderOpen size={12} className="mr-1" /> Explorar
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {form.outputMode === 'drive' && (
+                  <DriveProjectSection projectId={form.id} form={form} setForm={setForm} />
+                )}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10.5px]">Cor</Label>
                   <div className="flex gap-2 mt-0.5">

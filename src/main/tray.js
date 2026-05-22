@@ -45,11 +45,11 @@ export function createTray(mainWindow, projectStore) {
  * Safe to call multiple times — will not create duplicate intervals.
  */
 export function startTrayBlink() {
-  if (_blinkInterval || !tray) return
+  if (_blinkInterval || !tray || tray.isDestroyed()) return
   let showIcon = true
   const emptyIcon = nativeImage.createEmpty()
   _blinkInterval = setInterval(() => {
-    if (!tray) { clearInterval(_blinkInterval); _blinkInterval = null; return }
+    if (!tray || tray.isDestroyed()) { clearInterval(_blinkInterval); _blinkInterval = null; return }
     tray.setImage(showIcon ? _normalIcon : emptyIcon)
     showIcon = !showIcon
   }, 500)
@@ -62,7 +62,7 @@ export function stopTrayBlink() {
   if (!_blinkInterval) return
   clearInterval(_blinkInterval)
   _blinkInterval = null
-  if (tray && _normalIcon) tray.setImage(_normalIcon)
+  if (tray && !tray.isDestroyed() && _normalIcon) tray.setImage(_normalIcon)
 }
 
 /**
@@ -70,7 +70,7 @@ export function stopTrayBlink() {
  * Call this whenever the active project changes.
  */
 export function updateTrayMenu(mainWindow, projectStore) {
-  if (!tray) return
+  if (!tray || tray.isDestroyed()) return
 
   const projects = projectStore.getProjects()
   const activeId = projectStore.getActiveProjectId()

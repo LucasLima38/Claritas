@@ -76,7 +76,7 @@ describe('NotificationsDialog', () => {
         onClear={vi.fn()}
       />
     )
-    fireEvent.click(screen.getByText('Não lidos'))
+    fireEvent.click(screen.getByText('Não lidas'))
     expect(screen.getByText('Unread one')).toBeInTheDocument()
     expect(screen.queryByText('Already read')).not.toBeInTheDocument()
   })

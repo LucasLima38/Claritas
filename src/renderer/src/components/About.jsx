@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { ExternalLink, Loader2, RefreshCw } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -11,6 +12,7 @@ import {
 import logoUrl from '../assets/logo.png'
 
 export default function About({ open, onOpenChange, onCheckUpdate, updateStatus, downloadPercent }) {
+  const { t } = useTranslation()
   const [appInfo, setAppInfo] = useState(null)
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function About({ open, onOpenChange, onCheckUpdate, updateStatus,
               <p className="text-xs text-muted-foreground mt-0.5">v{appInfo.version}</p>
             )}
             <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
-              Captura e exporta esquemáticos do Altium Designer
+              {t('about.description')}
             </p>
           </div>
         </div>
@@ -44,9 +46,9 @@ export default function About({ open, onOpenChange, onCheckUpdate, updateStatus,
 
         {/* Sistema */}
         <div className="px-6 py-3 flex flex-col gap-1.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">Sistema</p>
-          <Row label="Plataforma" value={appInfo?.platform ?? '—'} />
-          <Row label="Arquitetura" value={appInfo?.arch ?? '—'} />
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-0.5">{t('about.system')}</p>
+          <Row label={t('about.platform')} value={appInfo?.platform ?? '—'} />
+          <Row label={t('about.arch')} value={appInfo?.arch ?? '—'} />
         </div>
 
         <Separator />
@@ -68,10 +70,10 @@ export default function About({ open, onOpenChange, onCheckUpdate, updateStatus,
               <RefreshCw size={13} />
             )}
             {isDownloading
-              ? `Baixando atualização… ${downloadPercent}%`
+              ? t('about.downloading', { percent: downloadPercent })
               : isChecking
-              ? 'Verificando atualizações…'
-              : 'Verificar atualizações'}
+              ? t('about.checking')
+              : t('about.checkUpdate')}
           </Button>
           <Button
             variant="outline"
@@ -80,14 +82,14 @@ export default function About({ open, onOpenChange, onCheckUpdate, updateStatus,
             onClick={() => window.electronAPI.openExternal('https://github.com/LucasLima38/Claritas')}
           >
             <ExternalLink size={13} />
-            Ver no GitHub
+            {t('about.github')}
           </Button>
         </div>
 
         <Separator />
 
         <p className="text-[10px] text-muted-foreground text-center py-3">
-          Made by Lucas Vieira
+          {t('about.madeBy')}
         </p>
       </DialogContent>
     </Dialog>

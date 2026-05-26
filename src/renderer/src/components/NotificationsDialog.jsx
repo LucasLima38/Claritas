@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -15,6 +16,7 @@ const TYPE_COLORS = {
 }
 
 export default function NotificationsDialog({ open, onOpenChange, notifications, onMarkAllRead, onClear }) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('all')
 
   function handleOpenChange(value) {
@@ -30,7 +32,7 @@ export default function NotificationsDialog({ open, onOpenChange, notifications,
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Notificações</DialogTitle>
+          <DialogTitle>{t('notifications.title')}</DialogTitle>
         </DialogHeader>
 
         {/* Tabs */}
@@ -44,7 +46,7 @@ export default function NotificationsDialog({ open, onOpenChange, notifications,
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            Todos
+            {t('notifications.all')}
           </button>
           <button
             onClick={() => setActiveTab('unread')}
@@ -55,14 +57,14 @@ export default function NotificationsDialog({ open, onOpenChange, notifications,
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            Não lidos
+            {t('notifications.unread')}
           </button>
         </div>
 
         {/* List */}
         <div className="flex flex-col gap-1 max-h-80 overflow-y-auto">
           {visible.length === 0 ? (
-            <p className="text-[12px] text-muted-foreground text-center py-6">Nenhuma notificação.</p>
+            <p className="text-[12px] text-muted-foreground text-center py-6">{t('notifications.empty')}</p>
           ) : (
             visible.map((n) => (
               <div
@@ -90,7 +92,7 @@ export default function NotificationsDialog({ open, onOpenChange, notifications,
             onClick={onClear}
             disabled={notifications.length === 0}
           >
-            Limpar
+            {t('notifications.clear')}
           </Button>
         </div>
       </DialogContent>

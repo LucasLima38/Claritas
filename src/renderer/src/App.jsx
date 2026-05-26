@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { PanelLeftClose, PanelLeftOpen, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Toaster } from '@/components/ui/sonner'
 import { Button } from '@/components/ui/button'
@@ -16,6 +17,7 @@ import AccountPanel from './components/AccountPanel.jsx'
 import SaveToast from './components/SaveToast.jsx'
 
 export default function App() {
+  const { t } = useTranslation()
   const { state, actions } = useApp()
   const [screen, setScreen] = useState('main')
   const [aboutOpen, setAboutOpen] = useState(false)
@@ -62,18 +64,18 @@ export default function App() {
       clearTimeout(checkTimeoutRef.current)
       setUpdateStatus('idle')
       setDownloadPercent(0)
-      toast(`Nova versão ${info.version} disponível`, {
-        description: 'Reinicie o app para instalar a atualização.',
+      toast(t('app.updateAvailable', { version: info.version }), {
+        description: t('app.updateDesc'),
         duration: Infinity,
         action: {
-          label: 'Reiniciar agora',
+          label: t('app.restart'),
           onClick: () => window.electronAPI.installUpdate(),
         },
       })
       actions.addNotification({
         id: crypto.randomUUID(),
         type: 'info',
-        message: `Nova versão ${info.version} disponível`,
+        message: t('app.updateAvailable', { version: info.version }),
         read: false,
         timestamp: Date.now(),
       })
@@ -85,7 +87,7 @@ export default function App() {
       clearTimeout(checkTimeoutRef.current)
       if (isManualCheck.current) {
         isManualCheck.current = false
-        toast('Você está na versão mais recente', { duration: 3000 })
+        toast(t('app.upToDate'), { duration: 3000 })
       }
       setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
     })
@@ -147,7 +149,7 @@ export default function App() {
           variant="ghost"
           size="icon"
           className="app-region-no-drag h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-          title="Conta Google"
+          title={t('app.googleAccount')}
           onClick={() => setAccountOpen(true)}
         >
           <User size={15} />

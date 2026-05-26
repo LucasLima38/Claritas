@@ -1,4 +1,5 @@
 import { RefreshCw, LogOut } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
 import { useApp } from '../context/AppContext.jsx'
 
 export default function AccountPanel({ open, onOpenChange }) {
+  const { t } = useTranslation()
   const { state, actions } = useApp()
   const { account } = state
 
@@ -16,13 +18,13 @@ export default function AccountPanel({ open, onOpenChange }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-72">
         <DialogHeader>
-          <DialogTitle className="text-sm">Conta Google</DialogTitle>
+          <DialogTitle className="text-sm">{t('account.title')}</DialogTitle>
         </DialogHeader>
 
         {!account ? (
           <div className="flex flex-col gap-4">
             <p className="text-xs text-muted-foreground text-center">
-              Faça login para sincronizar projetos e compartilhar arquivos.
+              {t('account.loginPrompt')}
             </p>
             <Button
               className="w-full gap-2"
@@ -31,7 +33,7 @@ export default function AccountPanel({ open, onOpenChange }) {
                 if (r?.ok) onOpenChange(false)
               }}
             >
-              Entrar com Google
+              {t('account.login')}
             </Button>
           </div>
         ) : (
@@ -70,7 +72,7 @@ export default function AccountPanel({ open, onOpenChange }) {
               onClick={() => actions.syncProjects()}
             >
               <RefreshCw size={13} className={account.syncing ? 'animate-spin' : ''} />
-              {account.syncing ? 'Sincronizando…' : 'Sincronizar agora'}
+              {account.syncing ? t('account.syncing') : t('account.syncNow')}
             </Button>
 
             <Button
@@ -79,7 +81,7 @@ export default function AccountPanel({ open, onOpenChange }) {
               className="w-full gap-2 text-muted-foreground"
               onClick={() => actions.googleLogout()}
             >
-              <LogOut size={13} /> Sair
+              <LogOut size={13} /> {t('account.logout')}
             </Button>
           </div>
         )}

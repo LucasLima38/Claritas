@@ -40,7 +40,8 @@
     "cancel": "Cancelar",
     "chooseFolder": "Escolher outra pasta",
     "createAuto": "Criar automaticamente",
-    "fitAll": "Encaixar tudo"
+    "fitAll": "Encaixar tudo",
+    "createDirError": "Não foi possível criar a pasta: {{message}}"
   },
   "clipgrid": {
     "recent": "Recentes",

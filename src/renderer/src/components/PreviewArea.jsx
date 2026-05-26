@@ -1,6 +1,6 @@
 import { Eye, Clock, FileText, Maximize2, FolderOpen, ZoomIn, ZoomOut, Scan, Save, X, Layers } from 'lucide-react'
-import { useApp } from '../context/AppContext.jsx'
 import { useTranslation } from 'react-i18next'
+import { useApp } from '../context/AppContext.jsx'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -94,7 +94,7 @@ export default function PreviewArea() {
     if (result.ok) {
       await actions.save()
     } else {
-      toast.error(`Não foi possível criar a pasta: ${result.message}`)
+      toast.error(t('preview.createDirError', { message: result.message }))
     }
   }
 

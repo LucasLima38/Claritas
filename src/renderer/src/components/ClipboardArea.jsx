@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { Paperclip, AlertCircle, Loader2 } from 'lucide-react'
+import { useTranslation, Trans } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { useApp } from '../context/AppContext.jsx'
 import PreviewArea from './PreviewArea.jsx'
-import { useTranslation, Trans } from 'react-i18next'
 
 export default function ClipboardArea() {
   const { state, actions } = useApp()

@@ -3,7 +3,7 @@ import { Paperclip, AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useApp } from '../context/AppContext.jsx'
 import PreviewArea from './PreviewArea.jsx'
-import { useTranslation } from 'react-i18next'
+import { useTranslation, Trans } from 'react-i18next'
 
 export default function ClipboardArea() {
   const { state, actions } = useApp()
@@ -61,7 +61,10 @@ export default function ClipboardArea() {
       </p>
       {hasProject && (
         <p className="text-xs text-muted-foreground mt-1">
-          {t('clipboard.instruction')}
+          <Trans
+              i18nKey="clipboard.instruction"
+              components={{ kbd: <kbd className="bg-muted border border-border rounded px-1.5 py-0.5 text-[10.5px] font-semibold" /> }}
+            />
         </p>
       )}
     </div>

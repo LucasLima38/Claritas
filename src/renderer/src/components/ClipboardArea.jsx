@@ -3,9 +3,11 @@ import { Paperclip, AlertCircle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useApp } from '../context/AppContext.jsx'
 import PreviewArea from './PreviewArea.jsx'
+import { useTranslation } from 'react-i18next'
 
 export default function ClipboardArea() {
   const { state, actions } = useApp()
+  const { t } = useTranslation()
 
   useEffect(() => {
     function handleKeyDown(e) {
@@ -23,8 +25,8 @@ export default function ClipboardArea() {
     return (
       <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
         <Loader2 size={28} className="mx-auto mb-2 text-primary animate-spin" />
-        <p className="text-sm font-medium">Convertendo...</p>
-        <p className="text-xs text-muted-foreground mt-1">Aguarde até 15 segundos</p>
+        <p className="text-sm font-medium">{t('clipboard.converting')}</p>
+        <p className="text-xs text-muted-foreground mt-1">{t('clipboard.wait')}</p>
       </div>
     )
   }
@@ -44,7 +46,7 @@ export default function ClipboardArea() {
           onClick={actions.clearError}
           className="mt-2 text-destructive"
         >
-          Tentar novamente
+          {t('clipboard.retry')}
         </Button>
       </div>
     )
@@ -55,13 +57,11 @@ export default function ClipboardArea() {
     <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-7 text-center">
       <Paperclip size={28} className="mx-auto mb-2 text-muted-foreground" />
       <p className="text-sm font-medium">
-        {hasProject ? 'Cole o esquemático' : 'Crie um projeto nas configurações'}
+        {hasProject ? t('clipboard.paste') : t('clipboard.createProject')}
       </p>
       {hasProject && (
         <p className="text-xs text-muted-foreground mt-1">
-          Copie no Altium Designer →{' '}
-          <kbd className="bg-muted border border-border rounded px-1.5 py-0.5 text-[10.5px] font-semibold">Ctrl+V</kbd>
-          {' '}aqui
+          {t('clipboard.instruction')}
         </p>
       )}
     </div>

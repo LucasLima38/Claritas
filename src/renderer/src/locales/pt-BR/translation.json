@@ -56,7 +56,11 @@
     "share": "Compartilhar",
     "shareFile": "Compartilhar arquivo",
     "recipientEmail": "E-mail do destinatário",
-    "sending": "Enviando…"
+    "sending": "Enviando…",
+    "today": "Hoje · {{time}}",
+    "deleteError": "Não foi possível remover o arquivo",
+    "deleted": "{{filename}} removido",
+    "shareError": "Erro ao compartilhar"
   },
   "statusbar": {
     "converting": "Convertendo...",

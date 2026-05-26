@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { ChevronLeft, ChevronRight, ExternalLink, FileText, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -15,10 +16,11 @@ function formatBytes(bytes) {
 }
 
 function formatTime(isoString) {
-  return new Date(isoString).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return new Date(isoString).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
 }
 
 export default function LightboxModal({ entries, index, onClose, onNavigate, onDelete }) {
+  const { t } = useTranslation()
   const isOpen = index !== null && index >= 0 && index < entries.length
   const entry = isOpen ? entries[index] : null
   const isPdf = entry?.filename?.endsWith('.pdf')
@@ -43,10 +45,10 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
   async function handleCopy() {
     try {
       const result = await window.electronAPI.copyFileToClipboard({ fullPath: entry.fullPath })
-      if (result.ok) toast.success('Arquivo copiado para o clipboard')
-      else toast.error('Não foi possível copiar o arquivo')
+      if (result.ok) toast.success(t('lightbox.copied'))
+      else toast.error(t('lightbox.copyError'))
     } catch {
-      toast.error('Não foi possível copiar o arquivo')
+      toast.error(t('lightbox.copyError'))
     }
   }
 
@@ -54,7 +56,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
     try {
       await window.electronAPI.showInFolder({ fullPath: entry.fullPath })
     } catch {
-      toast.error('Não foi possível abrir a pasta')
+      toast.error(t('lightbox.folderError'))
     }
   }
 
@@ -118,12 +120,12 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
           <div className="flex gap-2">
             {!isDriveOnly && (
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleCopy}>
-                Copiar arquivo
+                {t('lightbox.copy')}
               </Button>
             )}
             {!isDriveOnly && (
               <Button variant="outline" size="sm" className="h-7 text-xs" onClick={handleShowInFolder}>
-                Ir para a pasta
+                {t('lightbox.folder')}
               </Button>
             )}
             {entry?.driveFileUrl && (
@@ -134,7 +136,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
                 onClick={() => window.electronAPI.openExternal(entry.driveFileUrl)}
               >
                 <ExternalLink size={11} />
-                Abrir no Drive
+                {t('lightbox.drive')}
               </Button>
             )}
             <Button
@@ -143,7 +145,7 @@ export default function LightboxModal({ entries, index, onClose, onNavigate, onD
               className="h-7 text-xs text-destructive hover:text-destructive border-destructive/30"
               onClick={() => onDelete(entry)}
             >
-              Deletar
+              {t('lightbox.delete')}
             </Button>
           </div>
         </div>

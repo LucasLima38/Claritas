@@ -2,6 +2,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key) => key }),
+}))
+
 vi.mock('lucide-react', () => ({
   Share2: () => <span data-testid="icon-share2" />,
   Clipboard: () => <span />,
@@ -10,6 +14,7 @@ vi.mock('lucide-react', () => ({
   FileImage: () => <span />,
   FileText: () => <span />,
   RefreshCw: () => <span />,
+  ExternalLink: () => <span />,
 }))
 
 vi.mock('@/components/ui/context-menu', () => ({
@@ -70,7 +75,7 @@ describe('ClipGrid share feature', () => {
       actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
     })
     render(<ClipGrid />)
-    expect(screen.queryByText(/Compartilhar/i)).not.toBeInTheDocument()
+    expect(screen.queryByText('clipgrid.share')).not.toBeInTheDocument()
   })
 
   it('shows Compartilhar item when logged in', () => {
@@ -79,7 +84,7 @@ describe('ClipGrid share feature', () => {
       actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
     })
     render(<ClipGrid />)
-    expect(screen.getByText(/Compartilhar/i)).toBeInTheDocument()
+    expect(screen.getByText('clipgrid.share')).toBeInTheDocument()
   })
 
   it('opens share dialog when Compartilhar is clicked', () => {
@@ -88,7 +93,7 @@ describe('ClipGrid share feature', () => {
       actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
     })
     render(<ClipGrid />)
-    fireEvent.click(screen.getByText(/Compartilhar/i))
+    fireEvent.click(screen.getByText('clipgrid.share'))
     expect(screen.getByTestId('share-dialog')).toBeInTheDocument()
   })
 
@@ -98,9 +103,9 @@ describe('ClipGrid share feature', () => {
       actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
     })
     render(<ClipGrid />)
-    fireEvent.click(screen.getByText(/Compartilhar/i))
+    fireEvent.click(screen.getByText('clipgrid.share'))
     const buttons = screen.getAllByRole('button')
-    const submitBtn = buttons.find(b => b.textContent === 'Compartilhar' && b.closest('[data-testid="share-dialog"]'))
+    const submitBtn = buttons.find(b => b.textContent === 'clipgrid.share' && b.closest('[data-testid="share-dialog"]'))
     expect(submitBtn).toBeDisabled()
   })
 
@@ -110,11 +115,11 @@ describe('ClipGrid share feature', () => {
       actions: { shareFile: mockShareFile, deleteHistoryEntry: vi.fn(), syncHistory: vi.fn() },
     })
     render(<ClipGrid />)
-    fireEvent.click(screen.getByText(/Compartilhar/i))
-    fireEvent.change(screen.getByPlaceholderText(/E-mail do destinatário/i), { target: { value: 'test@example.com' } })
+    fireEvent.click(screen.getByText('clipgrid.share'))
+    fireEvent.change(screen.getByPlaceholderText('clipgrid.recipientEmail'), { target: { value: 'test@example.com' } })
     const dialog = screen.getByTestId('share-dialog')
     const buttons = dialog.querySelectorAll('button')
-    const submitBtn = Array.from(buttons).find(b => b.textContent === 'Compartilhar')
+    const submitBtn = Array.from(buttons).find(b => b.textContent === 'clipgrid.share')
     fireEvent.click(submitBtn)
     expect(mockShareFile).toHaveBeenCalledWith({ fullPath: 'C:\\f.svg', email: 'test@example.com' })
   })

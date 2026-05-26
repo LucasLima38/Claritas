@@ -2,6 +2,10 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({ t: (key) => key }),
+}))
+
 vi.mock('lucide-react', () => ({
   Share2: () => <span data-testid="icon-share2" />,
   Clipboard: () => <span />,
@@ -125,13 +129,13 @@ describe('ClipGrid filter prop', () => {
   it('filter="capture" hides the "próximo arquivo previsto" placeholder card', () => {
     useApp.mockReturnValue(makeUseApp(captureEntries))
     render(<ClipGrid filter="capture" />)
-    expect(screen.queryByText('próximo')).not.toBeInTheDocument()
+    expect(screen.queryByText('clipgrid.next')).not.toBeInTheDocument()
   })
 
   it('filter="clipboard" hides the "próximo arquivo previsto" placeholder card', () => {
     useApp.mockReturnValue(makeUseApp(clipboardEntries))
     render(<ClipGrid filter="clipboard" />)
-    expect(screen.queryByText('próximo')).not.toBeInTheDocument()
+    expect(screen.queryByText('clipgrid.next')).not.toBeInTheDocument()
   })
 
   it('without filter, shows all entries (existing behavior preserved)', () => {
@@ -154,7 +158,7 @@ describe('ClipGrid filter prop', () => {
     useApp.mockReturnValue(makeUseApp(clipboardEntries))
     render(<ClipGrid />)
     // nextName is derived from activeProject counter+1 with prefix "SCH" → "SCH001.svg"
-    expect(screen.getByText('próximo')).toBeInTheDocument()
+    expect(screen.getByText('clipgrid.next')).toBeInTheDocument()
     expect(screen.getByText('SCH001.svg')).toBeInTheDocument()
   })
 })

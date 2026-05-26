@@ -681,7 +681,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
         <>
           <Label className="text-[10.5px]">
             {required
-              ? 'Pasta no Google Drive'
+              ? t('settings.drive.required')
               : t('settings.drive.optional')}
           </Label>
           <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />

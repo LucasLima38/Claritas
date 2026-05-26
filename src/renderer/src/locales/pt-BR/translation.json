@@ -62,7 +62,7 @@
     "waitingConfirm": "Aguardando confirmação",
     "monitoring": "Monitorando",
     "svgsSession": "{{count}} SVGs nesta sessão",
-    "next": "Próximo:"
+    "next": "Próximo: {{name}}"
   },
   "toolbar": {
     "converting": "Convertendo...",

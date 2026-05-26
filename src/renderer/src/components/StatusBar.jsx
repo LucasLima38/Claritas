@@ -36,7 +36,7 @@ export default function StatusBar() {
       {nextName && (
         <>
           <span>·</span>
-          <span>{t('statusbar.next')} <span className="font-medium text-foreground">{nextName}</span></span>
+          <span>{t('statusbar.next', { name: nextName })}</span>
         </>
       )}
 

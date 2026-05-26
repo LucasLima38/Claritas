@@ -1,7 +1,9 @@
+import { useTranslation } from 'react-i18next'
 import { useApp } from '../context/AppContext.jsx'
 
 export default function StatusBar() {
   const { state } = useApp()
+  const { t } = useTranslation()
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
 
   const isConverting = state.status === 'converting'
@@ -22,19 +24,19 @@ export default function StatusBar() {
           }`}
         />
         <span>
-          {isConverting ? 'Convertendo...' :
-           isPreview    ? 'Aguardando confirmação' :
-                          'Monitorando'}
+          {isConverting ? t('statusbar.converting') :
+           isPreview    ? t('statusbar.waitingConfirm') :
+                          t('statusbar.monitoring')}
         </span>
       </div>
 
       <span>·</span>
-      <span>{state.history.length} SVGs nesta sessão</span>
+      <span>{t('statusbar.svgsSession', { count: state.history.length })}</span>
 
       {nextName && (
         <>
           <span>·</span>
-          <span>Próximo: <span className="font-medium text-foreground">{nextName}</span></span>
+          <span>{t('statusbar.next')} <span className="font-medium text-foreground">{nextName}</span></span>
         </>
       )}
 

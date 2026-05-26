@@ -1,9 +1,11 @@
 import { Clipboard, FolderOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useTranslation } from 'react-i18next'
 import { useApp } from '../context/AppContext.jsx'
 
 export default function Toolbar() {
   const { state, actions } = useApp()
+  const { t } = useTranslation()
   const isConverting = state.status === 'converting'
   const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
 
@@ -24,7 +26,7 @@ export default function Toolbar() {
         className="app-region-no-drag h-7 text-xs"
       >
         <Clipboard size={13} className="mr-1.5" />
-        {isConverting ? 'Convertendo...' : 'Colar'}
+        {isConverting ? t('toolbar.converting') : t('toolbar.paste')}
         {!isConverting && (
           <span className="ml-1.5 opacity-70 text-[10px] border border-white/30 rounded px-1">Ctrl+V</span>
         )}
@@ -38,7 +40,7 @@ export default function Toolbar() {
         className="app-region-no-drag h-7 text-xs"
       >
         <FolderOpen size={13} className="mr-1.5" />
-        Pasta
+        {t('toolbar.folder')}
       </Button>
     </div>
   )

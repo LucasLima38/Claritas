@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { DndContext, closestCenter, MouseSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -45,6 +46,7 @@ function SortableSidebarItem({ p, activeProjectId, screen, onNavigate, actions, 
 
 export default function Sidebar({ screen, onNavigate, open, width, updateStatus, downloadPercent, onCheckUpdate, onOpenAbout, onOpenNotifications, unreadCount, onOpenAccount }) {
   const { state, actions } = useApp()
+  const { t } = useTranslation()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
   async function handleDragEnd(event) {
@@ -78,10 +80,10 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
               onClick={state.updateInfo ? () => setUpdateDialogOpen(true) : onCheckUpdate}
               disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
               title={
-                state.updateInfo ? 'Atualização disponível — clique para instalar'
-                : updateStatus === 'downloading' ? `Baixando atualização… ${downloadPercent}%`
-                : updateStatus === 'checking' ? 'Verificando atualizações…'
-                : 'Verificar atualizações'
+                state.updateInfo ? t('sidebar.updateAvailable')
+                : updateStatus === 'downloading' ? t('sidebar.downloading', { percent: downloadPercent })
+                : updateStatus === 'checking' ? t('sidebar.checking')
+                : t('sidebar.checkUpdate')
               }
             >
               {state.updateInfo
@@ -99,16 +101,16 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
 
       <div className="flex flex-col flex-1 overflow-hidden py-2">
         <div className="flex flex-col overflow-y-auto flex-1">
-          {open && <SectionLabel>Workspace</SectionLabel>}
+          {open && <SectionLabel>{t('sidebar.workspace')}</SectionLabel>}
           <SidebarItem
             icon={<Clipboard size={14} />}
             active={screen === 'main'}
             onClick={() => onNavigate('main')}
             badge={(state.previewQueue.length + (state.status === 'preview' ? 1 : 0)) || null}
             collapsed={!open}
-            tooltip="Clipboard"
+            tooltip={t('sidebar.clipboard')}
           >
-            Clipboard
+            {t('sidebar.clipboard')}
           </SidebarItem>
 
           <SidebarItem
@@ -116,13 +118,13 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
             active={screen === 'capture'}
             onClick={() => onNavigate('capture')}
             collapsed={!open}
-            tooltip="Captura"
+            tooltip={t('sidebar.capture')}
           >
-            Captura
+            {t('sidebar.capture')}
           </SidebarItem>
 
           <Separator className="mx-3 my-1.5 w-auto" />
-          {open && <SectionLabel>Projetos</SectionLabel>}
+          {open && <SectionLabel>{t('sidebar.projects')}</SectionLabel>}
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={state.projects.map((p) => p.id)} strategy={verticalListSortingStrategy}>
@@ -141,7 +143,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
           </DndContext>
 
           {state.projects.length === 0 && open && (
-            <p className="text-[11px] text-muted-foreground px-3 py-1 italic">Nenhum projeto</p>
+            <p className="text-[11px] text-muted-foreground px-3 py-1 italic">{t('sidebar.noProjects')}</p>
           )}
         </div>
 
@@ -151,10 +153,10 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
             icon={<Bell size={14} />}
             onClick={onOpenNotifications}
             collapsed={!open}
-            tooltip="Notificações"
+            tooltip={t('sidebar.notifications')}
             badge={unreadCount > 0 ? unreadCount : null}
           >
-            Notificações
+            {t('sidebar.notifications')}
           </SidebarItem>
           <SidebarItem
             icon={
@@ -164,26 +166,26 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
             }
             onClick={onOpenAccount}
             collapsed={!open}
-            tooltip="Conta"
+            tooltip={t('sidebar.account')}
           >
-            Conta
+            {t('sidebar.account')}
           </SidebarItem>
           <SidebarItem
             icon={<Settings size={14} />}
             active={screen === 'settings'}
             onClick={() => onNavigate('settings')}
             collapsed={!open}
-            tooltip="Configurações"
+            tooltip={t('sidebar.settings')}
           >
-            Configurações
+            {t('sidebar.settings')}
           </SidebarItem>
           <SidebarItem
             icon={<Info size={14} />}
             onClick={onOpenAbout}
             collapsed={!open}
-            tooltip="Sobre"
+            tooltip={t('sidebar.about')}
           >
-            Sobre
+            {t('sidebar.about')}
           </SidebarItem>
         </div>
       </div>
@@ -192,17 +194,16 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <Download size={16} /> Atualização disponível
+              <Download size={16} /> {t('sidebar.updateDialog.title')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              A versão <strong>{state.updateInfo?.version}</strong> foi baixada e está pronta para instalar.
-              O app vai reiniciar automaticamente.
+              {t('sidebar.updateDialog.description', { version: state.updateInfo?.version })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Agora não</AlertDialogCancel>
+            <AlertDialogCancel>{t('sidebar.updateDialog.later')}</AlertDialogCancel>
             <AlertDialogAction onClick={actions.installUpdate}>
-              Reiniciar e instalar
+              {t('sidebar.updateDialog.install')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

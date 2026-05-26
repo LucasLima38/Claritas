@@ -6,7 +6,8 @@ import _Store from 'electron-store'
 
 const Store = _Store.default ?? _Store
 
-const CLIENT_ID = '87201199145-h4604tt5tce9iv1gg9iq982sgu2mjhus.apps.googleusercontent.com'
+const CLIENT_ID = '87201199145-qk13d26kngkvmk2g5aqacufhr3tndbrf.apps.googleusercontent.com'
+const CLIENT_SECRET = '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'
 const SCOPES = [
   'openid',
   'email',
@@ -76,7 +77,7 @@ function loadTokens() {
 export function getAuthClient() {
   const tokens = loadTokens()
   if (!tokens) return null
-  const client = new google.auth.OAuth2(CLIENT_ID)
+  const client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET)
   client.setCredentials(tokens)
   client.on('tokens', (newTokens) => saveTokens({ ...loadTokens(), ...newTokens }))
   return client
@@ -85,7 +86,7 @@ export function getAuthClient() {
 export async function loginWithGoogle() {
   const { port, codePromise, server } = await startCallbackServer()
   const redirectUri = `http://localhost:${port}/callback`
-  const oauth2Client = new google.auth.OAuth2(CLIENT_ID, '', redirectUri)
+  const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, redirectUri)
   const { codeVerifier, codeChallenge } = generatePKCE()
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',

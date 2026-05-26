@@ -1,5 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useRef } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
+import i18n from '../i18n'
 
 // status: 'idle' | 'converting' | 'preview' | 'saving' | 'error'
 
@@ -237,11 +239,15 @@ function applyTheme(theme, systemIsDark) {
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, initialState)
+  const { t } = useTranslation()
   const themeRef = useRef('system')
 
   useEffect(() => {
     window.electronAPI.getInitData().then((data) => {
       dispatch({ type: 'INIT', ...data })
+      if (data.settings?.language) {
+        i18n.changeLanguage(data.settings.language)
+      }
       const theme = data.settings?.theme ?? 'system'
       themeRef.current = theme
       const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -292,7 +298,7 @@ export function AppProvider({ children }) {
           actions.addNotification({
             id: crypto.randomUUID(),
             type: 'error',
-            message: `Erro de conversão: ${result.message}`,
+            message: t('context.conversionError', { message: result.message }),
             read: false,
             timestamp: Date.now(),
           })
@@ -303,15 +309,15 @@ export function AppProvider({ children }) {
     async save() {
       const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
       if (!activeProject) {
-        toast.error('Nenhum projeto ativo. Selecione um projeto nas configurações.')
+        toast.error(t('context.noActiveProject'))
         return
       }
       const driveEnabled = activeProject.outputMode === 'drive'
       dispatch({
         type: 'SHOW_SAVE_TOAST',
         payload: {
-          message: 'Salvando…',
-          subMessage: driveEnabled ? 'Enviando para o Drive' : undefined,
+          message: t('context.saving'),
+          subMessage: driveEnabled ? t('context.sendingToDrive') : undefined,
           type: 'saving',
         },
       })
@@ -322,13 +328,13 @@ export function AppProvider({ children }) {
       } catch (err) {
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: err?.message ?? 'Erro ao salvar', type: 'error' },
+          payload: { message: err?.message ?? t('context.saveError'), type: 'error' },
         })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
           type: 'error',
-          message: `Erro ao salvar: ${err.message}`,
+          message: t('context.saveErrorDetail', { message: err.message }),
           read: false,
           timestamp: Date.now(),
         })
@@ -337,13 +343,13 @@ export function AppProvider({ children }) {
       if (!result) {
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: 'Resposta inválida do processo principal.', type: 'error' },
+          payload: { message: t('context.invalidResponse'), type: 'error' },
         })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
           type: 'error',
-          message: 'Erro ao salvar: resposta inválida do processo principal.',
+          message: t('context.saveErrorDetail', { message: t('context.invalidResponse') }),
           read: false,
           timestamp: Date.now(),
         })
@@ -353,7 +359,7 @@ export function AppProvider({ children }) {
         dispatch({ type: 'SAVE_SUCCESS', filename: result.filename, entry: result.entry, newCounter: result.newCounter })
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: 'Salvo!', type: 'success' },
+          payload: { message: t('context.saved'), type: 'success' },
         })
       } else if (result.dirMissing) {
         dispatch({ type: 'HIDE_SAVE_TOAST' })
@@ -361,33 +367,33 @@ export function AppProvider({ children }) {
         actions.addNotification({
           id: crypto.randomUUID(),
           type: 'warning',
-          message: `Pasta de saída não encontrada: ${result.outputDir ?? '(desconhecida)'}`,
+          message: t('context.outputNotFound', { dir: result.outputDir ?? '(desconhecida)' }),
           read: false,
           timestamp: Date.now(),
         })
       } else if (result.error === 'EACCES') {
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: 'Sem permissão de escrita na pasta de destino.', type: 'error' },
+          payload: { message: t('context.noWritePermission'), type: 'error' },
         })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
           type: 'error',
-          message: 'Erro ao salvar: sem permissão de escrita na pasta de destino.',
+          message: t('context.saveErrorDetail', { message: t('context.noWritePermission') }),
           read: false,
           timestamp: Date.now(),
         })
       } else {
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: result.message ?? 'Erro ao salvar', type: 'error' },
+          payload: { message: result.message ?? t('context.saveError'), type: 'error' },
         })
         dispatch({ type: 'SAVE_ERROR' })
         actions.addNotification({
           id: crypto.randomUUID(),
           type: 'error',
-          message: `Erro ao salvar: ${result.message || 'erro desconhecido.'}`,
+          message: t('context.saveErrorDetail', { message: result.message || 'erro desconhecido.' }),
           read: false,
           timestamp: Date.now(),
         })
@@ -483,15 +489,15 @@ export function AppProvider({ children }) {
     async saveCapture({ dataURL, format, resolution }) {
       const activeProject = state.projects.find((p) => p.id === state.activeProjectId)
       if (!activeProject) {
-        toast.error('Selecione um projeto antes de salvar.')
+        toast.error(t('context.selectProjectFirst'))
         return
       }
       const driveEnabled = activeProject.outputMode === 'drive'
       dispatch({
         type: 'SHOW_SAVE_TOAST',
         payload: {
-          message: 'Salvando…',
-          subMessage: driveEnabled ? 'Enviando para o Drive' : undefined,
+          message: t('context.saving'),
+          subMessage: driveEnabled ? t('context.sendingToDrive') : undefined,
           type: 'saving',
         },
       })
@@ -504,7 +510,7 @@ export function AppProvider({ children }) {
       if (result.ok) {
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: 'Salvo!', type: 'success' },
+          payload: { message: t('context.saved'), type: 'success' },
         })
         dispatch({
           type: 'CAPTURE_SAVE_SUCCESS',
@@ -523,7 +529,7 @@ export function AppProvider({ children }) {
       } else {
         dispatch({
           type: 'SHOW_SAVE_TOAST',
-          payload: { message: result?.message ?? 'Erro ao capturar', type: 'error' },
+          payload: { message: result?.message ?? t('context.captureError'), type: 'error' },
         })
       }
     },
@@ -550,7 +556,7 @@ export function AppProvider({ children }) {
     async googleLogin() {
       const result = await window.electronAPI.googleLogin()
       if (!result.ok) {
-        toast.error(result.error ?? 'Erro ao fazer login')
+        toast.error(result.error ?? t('context.loginError'))
       }
       return result
     },
@@ -565,21 +571,21 @@ export function AppProvider({ children }) {
       const result = await window.electronAPI.syncProjects()
       dispatch({ type: 'SET_SYNCING', syncing: false })
       if (!result.ok) {
-        dispatch({ type: 'SET_SYNC_ERROR', error: result.error ?? 'Erro de sincronização' })
-        toast.error(result.error ?? 'Erro de sincronização')
+        dispatch({ type: 'SET_SYNC_ERROR', error: result.error ?? t('context.syncError') })
+        toast.error(result.error ?? t('context.syncError'))
       }
     },
 
     async shareFile({ fullPath, email }) {
       const result = await window.electronAPI.shareFile({ fullPath, email })
       if (result.ok) {
-        toast.success(`Compartilhado com ${email}`, {
+        toast.success(t('context.shared', { email }), {
           action: result.webViewLink
-            ? { label: 'Copiar link', onClick: () => navigator.clipboard.writeText(result.webViewLink) }
+            ? { label: t('context.copyLink'), onClick: () => navigator.clipboard.writeText(result.webViewLink) }
             : undefined,
         })
       } else {
-        toast.error(result.error ?? 'Erro ao compartilhar')
+        toast.error(result.error ?? t('context.shareError'))
       }
       return result
     },

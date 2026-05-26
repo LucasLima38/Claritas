@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { ChevronLeft, ChevronRight, ExternalLink, FileText, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { toast } from 'sonner'
 
 function toFileUrl(fullPath) {
   return `localfile:///${fullPath.replace(/\\/g, '/')}`

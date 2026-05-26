@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Loader2, Check, AlertCircle, Lock, LockOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card'
-import { Loader2, Check, AlertCircle, Lock, LockOpen } from 'lucide-react'
 
 const OCR_TIMEOUT_MS = 30_000
 
@@ -93,6 +94,7 @@ function fixOcrArtifacts(text) {
  *   autoRun  — start OCR immediately on mount
  */
 export function OcrPanel({ runOcr, autoRun = false }) {
+  const { t } = useTranslation()
   const [status, setStatus] = useState('idle')
   const [text, setText] = useState('')
   const [error, setError] = useState(null)
@@ -119,11 +121,11 @@ export function OcrPanel({ runOcr, autoRun = false }) {
       setStatus('error')
       setError(
         err.message === 'OCR_TIMEOUT'
-          ? 'OCR demorou muito. Tente novamente.'
-          : `Erro ao extrair texto: ${err.message}`
+          ? t('ocr.timeout')
+          : t('ocr.extractError', { message: err.message })
       )
     }
-  }, [runOcr])
+  }, [runOcr, t])
 
   useEffect(() => {
     if (autoRun) handleRunOcr()
@@ -148,17 +150,17 @@ export function OcrPanel({ runOcr, autoRun = false }) {
   }[status]
 
   const statusLabel = {
-    idle: 'Aguardando',
-    loading: 'Extraindo texto…',
-    ready: 'Pronto',
-    error: 'Erro',
-    empty: 'Sem texto',
+    idle: t('ocr.waiting'),
+    loading: t('ocr.extracting'),
+    ready: t('ocr.ready'),
+    error: t('ocr.error'),
+    empty: t('ocr.noText'),
   }[status]
 
   return (
     <Card className="w-full flex flex-col h-full rounded-none border-l border-t-0 border-b-0 border-r-0">
       <CardHeader className="py-2 px-3 flex-row items-center space-y-0 gap-2 shrink-0">
-        <span className="text-sm font-medium flex-1">Texto extraído</span>
+        <span className="text-sm font-medium flex-1">{t('ocr.extractedText')}</span>
 
         {/* ── Lock button + status ── */}
         <div className="flex items-center gap-1 shrink-0">
@@ -168,7 +170,7 @@ export function OcrPanel({ runOcr, autoRun = false }) {
               size="icon"
               className="h-6 w-6 text-muted-foreground hover:text-foreground"
               onClick={() => setLocked(l => !l)}
-              title={locked ? 'Desbloquear edição' : 'Bloquear edição'}
+              title={locked ? t('ocr.unlock') : t('ocr.lock')}
             >
               {locked ? <Lock size={12} /> : <LockOpen size={12} />}
             </Button>
@@ -185,7 +187,7 @@ export function OcrPanel({ runOcr, autoRun = false }) {
           <p className="text-xs text-destructive">{error}</p>
         )}
         {status === 'empty' && (
-          <p className="text-xs text-muted-foreground">Nenhum texto encontrado na imagem.</p>
+          <p className="text-xs text-muted-foreground">{t('ocr.notFound')}</p>
         )}
 
         {locked && status === 'ready' ? (
@@ -202,9 +204,9 @@ export function OcrPanel({ runOcr, autoRun = false }) {
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={status === 'idle' ? 'Clique em Extrair para iniciar o OCR' : ''}
+            placeholder={status === 'idle' ? t('ocr.clickToStart') : ''}
             className="flex-1 resize-none text-sm font-mono min-h-[200px]"
-            aria-label="Texto extraído"
+            aria-label={t('ocr.extractedText')}
           />
         )}
       </CardContent>
@@ -218,15 +220,15 @@ export function OcrPanel({ runOcr, autoRun = false }) {
           className="flex-1 gap-1.5"
         >
           {status === 'loading' && <Loader2 size={14} className="animate-spin" />}
-          Extrair
+          {t('ocr.extract')}
         </Button>
         {status !== 'idle' && (
           <>
             <Button variant="outline" size="sm" onClick={handleCopy} disabled={!text} className="flex-1">
-              Copiar
+              {t('ocr.copy')}
             </Button>
             <Button variant="ghost" size="sm" onClick={handleClear} className="flex-1">
-              Limpar
+              {t('ocr.clear')}
             </Button>
           </>
         )}

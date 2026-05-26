@@ -1,10 +1,12 @@
+import { useTranslation } from 'react-i18next'
+import { Loader2 } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 import { CaptureControls } from './CaptureControls'
 import { ImageEditor } from './ImageEditor'
-import { Loader2 } from 'lucide-react'
 import ClipGrid from './ClipGrid'
 
 export function CaptureTab() {
+  const { t } = useTranslation()
   const { state, actions } = useApp()
   const { captureStatus } = state
 
@@ -16,12 +18,12 @@ export function CaptureTab() {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
         <Loader2 size={40} className="animate-spin" />
-        <p className="text-sm">Capturando…</p>
+        <p className="text-sm">{t('capture.capturing')}</p>
         <button
           className="text-xs underline hover:text-foreground transition-colors"
           onClick={actions.cancelCapture}
         >
-          Cancelar
+          {t('capture.cancel')}
         </button>
       </div>
     )

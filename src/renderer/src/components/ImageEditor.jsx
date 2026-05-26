@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { Stage, Layer, Image as KonvaImage, Arrow, Rect, Ellipse, Line, Text, Group, Circle } from 'react-konva'
 import useImage from 'use-image'
+import { ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { EditorToolbar } from './EditorToolbar'
 import { OcrPanel } from './OcrPanel'
 import { Button } from '@/components/ui/button'
@@ -10,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { ChevronDown } from 'lucide-react'
 import { useApp } from '@/context/AppContext'
 
 const MAX_HISTORY = 50
@@ -128,6 +129,7 @@ function AnnotationShape({ shape }) {
 }
 
 export function ImageEditor() {
+  const { t } = useTranslation()
   const { state, actions } = useApp()
   const { captureData, captureFormat, captureResolution } = state
 
@@ -544,7 +546,7 @@ export function ImageEditor() {
                 }}
                 rows={1}
                 autoFocus
-                placeholder="Digite o texto…"
+                placeholder={t('editor.textPlaceholder')}
               />
             )}
           </div>
@@ -555,7 +557,7 @@ export function ImageEditor() {
             <div
               className="w-1.5 h-full cursor-col-resize shrink-0 hover:bg-primary/20 transition-colors select-none"
               onMouseDown={handleOcrResizeMouseDown}
-              title="Arraste para redimensionar"
+              title={t('editor.resizeOcr')}
             />
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               <OcrPanel
@@ -578,7 +580,7 @@ export function ImageEditor() {
             size="sm"
             onClick={actions.discardCapture}
           >
-            Descartar
+            {t('editor.discard')}
           </Button>
           <DropdownMenu>
             <div className="flex items-center">
@@ -587,7 +589,7 @@ export function ImageEditor() {
                 className="rounded-r-none"
                 onClick={handleSave}
               >
-                Salvar {captureFormat.toUpperCase()}
+                {t('editor.save', { format: captureFormat.toUpperCase() })}
               </Button>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" className="rounded-l-none border-l border-primary-foreground/20 px-2">

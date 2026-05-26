@@ -3,25 +3,13 @@ import {
   Type, Highlighter, Eraser, Hash, Scan,
   Undo2, Redo2
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-
-const DRAW_TOOLS = [
-  { value: 'select',      icon: MousePointer,  label: 'Cursor' },
-  { value: 'arrow',       icon: ArrowUpRight,  label: 'Seta' },
-  { value: 'rect',        icon: Square,        label: 'Retângulo' },
-  { value: 'ellipse',     icon: Circle,        label: 'Elipse' },
-  { value: 'line',        icon: Minus,         label: 'Linha' },
-  { value: 'pen',         icon: Pen,           label: 'Pincel' },
-  { value: 'text',        icon: Type,          label: 'Texto' },
-  { value: 'highlight',   icon: Highlighter,   label: 'Highlight' },
-  { value: 'eraser',  icon: Eraser, label: 'Borracha' },
-  { value: 'counter', icon: Hash,   label: 'Contador' },
-]
 
 const PALETTE_COLORS = [
   '#ef4444', '#f97316', '#eab308', '#22c55e',
@@ -58,6 +46,21 @@ export function EditorToolbar({
   ocrOpen,
   onToggleOcr,
 }) {
+  const { t } = useTranslation()
+
+  const DRAW_TOOLS = [
+    { value: 'select',    icon: MousePointer, label: t('editor.tools.cursor') },
+    { value: 'arrow',     icon: ArrowUpRight, label: t('editor.tools.arrow') },
+    { value: 'rect',      icon: Square,       label: t('editor.tools.rect') },
+    { value: 'ellipse',   icon: Circle,       label: t('editor.tools.ellipse') },
+    { value: 'line',      icon: Minus,        label: t('editor.tools.line') },
+    { value: 'pen',       icon: Pen,          label: t('editor.tools.brush') },
+    { value: 'text',      icon: Type,         label: t('editor.tools.text') },
+    { value: 'highlight', icon: Highlighter,  label: t('editor.tools.highlight') },
+    { value: 'eraser',    icon: Eraser,       label: t('editor.tools.eraser') },
+    { value: 'counter',   icon: Hash,         label: t('editor.tools.counter') },
+  ]
+
   return (
     <div className="flex items-center gap-2 px-3 py-2 bg-background border-b border-border flex-wrap min-w-0">
       {/* Drawing tools */}
@@ -87,7 +90,7 @@ export function EditorToolbar({
         variant={(ocrOpen || activeTool === 'ocr-region') ? 'default' : 'ghost'}
         size="sm"
         onClick={onToggleOcr}
-        title="OCR — selecionar região e extrair texto"
+        title={t('editor.ocr')}
         className="w-8 h-8 p-0"
         aria-label="OCR"
       >
@@ -102,8 +105,8 @@ export function EditorToolbar({
           <button
             className="w-7 h-7 rounded border-2 border-border hover:border-primary transition-colors"
             style={{ background: color }}
-            aria-label="Cor"
-            title="Cor"
+            aria-label={t('editor.color')}
+            title={t('editor.color')}
           />
         </PopoverTrigger>
         <PopoverContent className="w-48 p-3">
@@ -134,7 +137,7 @@ export function EditorToolbar({
       </Popover>
 
       {/* Stroke width */}
-      <div className="flex items-center gap-2 w-28" title="Espessura">
+      <div className="flex items-center gap-2 w-28" title={t('editor.thickness')}>
         <span className="text-xs text-muted-foreground shrink-0">
           {strokeWidth}px
         </span>
@@ -156,7 +159,7 @@ export function EditorToolbar({
         size="sm"
         onClick={onUndo}
         disabled={!canUndo}
-        title="Desfazer (Ctrl+Z)"
+        title={t('editor.undo')}
         className="w-8 h-8 p-0"
       >
         <Undo2 size={15} />
@@ -166,7 +169,7 @@ export function EditorToolbar({
         size="sm"
         onClick={onRedo}
         disabled={!canRedo}
-        title="Refazer (Ctrl+Y)"
+        title={t('editor.redo')}
         className="w-8 h-8 p-0"
       >
         <Redo2 size={15} />

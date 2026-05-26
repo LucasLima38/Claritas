@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Monitor, AppWindow, Maximize, Camera, Timer } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -8,26 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-
-const MODES = [
-  { value: 'region',     label: 'Região',      icon: Maximize },
-  { value: 'window',    label: 'Janela ativa', icon: AppWindow },
-  { value: 'fullscreen', label: 'Tela cheia',  icon: Monitor },
-]
-
-const DELAYS = [
-  { value: '0',  label: 'Sem delay' },
-  { value: '3',  label: '3 segundos' },
-  { value: '5',  label: '5 segundos' },
-  { value: '10', label: '10 segundos' },
-]
-
-const RESOLUTIONS = [
-  { value: 'low',    label: 'Baixa' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'high',   label: 'Alta' },
-]
 
 /**
  * Props:
@@ -35,9 +16,29 @@ const RESOLUTIONS = [
  *   disabled — true while countdown is running
  */
 export function CaptureControls({ onCapture, disabled = false }) {
+  const { t } = useTranslation()
   const [mode, setMode] = useState('fullscreen')
   const [delay, setDelay] = useState('0')
   const [resolution, setResolution] = useState('normal')
+
+  const MODES = [
+    { value: 'region',     label: t('capture.modes.region'),     icon: Maximize },
+    { value: 'window',     label: t('capture.modes.window'),     icon: AppWindow },
+    { value: 'fullscreen', label: t('capture.modes.fullscreen'), icon: Monitor },
+  ]
+
+  const DELAYS = [
+    { value: '0',  label: t('capture.noDelay') },
+    { value: '3',  label: t('capture.seconds', { n: 3 }) },
+    { value: '5',  label: t('capture.seconds', { n: 5 }) },
+    { value: '10', label: t('capture.seconds', { n: 10 }) },
+  ]
+
+  const RESOLUTIONS = [
+    { value: 'low',    label: t('capture.resolutions.low') },
+    { value: 'normal', label: t('capture.resolutions.normal') },
+    { value: 'high',   label: t('capture.resolutions.high') },
+  ]
 
   const handleCapture = () => {
     onCapture({ mode, delay: Number(delay), resolution })
@@ -47,7 +48,7 @@ export function CaptureControls({ onCapture, disabled = false }) {
     <div className="border-2 border-dashed border-border rounded-lg bg-muted/30 p-6 text-center">
       <div className="flex flex-col items-center gap-4">
         <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Modo de captura</span>
+          <span className="text-sm font-medium text-muted-foreground">{t('capture.modeLabel')}</span>
           <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
             {MODES.map(({ value, label, icon: Icon }) => (
               <button
@@ -82,7 +83,7 @@ export function CaptureControls({ onCapture, disabled = false }) {
         </div>
 
         <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Resolução</span>
+          <span className="text-sm font-medium text-muted-foreground">{t('capture.resolution')}</span>
           <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
             {RESOLUTIONS.map(({ value, label }) => (
               <button
@@ -107,7 +108,7 @@ export function CaptureControls({ onCapture, disabled = false }) {
           className="gap-2"
         >
           <Camera size={16} />
-          {disabled ? 'Capturando…' : 'Capturar agora'}
+          {disabled ? t('capture.capturing') : t('capture.captureNow')}
         </Button>
       </div>
     </div>

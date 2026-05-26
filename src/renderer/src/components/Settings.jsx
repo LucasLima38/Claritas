@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, Pencil, Trash2, ArrowLeft, FolderOpen, Check, Loader2, Share2, ExternalLink, FolderPlus, Folder, ChevronRight, HardDrive, ChevronsUpDown, ChevronUp, ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { useApp } from '../context/AppContext.jsx'
+import i18n from '../i18n'
 import {
   DndContext,
   closestCenter,
@@ -48,6 +50,7 @@ const COLOR_PALETTE = [
 ]
 
 function ColorPicker({ value, onChange }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [hex, setHex] = useState(value ?? PROJECT_COLORS[0])
 
@@ -80,7 +83,7 @@ function ColorPicker({ value, onChange }) {
         <button
           className="w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1"
           style={{ background: displayColor, borderColor: 'hsl(var(--border))' }}
-          title="Escolher cor"
+          title={t('settings.colorPicker.choose')}
         />
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3" align="start">
@@ -137,6 +140,7 @@ function BehaviorRow({ label, description, checked, onCheckedChange }) {
 }
 
 function ShortcutRecorder({ value, onChange }) {
+  const { t } = useTranslation()
   const [recording, setRecording] = useState(false)
 
   function handleKeyDown(e) {
@@ -166,8 +170,8 @@ function ShortcutRecorder({ value, onChange }) {
         className="h-7 px-2.5 rounded-md border border-border text-xs flex items-center min-w-[140px] cursor-pointer bg-background focus:ring-1 focus:ring-primary focus:outline-none"
       >
         {recording
-          ? <span className="text-muted-foreground italic">Pressione as teclas…</span>
-          : (value || <span className="text-muted-foreground">Nenhum</span>)
+          ? <span className="text-muted-foreground italic">{t('settings.shortcutRecorder.press')}</span>
+          : (value || <span className="text-muted-foreground">{t('settings.shortcutRecorder.none')}</span>)
         }
       </div>
       {value && (
@@ -177,7 +181,7 @@ function ShortcutRecorder({ value, onChange }) {
           className="h-7 px-2 text-xs text-muted-foreground"
           onClick={() => onChange('')}
         >
-          Limpar
+          {t('settings.shortcutRecorder.clear')}
         </Button>
       )}
     </div>
@@ -185,8 +189,9 @@ function ShortcutRecorder({ value, onChange }) {
 }
 
 function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
+  const { t } = useTranslation()
   const { state } = useApp()
-  const ROOT = { id: null, name: 'Meu Drive' }
+  const ROOT = { id: null, name: t('settings.drive.myDrive') }
   const [stack, setStack] = useState([ROOT])
   const [cache, setCache] = useState({})
   const [loadingKey, setLoadingKey] = useState(null)
@@ -230,11 +235,11 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
       if (result.ok) {
         setCache((c) => ({ ...c, [key]: result.folders }))
       } else {
-        setFetchError(result.error ?? 'Erro ao listar pastas')
+        setFetchError(result.error ?? t('settings.drive.listError'))
       }
     } catch {
       setLoadingKey(null)
-      setFetchError('Erro ao listar pastas')
+      setFetchError(t('settings.drive.listError'))
     }
   }
 
@@ -280,10 +285,10 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
         setLoadingKey(null)
         if (res.ok) setCache((c) => ({ ...c, [cacheKey]: res.folders }))
       } else {
-        toast.error(result.error ?? 'Erro ao criar pasta')
+        toast.error(result.error ?? t('settings.drive.createError'))
       }
     } catch {
-      toast.error('Erro ao criar pasta')
+      toast.error(t('settings.drive.createError'))
     } finally {
       setSavingFolder(false)
     }
@@ -304,12 +309,12 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
         const res = await window.electronAPI.driveListFolders(current.id)
         setLoadingKey(null)
         if (res.ok) setCache((c) => ({ ...c, [cacheKey]: res.folders }))
-        toast.success('Pasta excluída')
+        toast.success(t('settings.drive.deleted'))
       } else {
-        toast.error(result.error ?? 'Erro ao excluir pasta')
+        toast.error(result.error ?? t('settings.drive.deleteError'))
       }
     } catch {
-      toast.error('Erro ao excluir pasta')
+      toast.error(t('settings.drive.deleteError'))
     } finally {
       setDeletingId(null)
     }
@@ -318,7 +323,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
   function formatDate(iso) {
     if (!iso) return '—'
     try {
-      return new Intl.DateTimeFormat('pt-BR', {
+      return new Intl.DateTimeFormat(undefined, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -361,7 +366,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
       {/* Section label */}
       <div className="px-2 pt-1.5 pb-0.5">
         <span className="text-[9.5px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Meu Drive
+          {t('settings.drive.myDrive')}
         </span>
       </div>
 
@@ -371,7 +376,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
           className="flex items-center flex-1 text-[9.5px] text-muted-foreground hover:text-foreground font-medium"
           onClick={() => toggleSort('name')}
         >
-          Nome
+          {t('settings.drive.name')}
           <SortIcon col="name" />
         </button>
         <button
@@ -379,7 +384,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
           onClick={() => toggleSort('modifiedTime')}
         >
           <SortIcon col="modifiedTime" />
-          Modificado
+          {t('settings.drive.modified')}
         </button>
       </div>
 
@@ -394,7 +399,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
           <p className="text-[10px] text-destructive text-center py-3">{fetchError}</p>
         )}
         {!loading && !fetchError && folders?.length === 0 && (
-          <p className="text-[10px] text-muted-foreground text-center py-3">Nenhuma pasta</p>
+          <p className="text-[10px] text-muted-foreground text-center py-3">{t('settings.drive.noFolders')}</p>
         )}
         {folders?.map((f) => (
           <div key={f.id} className="group flex items-center gap-1.5 px-2 py-1 hover:bg-accent">
@@ -402,7 +407,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
               <>
                 <Trash2 size={11} className="text-destructive shrink-0" />
                 <span className="text-[10.5px] flex-1 text-destructive truncate min-w-0">
-                  Excluir &quot;{f.name}&quot;?
+                  {t('settings.drive.deleteConfirm', { name: f.name })}
                 </span>
                 <button
                   onClick={() => handleDeleteFolder(f.id)}
@@ -411,13 +416,13 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
                 >
                   {deletingId === f.id
                     ? <Loader2 size={10} className="animate-spin" />
-                    : 'Confirmar'}
+                    : t('settings.drive.confirm')}
                 </button>
                 <button
                   onClick={() => setConfirmDeleteId(null)}
                   className="text-[10px] text-muted-foreground hover:text-foreground shrink-0 ml-1"
                 >
-                  Cancelar
+                  {t('settings.drive.cancel')}
                 </button>
               </>
             ) : (
@@ -437,15 +442,15 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
                     <button
                       onClick={() => onSelectExisting(f)}
                       className="text-[9.5px] text-primary hover:underline px-1 shrink-0"
-                      title="Selecionar esta pasta"
+                      title={t('settings.drive.selectFolder')}
                     >
-                      Selecionar
+                      {t('settings.drive.select')}
                     </button>
                   )}
                   <button
                     onClick={() => setConfirmDeleteId(f.id)}
                     className="text-muted-foreground hover:text-destructive transition-colors shrink-0 p-0.5 rounded"
-                    title="Excluir pasta"
+                    title={t('settings.drive.deleteFolder')}
                   >
                     <Trash2 size={10} />
                   </button>
@@ -471,7 +476,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
                 setNewFolderName('')
               }
             }}
-            placeholder="Nome da pasta"
+            placeholder={t('settings.drive.folderName')}
             className="flex-1 text-[11px] bg-transparent border-none outline-none placeholder:text-muted-foreground/60 min-w-0"
           />
           {savingFolder ? (
@@ -482,7 +487,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
               disabled={!newFolderName.trim()}
               className="text-[10px] text-primary hover:underline shrink-0 disabled:opacity-40"
             >
-              Criar
+              {t('settings.drive.create')}
             </button>
           )}
           <button
@@ -507,7 +512,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
           }}
         >
           <FolderPlus size={11} />
-          Nova pasta
+          {t('settings.drive.newFolder')}
         </button>
         <Button
           size="sm"
@@ -515,7 +520,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
           onClick={() => onSelectLocation(current)}
         >
           <Check size={10} />
-          Criar pasta aqui
+          {t('settings.drive.createHere')}
         </Button>
       </div>
     </div>
@@ -523,6 +528,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
 }
 
 function DriveProjectSection({ projectId, form, setForm, required = false }) {
+  const { t } = useTranslation()
   const { state, actions } = useApp()
   const [shareEmail, setShareEmail] = useState('')
   const [sharing, setSharing] = useState(false)
@@ -541,9 +547,9 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
       setForm((f) => ({ ...f, driveFolderId: result.folderId, driveFolderUrl: result.folderUrl, driveFolderName: result.folderName }))
       setBrowsing(false)
       setPendingParent(null)
-      toast.success('Pasta criada no Drive')
+      toast.success(t('settings.drive.folderCreated'))
     } else {
-      toast.error(result.error ?? 'Erro ao criar pasta no Drive')
+      toast.error(result.error ?? t('settings.drive.createDriveError'))
     }
   }
 
@@ -556,7 +562,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
     setBrowsing(false)
     setPendingParent(null)
     setPendingSelect(null)
-    toast.success('Pasta vinculada ao projeto')
+    toast.success(t('settings.drive.linked'))
   }
 
   return (
@@ -565,21 +571,21 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
       {form.driveFolderId ? (
         browsing ? (
           <>
-            <Label className="text-[10.5px]">Escolher nova localização</Label>
+            <Label className="text-[10.5px]">{t('settings.drive.chooseLocation')}</Label>
             <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />
             {pendingSelect && (
               <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
                 <span className="text-[10.5px]">
-                  Salvar arquivos em <span className="font-medium">{pendingSelect.name}</span>?
+                  {t('settings.drive.saveIn', { name: pendingSelect.name })}
                 </span>
                 <div className="flex gap-1.5">
                   <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
                     onClick={() => setPendingSelect(null)}>
-                    Cancelar
+                    {t('settings.drive.cancel')}
                   </Button>
                   <Button size="sm" className="h-6 px-2 text-xs gap-1"
                     onClick={handleConfirmSelect}>
-                    Confirmar
+                    {t('settings.drive.confirm')}
                   </Button>
                 </div>
               </div>
@@ -587,17 +593,17 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
             {pendingParent && !pendingSelect && (
               <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
                 <span className="text-[10.5px]">
-                  Criar em <span className="font-medium">{pendingParent.name}</span>?
+                  {t('settings.drive.createIn', { name: pendingParent.name })}
                 </span>
                 <div className="flex gap-1.5">
                   <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
                     onClick={() => setPendingParent(null)}>
-                    Cancelar
+                    {t('settings.drive.cancel')}
                   </Button>
                   <Button size="sm" className="h-6 px-2 text-xs gap-1"
                     disabled={creating} onClick={handleConfirmCreate}>
                     {creating && <Loader2 size={10} className="animate-spin" />}
-                    Criar
+                    {t('settings.drive.create')}
                   </Button>
                 </div>
               </div>
@@ -608,7 +614,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
               className="h-6 text-xs self-start px-1 text-muted-foreground"
               onClick={() => { setBrowsing(false); setPendingParent(null); setPendingSelect(null) }}
             >
-              Cancelar
+              {t('settings.drive.cancel')}
             </Button>
           </>
         ) : (
@@ -618,13 +624,13 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
                 <Folder size={11} className="text-muted-foreground shrink-0" />
                 {form.driveFolderName
                   ? <span className="text-[10.5px] font-medium truncate max-w-[140px]" title={form.driveFolderName}>{form.driveFolderName}</span>
-                  : <span className="text-[10.5px] text-muted-foreground">Pasta no Drive vinculada</span>
+                  : <span className="text-[10.5px] text-muted-foreground">{t('settings.drive.driveLinked')}</span>
                 }
                 <button
                   className="text-[10.5px] text-primary flex items-center gap-0.5 hover:underline"
                   onClick={() => window.electronAPI.openExternal(form.driveFolderUrl)}
                 >
-                  Abrir <ExternalLink size={9} />
+                  {t('settings.drive.open')} <ExternalLink size={9} />
                 </button>
               </div>
               <Button
@@ -633,14 +639,14 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
                 className="h-6 px-2 text-[10.5px]"
                 onClick={() => setBrowsing(true)}
               >
-                Trocar
+                {t('settings.drive.change')}
               </Button>
             </div>
-            <Label className="text-[10.5px]">Compartilhar com colaborador</Label>
+            <Label className="text-[10.5px]">{t('settings.drive.share')}</Label>
             <div className="flex gap-1.5">
               <Input
                 className="h-7 text-xs flex-1"
-                placeholder="colaborador@empresa.com"
+                placeholder={t('settings.drive.sharePlaceholder')}
                 value={shareEmail}
                 onChange={(e) => setShareEmail(e.target.value)}
               />
@@ -654,40 +660,44 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
                   const result = await actions.driveShareProjectFolder(projectId, shareEmail)
                   setSharing(false)
                   if (result.ok) {
-                    toast.success(`Pasta compartilhada com ${shareEmail}`, {
+                    toast.success(t('settings.drive.shareSuccess', { email: shareEmail }), {
                       action: result.webViewLink
-                        ? { label: 'Copiar link', onClick: () => navigator.clipboard.writeText(result.webViewLink) }
+                        ? { label: t('settings.drive.copyLink'), onClick: () => navigator.clipboard.writeText(result.webViewLink) }
                         : undefined,
                     })
                     setShareEmail('')
                   } else {
-                    toast.error(result.error ?? 'Erro ao compartilhar')
+                    toast.error(result.error ?? t('settings.drive.shareError'))
                   }
                 }}
               >
                 {sharing ? <Loader2 size={12} className="animate-spin" /> : <Share2 size={12} />}
-                <span className="ml-1">Compartilhar</span>
+                <span className="ml-1">{t('settings.drive.shareButton')}</span>
               </Button>
             </div>
           </>
         )
       ) : (
         <>
-          <Label className="text-[10.5px]">Pasta no Google Drive{!required && ' (opcional)'}</Label>
+          <Label className="text-[10.5px]">
+            {required
+              ? 'Pasta no Google Drive'
+              : t('settings.drive.optional')}
+          </Label>
           <DriveFolderBrowser onSelectLocation={(f) => { setPendingParent(f); setPendingSelect(null) }} onSelectExisting={handleSelectExisting} />
           {pendingSelect && (
             <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
               <span className="text-[10.5px]">
-                Salvar arquivos em <span className="font-medium">{pendingSelect.name}</span>?
+                {t('settings.drive.saveIn', { name: pendingSelect.name })}
               </span>
               <div className="flex gap-1.5">
                 <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
                   onClick={() => setPendingSelect(null)}>
-                  Cancelar
+                  {t('settings.drive.cancel')}
                 </Button>
                 <Button size="sm" className="h-6 px-2 text-xs gap-1"
                   onClick={handleConfirmSelect}>
-                  Confirmar
+                  {t('settings.drive.confirm')}
                 </Button>
               </div>
             </div>
@@ -695,17 +705,17 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
           {pendingParent && !pendingSelect && (
             <div className="flex items-center justify-between rounded-md border border-border bg-accent/30 px-2.5 py-1.5">
               <span className="text-[10.5px]">
-                Criar em <span className="font-medium">{pendingParent.name}</span>?
+                {t('settings.drive.createIn', { name: pendingParent.name })}
               </span>
               <div className="flex gap-1.5">
                 <Button size="sm" variant="ghost" className="h-6 px-2 text-xs"
                   onClick={() => setPendingParent(null)}>
-                  Cancelar
+                  {t('settings.drive.cancel')}
                 </Button>
                 <Button size="sm" className="h-6 px-2 text-xs gap-1"
                   disabled={creating} onClick={handleConfirmCreate}>
                   {creating && <Loader2 size={10} className="animate-spin" />}
-                  Criar
+                  {t('settings.drive.create')}
                 </Button>
               </div>
             </div>
@@ -717,6 +727,7 @@ function DriveProjectSection({ projectId, form, setForm, required = false }) {
 }
 
 function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDelete, onSetActive, setForm, chooseDir, submitForm, setEditingId }) {
+  const { t } = useTranslation()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: p.id })
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -747,8 +758,8 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
             {p.outputMode === 'drive'
               ? (p.driveFolderUrl
                   ? <><Folder size={10} className="shrink-0" /><span className="truncate">{p.driveFolderName || 'Drive'}</span></>
-                  : 'Drive — sem pasta')
-              : (p.outputDir || 'Sem pasta')}
+                  : t('settings.project.driveNoFolder'))
+              : (p.outputDir || t('settings.project.noFolder'))}
           </p>
         </div>
         <div className="flex gap-1.5 shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
@@ -777,7 +788,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
         <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5 mt-1">
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-[10.5px]">Nome do projeto</Label>
+              <Label className="text-[10.5px]">{t('settings.project.name')}</Label>
               <Input
                 className="h-7 text-xs"
                 placeholder="Motor BLDC"
@@ -786,7 +797,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-[10.5px]">Prefixo</Label>
+              <Label className="text-[10.5px]">{t('settings.project.prefix')}</Label>
               <Input
                 className="h-7 text-xs"
                 placeholder="BLDC_"
@@ -796,14 +807,14 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
             </div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
+            <span className="text-[10.5px] text-muted-foreground flex-1">{t('settings.project.outputFolder')}</span>
             <Button
               size="sm"
               variant={form.outputMode !== 'drive' ? 'default' : 'outline'}
               className="h-6 px-2.5 text-xs"
               onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
             >
-              Local
+              {t('settings.project.local')}
             </Button>
             <Button
               size="sm"
@@ -811,12 +822,12 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               className="h-6 px-2.5 text-xs"
               onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
             >
-              Drive
+              {t('settings.project.drive')}
             </Button>
           </div>
           {form.outputMode !== 'drive' && (
             <div className="flex flex-col gap-1">
-              <Label className="text-[10.5px]">Pasta de saída</Label>
+              <Label className="text-[10.5px]">{t('settings.project.outputFolder')}</Label>
               <div className="flex gap-1.5">
                 <Input
                   className="h-7 text-xs flex-1"
@@ -825,13 +836,13 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
                   onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
                 />
                 <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                  <FolderOpen size={12} className="mr-1" /> Explorar
+                  <FolderOpen size={12} className="mr-1" /> {t('settings.project.browse')}
                 </Button>
               </div>
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[10.5px]">Cor</Label>
+            <Label className="text-[10.5px]">{t('settings.project.color')}</Label>
             <div className="flex items-center gap-2 mt-0.5">
               {PROJECT_COLORS.map((c) => (
                 <button
@@ -849,7 +860,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
           )}
           <div className="flex gap-2 pt-1">
             <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
-              Salvar
+              {t('settings.project.save')}
             </Button>
             <Button
               size="sm"
@@ -857,7 +868,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
               className="h-7 text-xs"
               onClick={() => { setEditingId(null); setForm(null) }}
             >
-              Cancelar
+              {t('settings.project.cancel')}
             </Button>
           </div>
         </Card>
@@ -867,6 +878,7 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
 }
 
 export default function Settings({ onBack }) {
+  const { t } = useTranslation()
   const { state, actions } = useApp()
   const [editingId, setEditingId] = useState(null)
   const [form, setForm] = useState(null)
@@ -897,15 +909,15 @@ export default function Settings({ onBack }) {
   async function submitForm() {
     const mode = form.outputMode
     if (!form.name || !form.prefix) {
-      toast.error('Preencha nome e prefixo')
+      toast.error(t('settings.validation.nameAndPrefix'))
       return
     }
     if (mode === 'local' && !form.outputDir) {
-      toast.error('Preencha a pasta de saída')
+      toast.error(t('settings.validation.outputFolder'))
       return
     }
     if (mode === 'drive' && !form.driveFolderId) {
-      toast.error('Configure a pasta do Drive antes de salvar')
+      toast.error(t('settings.validation.driveFolder'))
       return
     }
     if (editingId === 'new') {
@@ -961,16 +973,16 @@ export default function Settings({ onBack }) {
           onClick={onBack}
           className="app-region-no-drag h-7 px-2 text-xs text-muted-foreground gap-1"
         >
-          <ArrowLeft size={14} /> Voltar
+          <ArrowLeft size={14} /> {t('settings.back')}
         </Button>
-        <h2 className="text-sm font-semibold">Configurações</h2>
+        <h2 className="text-sm font-semibold">{t('settings.title')}</h2>
       </div>
 
       <div className="p-5 flex flex-col gap-6 w-full max-w-2xl mx-auto">
 
         {/* Projects section */}
         <section>
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Projetos</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t('settings.projects')}</p>
 
           <div className="flex flex-col gap-2">
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -998,7 +1010,7 @@ export default function Settings({ onBack }) {
               <Card className="border-primary p-3 bg-accent/30 flex flex-col gap-2.5">
                 <div className="grid grid-cols-2 gap-2">
                   <div className="flex flex-col gap-1">
-                    <Label className="text-[10.5px]">Nome do projeto</Label>
+                    <Label className="text-[10.5px]">{t('settings.addProject.name')}</Label>
                     <Input
                       className="h-7 text-xs"
                       placeholder="Motor BLDC"
@@ -1007,7 +1019,7 @@ export default function Settings({ onBack }) {
                     />
                   </div>
                   <div className="flex flex-col gap-1">
-                    <Label className="text-[10.5px]">Prefixo</Label>
+                    <Label className="text-[10.5px]">{t('settings.addProject.prefix')}</Label>
                     <Input
                       className="h-7 text-xs"
                       placeholder="BLDC_"
@@ -1017,14 +1029,14 @@ export default function Settings({ onBack }) {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] text-muted-foreground flex-1">Destino de saída</span>
+                  <span className="text-[10.5px] text-muted-foreground flex-1">{t('settings.project.outputFolder')}</span>
                   <Button
                     size="sm"
                     variant={form.outputMode !== 'drive' ? 'default' : 'outline'}
                     className="h-6 px-2.5 text-xs"
                     onClick={() => setForm((f) => ({ ...f, outputMode: 'local' }))}
                   >
-                    Local
+                    {t('settings.project.local')}
                   </Button>
                   <Button
                     size="sm"
@@ -1032,12 +1044,12 @@ export default function Settings({ onBack }) {
                     className="h-6 px-2.5 text-xs"
                     onClick={() => setForm((f) => ({ ...f, outputMode: 'drive' }))}
                   >
-                    Drive
+                    {t('settings.project.drive')}
                   </Button>
                 </div>
                 {form.outputMode !== 'drive' && (
                   <div className="flex flex-col gap-1">
-                    <Label className="text-[10.5px]">Pasta de saída</Label>
+                    <Label className="text-[10.5px]">{t('settings.addProject.outputFolder')}</Label>
                     <div className="flex gap-1.5">
                       <Input
                         className="h-7 text-xs flex-1"
@@ -1046,7 +1058,7 @@ export default function Settings({ onBack }) {
                         onChange={(e) => setForm((f) => ({ ...f, outputDir: e.target.value }))}
                       />
                       <Button variant="outline" size="sm" className="h-7 px-2.5 text-xs" onClick={chooseDir}>
-                        <FolderOpen size={12} className="mr-1" /> Explorar
+                        <FolderOpen size={12} className="mr-1" /> {t('settings.addProject.browse')}
                       </Button>
                     </div>
                   </div>
@@ -1055,7 +1067,7 @@ export default function Settings({ onBack }) {
                   <DriveProjectSection projectId={form.id} form={form} setForm={setForm} />
                 )}
                 <div className="flex flex-col gap-1.5">
-                  <Label className="text-[10.5px]">Cor</Label>
+                  <Label className="text-[10.5px]">{t('settings.addProject.color')}</Label>
                   <div className="flex items-center gap-2 mt-0.5">
                     {PROJECT_COLORS.map((c) => (
                       <button
@@ -1070,7 +1082,7 @@ export default function Settings({ onBack }) {
                 </div>
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" className="h-7 text-xs" onClick={submitForm}>
-                    Adicionar
+                    {t('settings.addProject.add')}
                   </Button>
                   <Button
                     size="sm"
@@ -1078,7 +1090,7 @@ export default function Settings({ onBack }) {
                     className="h-7 text-xs"
                     onClick={() => { setEditingId(null); setForm(null) }}
                   >
-                    Cancelar
+                    {t('settings.addProject.cancel')}
                   </Button>
                 </div>
               </Card>
@@ -1089,7 +1101,7 @@ export default function Settings({ onBack }) {
                 onClick={openAdd}
                 className="border-dashed justify-start gap-2 text-xs text-muted-foreground h-9"
               >
-                <Plus size={13} /> Adicionar projeto
+                <Plus size={13} /> {t('settings.addProject.button')}
               </Button>
             )}
           </div>
@@ -1099,23 +1111,23 @@ export default function Settings({ onBack }) {
 
         {/* Comportamento section */}
         <section>
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Comportamento</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">{t('settings.behavior')}</p>
           <div className="flex flex-col divide-y divide-border">
             <BehaviorRow
-              label="Iniciar com o Windows"
-              description="Inicia automaticamente ao fazer login"
+              label={t('settings.startWithWindows')}
+              description={t('settings.startWithWindowsDesc')}
               checked={launchOnStartup}
               onCheckedChange={handleLaunchOnStartup}
             />
             <BehaviorRow
-              label="Iniciar minimizado"
-              description="Abre sem exibir a janela (apenas bandeja)"
+              label={t('settings.startMinimized')}
+              description={t('settings.startMinimizedDesc')}
               checked={state.settings.startMinimized ?? false}
               onCheckedChange={(v) => actions.updateSettings({ startMinimized: v })}
             />
             <BehaviorRow
-              label="Botão fechar oculta o app"
-              description="× mantém o app rodando na bandeja do sistema"
+              label={t('settings.closeHides')}
+              description={t('settings.closeHidesDesc')}
               checked={state.settings.closeHides ?? true}
               onCheckedChange={(v) => actions.updateSettings({ closeHides: v })}
             />
@@ -1126,15 +1138,15 @@ export default function Settings({ onBack }) {
 
         {/* Atalho global */}
         <section>
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Atalho global</p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t('settings.shortcut')}</p>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-[10.5px]">Abrir preview (funciona mesmo com o app minimizado)</Label>
+            <Label className="text-[10.5px]">{t('settings.shortcutDesc')}</Label>
             <ShortcutRecorder
               value={state.settings.globalShortcut ?? ''}
               onChange={(v) => actions.updateSettings({ globalShortcut: v })}
             />
             <p className="text-[10.5px] text-muted-foreground mt-1">
-              Ex: Ctrl+Shift+S · Requer ao menos um modificador (Ctrl, Alt ou Shift)
+              {t('settings.shortcutHint')}
             </p>
           </div>
         </section>
@@ -1143,30 +1155,52 @@ export default function Settings({ onBack }) {
 
         {/* Aparência section */}
         <section>
-          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">Aparência</p>
-          <div className="flex flex-col gap-1.5">
-            <Label className="text-[10.5px]">Tema</Label>
-            <Select
-              value={state.settings.theme ?? 'system'}
-              onValueChange={(value) => actions.updateSettings({ theme: value })}
-            >
-              <SelectTrigger className="h-7 text-xs w-56 app-region-no-drag">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="system">Sistema (padrão)</SelectItem>
-                <SelectItem value="black-moon">Black Moon</SelectItem>
-                <SelectItem value="blue-moon">Blue Moon</SelectItem>
-                <SelectItem value="charcoal">Charcoal</SelectItem>
-                <SelectItem value="claritas">Claritas</SelectItem>
-                <SelectItem value="light">Claro</SelectItem>
-                <SelectItem value="dark">Escuro</SelectItem>
-                <SelectItem value="snnabb">Snnabb</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-[10.5px] text-muted-foreground mt-1">
-              "Sistema" segue automaticamente a configuração do Windows.
-            </p>
+          <p className="text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground mb-3">{t('settings.appearance')}</p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10.5px]">{t('settings.theme')}</Label>
+              <Select
+                value={state.settings.theme ?? 'system'}
+                onValueChange={(value) => actions.updateSettings({ theme: value })}
+              >
+                <SelectTrigger className="h-7 text-xs w-56 app-region-no-drag">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="system">{t('settings.themes.system')}</SelectItem>
+                  <SelectItem value="black-moon">Black Moon</SelectItem>
+                  <SelectItem value="blue-moon">Blue Moon</SelectItem>
+                  <SelectItem value="charcoal">Charcoal</SelectItem>
+                  <SelectItem value="claritas">Claritas</SelectItem>
+                  <SelectItem value="light">{t('settings.themes.light')}</SelectItem>
+                  <SelectItem value="dark">{t('settings.themes.dark')}</SelectItem>
+                  <SelectItem value="snnabb">Snnabb</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-[10.5px] text-muted-foreground mt-1">
+                {t('settings.themeNote')}
+              </p>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">{t('settings.language')}</span>
+              <Select
+                value={state.settings.language ?? 'pt-BR'}
+                onValueChange={(lang) => {
+                  i18n.changeLanguage(lang)
+                  actions.updateSettings({ language: lang })
+                }}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pt-BR">{t('settings.languages.pt-BR')}</SelectItem>
+                  <SelectItem value="pt-PT">{t('settings.languages.pt-PT')}</SelectItem>
+                  <SelectItem value="en">{t('settings.languages.en')}</SelectItem>
+                  <SelectItem value="de">{t('settings.languages.de')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </section>
 

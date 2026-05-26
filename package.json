@@ -47,9 +47,12 @@
     "clsx": "^2.1.1",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
+    "googleapis": "^144.0.0",
+    "i18next": "^26.3.0",
     "konva": "^10.3.0",
     "lucide-react": "^1.8.0",
     "pdfkit": "^0.18.0",
+    "react-i18next": "^17.0.8",
     "react-konva": "^19.2.3",
     "react-zoom-pan-pinch": "^4.0.3",
     "sharp": "^0.34.5",
@@ -58,7 +61,6 @@
     "svgo": "^4.0.1",
     "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
-    "googleapis": "^144.0.0",
     "use-image": "^1.1.4"
   },
   "devDependencies": {

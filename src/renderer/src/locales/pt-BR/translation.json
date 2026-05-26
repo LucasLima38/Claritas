@@ -1,0 +1,294 @@
+{
+  "sidebar": {
+    "workspace": "Workspace",
+    "projects": "Projetos",
+    "clipboard": "Clipboard",
+    "capture": "Captura",
+    "noProjects": "Nenhum projeto",
+    "notifications": "Notificações",
+    "account": "Conta",
+    "settings": "Configurações",
+    "about": "Sobre",
+    "updateAvailable": "Atualização disponível — clique para instalar",
+    "downloading": "Baixando atualização… {{percent}}%",
+    "checking": "Verificando atualizações…",
+    "checkUpdate": "Verificar atualizações",
+    "updateDialog": {
+      "title": "Atualização disponível",
+      "description": "A versão {{version}} foi baixada e está pronta para instalar. O app vai reiniciar automaticamente.",
+      "later": "Agora não",
+      "install": "Reiniciar e instalar"
+    }
+  },
+  "clipboard": {
+    "converting": "Convertendo...",
+    "wait": "Aguarde até 15 segundos",
+    "retry": "Tentar novamente",
+    "paste": "Cole o esquemático",
+    "createProject": "Crie um projeto nas Configurações",
+    "instruction": "No Altium Designer copie → cole com Ctrl+V aqui"
+  },
+  "preview": {
+    "title": "Prévia —",
+    "inQueue": "na fila",
+    "discard": "Descartar",
+    "saving": "Salvando...",
+    "save": "Salvar",
+    "alt": "Prévia do esquemático",
+    "outputNotFound": "Pasta de saída não encontrada",
+    "outputNotFoundDesc": "A pasta de destino não existe:",
+    "cancel": "Cancelar",
+    "chooseFolder": "Escolher outra pasta",
+    "createAuto": "Criar automaticamente",
+    "fitAll": "Encaixar tudo"
+  },
+  "clipgrid": {
+    "recent": "Recentes",
+    "files_one": "{{count}} arquivo nesta sessão",
+    "files_other": "{{count}} arquivos nesta sessão",
+    "syncFolder": "Sincronizar com pasta",
+    "next": "próximo",
+    "copyFile": "Copiar arquivo",
+    "openFolder": "Abrir pasta",
+    "openDrive": "Abrir no Drive",
+    "deleteFile": "Excluir arquivo",
+    "share": "Compartilhar",
+    "shareFile": "Compartilhar arquivo",
+    "recipientEmail": "E-mail do destinatário",
+    "sending": "Enviando…"
+  },
+  "statusbar": {
+    "converting": "Convertendo...",
+    "waitingConfirm": "Aguardando confirmação",
+    "monitoring": "Monitorando",
+    "svgsSession": "{{count}} SVGs nesta sessão",
+    "next": "Próximo:"
+  },
+  "toolbar": {
+    "converting": "Convertendo...",
+    "paste": "Colar",
+    "folder": "Pasta"
+  },
+  "capture": {
+    "capturing": "Capturando…",
+    "cancel": "Cancelar",
+    "modeLabel": "Modo de captura",
+    "resolution": "Resolução",
+    "captureNow": "Capturar agora",
+    "noDelay": "Sem atraso",
+    "seconds": "{{n}} segundos",
+    "modes": {
+      "region": "Região",
+      "window": "Janela ativa",
+      "fullscreen": "Tela cheia"
+    },
+    "resolutions": {
+      "low": "Baixa",
+      "normal": "Normal",
+      "high": "Alta"
+    }
+  },
+  "editor": {
+    "tools": {
+      "cursor": "Cursor",
+      "arrow": "Seta",
+      "rect": "Retângulo",
+      "ellipse": "Elipse",
+      "line": "Linha",
+      "brush": "Pincel",
+      "text": "Texto",
+      "highlight": "Destacar",
+      "eraser": "Borracha",
+      "counter": "Contador"
+    },
+    "ocr": "OCR — selecione uma região para extrair o texto",
+    "color": "Cor",
+    "thickness": "Espessura",
+    "undo": "Desfazer (Ctrl+Z)",
+    "redo": "Refazer (Ctrl+Y)",
+    "textPlaceholder": "Digite o texto…",
+    "resizeOcr": "Arraste para ampliar",
+    "discard": "Descartar",
+    "save": "Salvar {{format}}"
+  },
+  "ocr": {
+    "waiting": "Aguardando",
+    "extracting": "Extraindo texto…",
+    "ready": "Pronto",
+    "error": "Erro",
+    "noText": "Sem texto",
+    "extractedText": "Texto extraído",
+    "unlock": "Desbloquear edição",
+    "lock": "Bloquear edição",
+    "timeout": "OCR demorou muito. Tente novamente.",
+    "extractError": "Erro ao extrair: {{message}}",
+    "notFound": "Nenhum texto encontrado na imagem.",
+    "clickToStart": "Clique em Extrair para iniciar o OCR",
+    "extract": "Extrair",
+    "copy": "Copiar",
+    "clear": "Limpar"
+  },
+  "lightbox": {
+    "copied": "Arquivo copiado para a área de transferência",
+    "copyError": "Não foi possível copiar o arquivo",
+    "folderError": "Não foi possível abrir a pasta",
+    "copy": "Copiar arquivo",
+    "folder": "Abrir pasta",
+    "drive": "Abrir no Drive",
+    "delete": "Excluir"
+  },
+  "about": {
+    "description": "Captura e exporta esquemáticos do Altium Designer",
+    "system": "Sistema",
+    "platform": "Plataforma",
+    "arch": "Arquitetura",
+    "downloading": "Baixando atualização… {{percent}}%",
+    "checking": "Verificando atualizações…",
+    "checkUpdate": "Verificar atualizações",
+    "github": "Ver no GitHub",
+    "madeBy": "Feito por Lucas Vieira"
+  },
+  "account": {
+    "title": "Conta Google",
+    "loginPrompt": "Entre para sincronizar projetos e compartilhar arquivos.",
+    "login": "Entrar com Google",
+    "syncing": "Sincronizando…",
+    "syncNow": "Sincronizar agora",
+    "logout": "Sair"
+  },
+  "notifications": {
+    "title": "Notificações",
+    "all": "Todas",
+    "unread": "Não lidas",
+    "empty": "Nenhuma notificação.",
+    "clear": "Limpar"
+  },
+  "app": {
+    "updateAvailable": "Nova versão {{version}} disponível",
+    "updateDesc": "Reinicie o app para instalar a atualização.",
+    "restart": "Reiniciar agora",
+    "upToDate": "Você está usando a versão mais recente",
+    "googleAccount": "Conta Google"
+  },
+  "context": {
+    "conversionError": "Erro na conversão: {{message}}",
+    "noActiveProject": "Nenhum projeto ativo. Selecione um projeto nas Configurações.",
+    "saving": "Salvando…",
+    "sendingToDrive": "Enviando para o Drive",
+    "saveError": "Erro ao salvar",
+    "invalidResponse": "Resposta inválida do processo principal.",
+    "saved": "Salvo!",
+    "outputNotFound": "Pasta de saída não encontrada: {{dir}}",
+    "noWritePermission": "Sem permissão de escrita na pasta de destino.",
+    "saveErrorDetail": "Erro ao salvar: {{message}}",
+    "selectProjectFirst": "Selecione um projeto antes de salvar.",
+    "captureError": "Erro na captura",
+    "loginError": "Erro no login",
+    "syncError": "Erro na sincronização",
+    "shared": "Compartilhado com {{email}}",
+    "copyLink": "Copiar link",
+    "shareError": "Erro ao compartilhar"
+  },
+  "settings": {
+    "back": "Voltar",
+    "title": "Configurações",
+    "projects": "Projetos",
+    "validation": {
+      "nameAndPrefix": "Preencha o nome e o prefixo",
+      "outputFolder": "Preencha a pasta de saída",
+      "driveFolder": "Configure a pasta do Drive antes de salvar"
+    },
+    "project": {
+      "name": "Nome do projeto",
+      "prefix": "Prefixo",
+      "outputFolder": "Pasta de saída",
+      "browse": "Procurar",
+      "color": "Cor",
+      "save": "Salvar",
+      "cancel": "Cancelar",
+      "local": "Local",
+      "drive": "Drive",
+      "driveNoFolder": "Drive — sem pasta",
+      "noFolder": "Sem pasta"
+    },
+    "addProject": {
+      "name": "Nome do projeto",
+      "prefix": "Prefixo",
+      "outputFolder": "Pasta de saída",
+      "browse": "Procurar",
+      "color": "Cor",
+      "add": "Adicionar",
+      "cancel": "Cancelar",
+      "button": "Adicionar projeto"
+    },
+    "behavior": "Comportamento",
+    "startWithWindows": "Iniciar com o Windows",
+    "startWithWindowsDesc": "Inicia automaticamente no login",
+    "startMinimized": "Iniciar minimizado",
+    "startMinimizedDesc": "Abre sem exibir a janela (somente bandeja)",
+    "closeHides": "Botão fechar oculta o app",
+    "closeHidesDesc": "× mantém o app rodando na bandeja do sistema",
+    "shortcut": "Atalho global",
+    "shortcutDesc": "Abre a prévia (funciona mesmo com o app minimizado)",
+    "shortcutHint": "Ex.: Ctrl+Shift+S · Precisa de pelo menos um modificador (Ctrl, Alt ou Shift)",
+    "appearance": "Aparência",
+    "theme": "Tema",
+    "themes": {
+      "system": "Sistema (padrão)",
+      "light": "Claro",
+      "dark": "Escuro"
+    },
+    "themeNote": "\"Sistema\" segue automaticamente a configuração do Windows.",
+    "language": "Idioma",
+    "languages": {
+      "pt-BR": "Português (Brasil)",
+      "pt-PT": "Português (Portugal)",
+      "en": "English",
+      "de": "Deutsch"
+    },
+    "shortcutRecorder": {
+      "press": "Pressione as teclas…",
+      "none": "Nenhum",
+      "clear": "Limpar"
+    },
+    "colorPicker": {
+      "choose": "Escolher cor"
+    },
+    "drive": {
+      "myDrive": "Meu Drive",
+      "listError": "Erro ao listar pastas",
+      "name": "Nome",
+      "modified": "Modificado",
+      "noFolders": "Nenhuma pasta",
+      "deleteConfirm": "Excluir \"{{name}}\"?",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar",
+      "select": "Selecionar",
+      "selectFolder": "Selecionar esta pasta",
+      "deleteFolder": "Excluir pasta",
+      "folderName": "Nome da pasta",
+      "create": "Criar",
+      "newFolder": "Nova pasta",
+      "createHere": "Criar pasta aqui",
+      "createError": "Erro ao criar pasta",
+      "deleted": "Pasta excluída",
+      "deleteError": "Erro ao excluir pasta",
+      "chooseLocation": "Escolher novo local",
+      "saveIn": "Salvar arquivos em {{name}}?",
+      "createIn": "Criar em {{name}}?",
+      "folderCreated": "Pasta criada no Drive",
+      "createDriveError": "Erro ao criar pasta no Drive",
+      "linked": "Pasta vinculada ao projeto",
+      "driveLinked": "Pasta do Drive vinculada",
+      "open": "Abrir",
+      "change": "Alterar",
+      "share": "Compartilhar com colaborador",
+      "sharePlaceholder": "colaborador@empresa.com",
+      "shareButton": "Compartilhar",
+      "shareSuccess": "Compartilhado com {{email}}",
+      "copyLink": "Copiar link",
+      "shareError": "Erro ao compartilhar",
+      "optional": "Pasta do Google Drive (opcional/obrigatório)"
+    }
+  }
+}

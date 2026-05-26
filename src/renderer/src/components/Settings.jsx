@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { useApp } from '../context/AppContext.jsx'
@@ -33,6 +34,95 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 
 const PROJECT_COLORS = ['#2f81f7', '#27c93f', '#ff9f43', '#e74c3c', '#9b59b6', '#1abc9c']
+
+const COLOR_PALETTE = [
+  ['#fee2e2','#fca5a5','#f87171','#ef4444','#dc2626','#b91c1c','#991b1b','#7f1d1d'],
+  ['#ffedd5','#fdba74','#fb923c','#f97316','#ea580c','#c2410c','#9a3412','#7c2d12'],
+  ['#fef9c3','#fde047','#facc15','#eab308','#ca8a04','#a16207','#854d0e','#713f12'],
+  ['#dcfce7','#86efac','#4ade80','#22c55e','#16a34a','#15803d','#166534','#14532d'],
+  ['#ccfbf1','#5eead4','#2dd4bf','#14b8a6','#0d9488','#0f766e','#115e59','#134e4a'],
+  ['#dbeafe','#93c5fd','#60a5fa','#3b82f6','#2563eb','#1d4ed8','#1e40af','#1e3a8a'],
+  ['#ede9fe','#c4b5fd','#a78bfa','#8b5cf6','#7c3aed','#6d28d9','#5b21b6','#4c1d95'],
+  ['#fce7f3','#f9a8d4','#f472b6','#ec4899','#db2777','#be185d','#9d174d','#831843'],
+  ['#f8fafc','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
+]
+
+function ColorPicker({ value, onChange }) {
+  const [open, setOpen] = useState(false)
+  const [hex, setHex] = useState(value ?? PROJECT_COLORS[0])
+
+  useEffect(() => { setHex(value ?? PROJECT_COLORS[0]) }, [value])
+
+  function pick(color) {
+    onChange(color)
+    setOpen(false)
+  }
+
+  function handleHexChange(e) {
+    const v = e.target.value
+    if (/^#[0-9a-fA-F]{0,6}$/.test(v)) {
+      setHex(v)
+      if (/^#[0-9a-fA-F]{6}$/.test(v)) onChange(v)
+    }
+  }
+
+  function handleHexBlur() {
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+      setHex(value ?? PROJECT_COLORS[0])
+    }
+  }
+
+  const displayColor = /^#[0-9a-fA-F]{6}$/.test(value) ? value : PROJECT_COLORS[0]
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className="w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-1"
+          style={{ background: displayColor, borderColor: 'hsl(var(--border))' }}
+          title="Escolher cor"
+        />
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-3" align="start">
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-0.5">
+            {COLOR_PALETTE.map((row, ri) => (
+              <div key={ri} className="flex gap-0.5">
+                {row.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => pick(c)}
+                    className="w-5 h-5 rounded-sm transition-all hover:scale-110 hover:z-10 relative"
+                    style={{
+                      background: c,
+                      outline: value === c ? '2px solid hsl(var(--foreground))' : '2px solid transparent',
+                      outlineOffset: '1px',
+                    }}
+                    title={c}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pt-1 border-t">
+            <div
+              className="w-5 h-5 rounded-sm flex-shrink-0 border"
+              style={{ background: displayColor, borderColor: 'hsl(var(--border))' }}
+            />
+            <Input
+              className="h-6 w-[5rem] text-[10px] px-1.5 font-mono"
+              value={hex}
+              maxLength={7}
+              onChange={handleHexChange}
+              onBlur={handleHexBlur}
+              placeholder="#000000"
+            />
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
 
 function BehaviorRow({ label, description, checked, onCheckedChange }) {
   return (
@@ -742,15 +832,16 @@ function SortableProjectCard({ p, activeProjectId, editingId, form, onEdit, onDe
           )}
           <div className="flex flex-col gap-1.5">
             <Label className="text-[10.5px]">Cor</Label>
-            <div className="flex gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-0.5">
               {PROJECT_COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setForm((f) => ({ ...f, color: c }))}
-                  className="w-5 h-5 rounded-full border-2 transition-all"
+                  className="w-5 h-5 rounded-full border-2 transition-all flex-shrink-0"
                   style={{ background: c, borderColor: form.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
                 />
               ))}
+              <ColorPicker value={form.color} onChange={(c) => setForm((f) => ({ ...f, color: c }))} />
             </div>
           </div>
           {form.outputMode === 'drive' && (
@@ -965,15 +1056,16 @@ export default function Settings({ onBack }) {
                 )}
                 <div className="flex flex-col gap-1.5">
                   <Label className="text-[10.5px]">Cor</Label>
-                  <div className="flex gap-2 mt-0.5">
+                  <div className="flex items-center gap-2 mt-0.5">
                     {PROJECT_COLORS.map((c) => (
                       <button
                         key={c}
                         onClick={() => setForm((f) => ({ ...f, color: c }))}
-                        className="w-5 h-5 rounded-full border-2 transition-all"
+                        className="w-5 h-5 rounded-full border-2 transition-all flex-shrink-0"
                         style={{ background: c, borderColor: form.color === c ? 'hsl(var(--foreground))' : 'transparent' }}
                       />
                     ))}
+                    <ColorPicker value={form.color} onChange={(c) => setForm((f) => ({ ...f, color: c }))} />
                   </div>
                 </div>
                 <div className="flex gap-2 pt-1">

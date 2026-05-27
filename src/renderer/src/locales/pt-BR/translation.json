@@ -293,6 +293,7 @@
       "shareSuccess": "Compartilhado com {{email}}",
       "copyLink": "Copiar link",
       "shareError": "Erro ao compartilhar",
+      "required": "Pasta no Google Drive",
       "optional": "Pasta do Google Drive (opcional/obrigatório)"
     }
   }

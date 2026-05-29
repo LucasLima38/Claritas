@@ -952,6 +952,8 @@ footer span{color:var(--border-hi)}
 
     var current = 0;
     var locked = false;
+    var snapPending = 0;
+    var snapDir = null;
 
     function activateStep(idx) {
       if (!steps.length) return;
@@ -1019,13 +1021,19 @@ footer span{color:var(--border-hi)}
       var goDown = e.deltaY > 0;
       // Se ainda há passos nesta seção na direção do scroll, deixa rolar normalmente
       if (steps.length) {
-        if (goDown && current < steps.length - 1) return;
-        if (!goDown && current > 0) return;
+        if (goDown && current < steps.length - 1) { snapPending = 0; snapDir = null; return; }
+        if (!goDown && current > 0) { snapPending = 0; snapDir = null; return; }
       }
       var target = goDown ? sectionData[sectionIdx + 1] : sectionData[sectionIdx - 1];
       if (!target) return;
       e.preventDefault();
       if (locked) return;
+      // Exige 3 scrolls consecutivos na mesma direção antes de trocar de seção
+      if (goDown !== snapDir) { snapPending = 0; snapDir = goDown; }
+      snapPending++;
+      if (snapPending < 3) return;
+      snapPending = 0;
+      snapDir = null;
       locked = true;
       doSnap(target, goDown ? 'down' : 'up');
     }, { passive: false });

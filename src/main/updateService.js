@@ -37,7 +37,7 @@ export function initAutoUpdater(mainWindow, ipcMain) {
 
   ipcMain.removeHandler('install-update')
   ipcMain.handle('install-update', () => {
-    autoUpdater.quitAndInstall(false, true)
+    autoUpdater.quitAndInstall(true, true)
   })
 
   ipcMain.removeHandler('check-for-updates')

@@ -11,6 +11,7 @@
     "about": "Sobre",
     "updateAvailable": "Atualização disponível — clique para instalar",
     "downloading": "Baixando atualização… {{percent}}%",
+    "downloadingLabel": "Baixando atualização…",
     "checking": "Verificando atualizações…",
     "checkUpdate": "Verificar atualizações",
     "updateDialog": {

@@ -7,6 +7,7 @@ import { Settings, Clipboard, Download, Camera, Loader2, Info, Bell, User } from
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,7 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
   const { state, actions } = useApp()
   const { t } = useTranslation()
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false)
+  const [hoveringDownload, setHoveringDownload] = useState(false)
   const sensors = useSensors(useSensor(MouseSensor, { activationConstraint: { distance: 8 } }))
   async function handleDragEnd(event) {
     const { active, over } = event
@@ -73,28 +75,48 @@ export default function Sidebar({ screen, onNavigate, open, width, updateStatus,
         {open && (
           <>
             <span className="text-[13px] font-semibold tracking-tight truncate flex-1">Claritas</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="app-region-no-drag h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={state.updateInfo ? () => setUpdateDialogOpen(true) : onCheckUpdate}
-              disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
-              title={
-                state.updateInfo ? t('sidebar.updateAvailable')
-                : updateStatus === 'downloading' ? t('sidebar.downloading', { percent: downloadPercent })
-                : updateStatus === 'checking' ? t('sidebar.checking')
-                : t('sidebar.checkUpdate')
-              }
-            >
-              {state.updateInfo
-                ? <Download size={12} className="animate-levitate text-primary" />
-                : updateStatus === 'downloading'
-                  ? <span className="text-[9px] font-bold tabular-nums text-primary leading-none">{downloadPercent}%</span>
-                  : updateStatus === 'checking'
-                    ? <Loader2 size={12} className="animate-spin" />
-                    : <Download size={12} />
-              }
-            </Button>
+            <TooltipProvider delayDuration={0}>
+              <Tooltip open={hoveringDownload && updateStatus === 'downloading'}>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="app-region-no-drag h-6 w-6 shrink-0 text-muted-foreground hover:text-foreground"
+                    onClick={state.updateInfo ? () => setUpdateDialogOpen(true) : onCheckUpdate}
+                    disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
+                    title={
+                      updateStatus === 'downloading' ? undefined
+                      : state.updateInfo ? t('sidebar.updateAvailable')
+                      : updateStatus === 'checking' ? t('sidebar.checking')
+                      : t('sidebar.checkUpdate')
+                    }
+                    onMouseEnter={() => setHoveringDownload(true)}
+                    onMouseLeave={() => setHoveringDownload(false)}
+                  >
+                    {state.updateInfo
+                      ? <Download size={12} className="animate-levitate text-primary" />
+                      : updateStatus === 'downloading'
+                        ? <Download size={12} className="text-primary animate-pulse" />
+                        : updateStatus === 'checking'
+                          ? <Loader2 size={12} className="animate-spin" />
+                          : <Download size={12} />
+                    }
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="flex flex-col gap-1.5 p-2 min-w-[140px]">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{t('sidebar.downloadingLabel')}</span>
+                    <span className="font-bold tabular-nums">{downloadPercent}%</span>
+                  </div>
+                  <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-300 rounded-full"
+                      style={{ width: `${downloadPercent}%` }}
+                    />
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </>
         )}
       </div>

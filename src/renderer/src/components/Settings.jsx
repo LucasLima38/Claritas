@@ -1196,6 +1196,14 @@ export default function Settings({ onBack }) {
                   <SelectItem value="pt-PT">{t('settings.languages.pt-PT')}</SelectItem>
                   <SelectItem value="en">{t('settings.languages.en')}</SelectItem>
                   <SelectItem value="de">{t('settings.languages.de')}</SelectItem>
+                  <SelectItem value="es">{t('settings.languages.es')}</SelectItem>
+                  <SelectItem value="fr">{t('settings.languages.fr')}</SelectItem>
+                  <SelectItem value="it">{t('settings.languages.it')}</SelectItem>
+                  <SelectItem value="ru">{t('settings.languages.ru')}</SelectItem>
+                  <SelectItem value="ja">{t('settings.languages.ja')}</SelectItem>
+                  <SelectItem value="ko">{t('settings.languages.ko')}</SelectItem>
+                  <SelectItem value="zh-CN">{t('settings.languages.zh-CN')}</SelectItem>
+                  <SelectItem value="zh-TW">{t('settings.languages.zh-TW')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

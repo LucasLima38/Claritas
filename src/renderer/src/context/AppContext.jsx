@@ -438,6 +438,9 @@ export function AppProvider({ children }) {
         const systemIsDark = window.matchMedia('(prefers-color-scheme: dark)').matches
         applyTheme(settings.theme, systemIsDark)
       }
+      if (updates.language) {
+        i18n.changeLanguage(settings.language)
+      }
     },
 
     hideSaveToast() {

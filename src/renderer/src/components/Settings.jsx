@@ -19,7 +19,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { useApp } from '../context/AppContext.jsx'
-import i18n from '../i18n'
 import {
   DndContext,
   closestCenter,
@@ -1181,16 +1180,15 @@ export default function Settings({ onBack }) {
                 {t('settings.themeNote')}
               </p>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">{t('settings.language')}</span>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-[10.5px]">{t('settings.language')}</Label>
               <Select
                 value={state.settings.language ?? 'pt-BR'}
                 onValueChange={(lang) => {
-                  i18n.changeLanguage(lang)
                   actions.updateSettings({ language: lang })
                 }}
               >
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="h-7 text-xs w-56 app-region-no-drag">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

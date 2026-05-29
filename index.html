@@ -138,7 +138,7 @@ img{max-width:100%;display:block}
 .feature-steps{width:32%;flex-shrink:0;display:flex;flex-direction:column;gap:0;justify-content:center}
 .feature-media{flex:1;display:flex;flex-direction:column;justify-content:center}
 .feature-img-wrap{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;flex:1;min-height:0;width:100%}
-.feature-img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.3s ease}
+.feature-img{width:100%;height:100%;object-fit:contain;display:block;transition:opacity 0.3s ease}
 .progress-dots{display:flex;gap:8px;justify-content:center;padding:1rem 0}
 .pdot{width:8px;height:8px;border-radius:50%;background:var(--border-hi);transition:background 0.3s,transform 0.3s;cursor:pointer}
 .pdot.active{background:var(--accent);transform:scale(1.3)}
@@ -339,25 +339,25 @@ footer span{color:var(--border-hi)}
     </div>
     <div class="feature-body">
       <div class="feature-steps">
-        <div class="step-block active" data-step="1" data-img="assets/screenshots/app-clipboard.png">
+        <div class="step-block active" data-step="1" data-img="assets/screenshots/modo-clipboard-passo-1-selecionar-esquemático.png">
           <div class="step-num">Passo 1</div>
           <div class="step-title">Abra seu projeto no Altium</div>
-          <div class="step-desc">Abra o projeto que deseja exportar no Altium Designer.</div>
+          <div class="step-desc">Abra o projeto que deseja expor no Altium Designer. Selecione o esquemático para copiar.</div>
         </div>
-        <div class="step-block" data-step="2" data-img="assets/screenshots/app-clipboard.png">
+        <div class="step-block" data-step="2" data-img="assets/screenshots/modo-clipboard-passo-2-ctrl-shift-v-previa-do-esquematico-em-svg.png">
           <div class="step-num">Passo 2</div>
-          <div class="step-title">Copie o esquemático (Ctrl+C)</div>
-          <div class="step-desc">Selecione e pressione Ctrl+C. O Claritas detecta automaticamente o conteúdo do clipboard.</div>
+          <div class="step-title">Cole usando Ctrl + Shift + V</div>
+          <div class="step-desc">Selecione e pressione Ctrl + Shift + V. O Claritas detecta automaticamente o conteúdo do clipboard e abre o aplicativo para você ver a prévia do esquemático em SVG.</div>
         </div>
-        <div class="step-block" data-step="3" data-img="assets/screenshots/app-clipboard.png">
+        <div class="step-block" data-step="3" data-img="assets/screenshots/modo-clipboard-passo-3-projeto-salvo-no-diretorio-escolhido.png">
           <div class="step-num">Passo 3</div>
-          <div class="step-title">Prévia automática e salve com um clique</div>
-          <div class="step-desc">O SVG aparece instantaneamente na prévia. Salve no projeto com um único clique.</div>
+          <div class="step-title">Projeto salvo no diretório customizado do seu computador ou no Google Drive</div>
+          <div class="step-desc">Organize e estrutura as imagens dos documentos dos projetos de forma simples, prática e rápida!</div>
         </div>
       </div>
       <div class="feature-media">
         <div class="feature-img-wrap">
-          <img class="feature-img" src="assets/screenshots/app-clipboard.png" alt="Modo Clipboard" data-current="assets/screenshots/app-clipboard.png">
+          <img class="feature-img" src="assets/screenshots/modo-clipboard-passo-1-selecionar-esquemático.png" alt="Modo Clipboard" data-current="assets/screenshots/modo-clipboard-passo-1-selecionar-esquemático.png">
           <div class="progress-dots">
             <span class="pdot active" data-dot="1"></span>
             <span class="pdot" data-dot="2"></span>

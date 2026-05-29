@@ -139,7 +139,8 @@ img{max-width:100%;display:block}
 .feature-media{flex:1;display:flex;flex-direction:column;justify-content:center}
 .feature-img-wrap{background:var(--surface-2);border:1px solid var(--border);border-radius:16px;overflow:hidden;flex:1;min-height:0;width:100%}
 .feature-img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity 0.3s ease}
-#modo-clipboard .feature-img{object-fit:contain}
+#modo-clipboard .feature-img-wrap{flex:none;aspect-ratio:16/9;width:100%;min-height:0}
+#modo-clipboard .feature-img{object-fit:contain;height:100%}
 .progress-dots{display:flex;gap:8px;justify-content:center;padding:1rem 0}
 .pdot{width:8px;height:8px;border-radius:50%;background:var(--border-hi);transition:background 0.3s,transform 0.3s;cursor:pointer}
 .pdot.active{background:var(--accent);transform:scale(1.3)}
@@ -1135,7 +1136,7 @@ footer span{color:var(--border-hi)}
     [21,0,9,1,22,7,5,23,8,20,10,11,14,13,4,12,3,19,2,17,18,6,24,15,29,25,28,26,27,16,30,31,32]
   ];
   function makeSVG(ord){
-    var s='<svg class="section-watermark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 850" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">';
+    var s='<svg class="section-watermark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 850" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">';
     for(var i=0;i<33;i++) s+='<g transform="translate('+pos[i][0]+','+pos[i][1]+')" stroke-width="2">'+C[ord[i]]+'</g>';
     return s+'</g></svg>';
   }

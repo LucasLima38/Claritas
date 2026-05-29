@@ -438,7 +438,7 @@ footer span{color:var(--border-hi)}
         <div class="step-block" data-step="3" data-img="assets/screenshots/modo-google-drive-passo-3-sincronizacao.png">
           <div class="step-num">Passo 3</div>
           <div class="step-title">Salve e sincronize automaticamente</div>
-          <div class="step-desc">Ao salvar um arquivo, o Claritas faz o upload direto para a pasta do Drive que você escolheu. Simples assim — seus projetos sempre organizados e acessíveis de qualquer lugar.</div>
+          <div class="step-desc">Ao salvar um arquivo, o Claritas faz o upload direto para a pasta do Drive escolhida. E o melhor: você pode compartilhar essa pasta com seus colegas de trabalho, dando acesso a todos os arquivos do projeto em tempo real.</div>
         </div>
       </div>
       <div class="feature-media">
@@ -1140,8 +1140,9 @@ footer span{color:var(--border-hi)}
     for(var i=0;i<33;i++) s+='<g transform="translate('+pos[i][0]+','+pos[i][1]+')" stroke-width="2">'+C[ord[i]]+'</g>';
     return s+'</g></svg>';
   }
-  document.querySelectorAll('.feature-scroll-track:not([style*="height:auto"]) .feature-inner').forEach(function(el,i){
-    el.insertAdjacentHTML('afterbegin',makeSVG(orders[i]||orders[0]));
+  document.querySelectorAll('.feature-scroll-track:not([style*="height:auto"])').forEach(function(el,i){
+    var section=el.closest('.feature-section');
+    if(section) section.insertAdjacentHTML('afterbegin',makeSVG(orders[i]||orders[0]));
   });
 })();
 </script>

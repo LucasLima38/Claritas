@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claritas — Política de Privacidade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    (function () {
+      var t = localStorage.getItem('claritas-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    })();
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #080c14;
+      --surface:      #0e1420;
+      --surface-2:    #131a28;
+      --border:       #1c2538;
+      --border-hi:    #263248;
+      --text:         #dde4f0;
+      --muted:        #506070;
+      --muted-2:      #8ba0bc;
+      --accent:       #00c4db;
+      --accent-dim:   rgba(0, 196, 219, 0.08);
+      --accent-glow:  rgba(0, 196, 219, 0.22);
+      --header-bg:    rgba(8, 12, 20, 0.82);
+      --hero-glow:    rgba(0, 196, 219, 0.06);
+      --radius:       12px;
+    }
+
+    html[data-theme="light"] {
+      --bg:             #f9f4e8;
+      --surface:        #f2e9d2;
+      --surface-2:      #ede0c4;
+      --border:         #e2cfa0;
+      --border-hi:      #d4b87a;
+      --text:           #2c1f0e;
+      --muted:          #8a7055;
+      --muted-2:        #6b5540;
+      --accent:         #b87333;
+      --accent-dim:     rgba(184, 115, 51, 0.10);
+      --accent-glow:    rgba(184, 115, 51, 0.22);
+      --header-bg:      rgba(249, 244, 232, 0.88);
+      --hero-glow:      rgba(184, 115, 51, 0.06);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 4rem;
+      background-image: radial-gradient(circle at 50% -60px, var(--hero-glow) 0%, transparent 65%);
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── HEADER ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 1.5rem;
+      background: var(--header-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.3px;
+    }
+
+    .logo:hover { text-decoration: none; }
+
+    .logo-icon {
+      width: 30px;
+      height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-icon svg { display: block; }
+
+    .back-link {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--muted-2);
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .back-link:hover { color: var(--accent); text-decoration: none; }
+
+    /* ── MAIN ── */
+    main {
+      max-width: 760px;
+      margin: 3rem auto;
+      padding: 0 1.5rem;
+    }
+
+    .page-eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+    }
+
+    .page-title {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.8px;
+      margin-bottom: 0.4rem;
+      line-height: 1.2;
+    }
+
+    .page-subtitle {
+      color: var(--muted-2);
+      font-size: 0.875rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── SECTIONS ── */
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    section:hover {
+      border-color: var(--border-hi);
+    }
+
+    h2 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.85rem;
+      letter-spacing: 0.01em;
+    }
+
+    p {
+      color: var(--muted-2);
+      font-size: 0.9rem;
+      margin-bottom: 0.6rem;
+      line-height: 1.7;
+    }
+
+    p:last-child { margin-bottom: 0; }
+
+    ul {
+      margin-top: 0.4rem;
+      padding-left: 0;
+      list-style: none;
+    }
+
+    li {
+      color: var(--muted-2);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      margin-bottom: 0.55rem;
+      padding-left: 1.2rem;
+      position: relative;
+    }
+
+    li::before {
+      content: '·';
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    li:last-child { margin-bottom: 0; }
+
+    strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    em { color: var(--muted-2); font-style: italic; }
+
+    .chip {
+      display: inline-block;
+      background: var(--accent-dim);
+      border: 1px solid rgba(0, 196, 219, 0.25);
+      border-radius: 5px;
+      padding: 0.05rem 0.45rem;
+      font-size: 0.78rem;
+      font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
+      color: var(--accent);
+      margin: 0.1rem 0.15rem 0.1rem 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      color: var(--muted);
+      font-size: 0.82rem;
+      padding: 0 1.5rem;
+    }
+
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--accent); }
+    footer span { margin: 0 0.4rem; color: var(--border-hi); }
+
+    @media (max-width: 520px) {
+      .page-title { font-size: 1.5rem; }
+      section { padding: 1.25rem 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+      </span>
+      Claritas
+    </a>
+    <a href="index.html" class="back-link">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Voltar ao site
+    </a>
+  </div>
+</header>
+
+<main>
+
+  <p class="page-eyebrow">Legal</p>
+  <h1 class="page-title">Política de Privacidade</h1>
+  <p class="page-subtitle">Última atualização: 21 de maio de 2026</p>
+
+  <section>
+    <h2>Visão geral</h2>
+    <p>
+      O Claritas é um aplicativo desktop gratuito e open-source para Windows que ajuda engenheiros
+      a capturar, anotar e organizar diagramas esquemáticos de suas ferramentas EDA.
+      Esta página explica como o app trata seus dados.
+    </p>
+    <p>
+      <strong>Resumo:</strong> seus arquivos ficam no seu dispositivo e na sua própria conta
+      do Google Drive. Não rodamos servidores, não coletamos dados analíticos e nunca vemos seus dados.
+    </p>
+  </section>
+
+  <section>
+    <h2>Quais dados o app acessa</h2>
+    <ul>
+      <li><strong>Conteúdo do clipboard</strong> — lido localmente para detectar esquemáticos copiados da sua ferramenta EDA. Nada é transmitido.</li>
+      <li><strong>Screenshots</strong> — capturados sob demanda (Modo Captura). Armazenados apenas no seu dispositivo ou Google Drive — nunca enviados a servidores de terceiros.</li>
+      <li><strong>Conta Google (e-mail e nome de exibição)</strong> — exibidos na UI do app após o login. Não são armazenados em nenhum banco de dados.</li>
+      <li><strong>Arquivos do Google Drive</strong> — o Claritas pode ler, criar e excluir arquivos <em>que ele mesmo criou</em> (escopo <span class="chip">drive.file</span>), ler metadados de arquivos (escopo <span class="chip">drive.metadata.readonly</span>) e ler dados de aplicativo (escopo <span class="chip">drive.appdata</span>). Não é possível acessar arquivos criados por outros apps ou pessoas.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>O que é armazenado e onde</h2>
+    <ul>
+      <li><strong>Tokens OAuth</strong> — criptografados no seu dispositivo local usando a criptografia integrada do Windows (API <span class="chip">safeStorage</span>). Nunca são escritos em texto simples e nunca saem da sua máquina.</li>
+      <li><strong>Imagens exportadas</strong> — salvas em uma pasta que você escolhe no disco local e/ou na sua conta do Google Drive.</li>
+      <li><strong>Configurações do app</strong> (tema, nome do projeto, atalhos) — armazenadas em um arquivo de configuração local no seu dispositivo.</li>
+    </ul>
+    <p>Não existem servidores do Claritas. Nenhum dado é enviado ao desenvolvedor ou a terceiros.</p>
+  </section>
+
+  <section>
+    <h2>Google OAuth</h2>
+    <p>
+      O Claritas usa o Google OAuth 2.0 com o fluxo PKCE (tipo Desktop App). Isso significa:
+    </p>
+    <ul>
+      <li>Nenhum segredo de cliente está embutido de forma insegura no binário — o app usa credenciais de Desktop App conforme documentado pelo Google.</li>
+      <li>A autenticação ocorre inteiramente entre seu navegador e os servidores do Google.</li>
+      <li>O Claritas nunca recebe sua senha do Google.</li>
+      <li>Você pode revogar o acesso a qualquer momento na
+        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener">página de permissões da sua conta Google</a>.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Retenção e exclusão de dados</h2>
+    <ul>
+      <li>Fazer logout do app (<em>Configurações → Sair</em>) exclui imediatamente todos os tokens OAuth do seu dispositivo e revoga o token de acesso com o Google.</li>
+      <li>Arquivos salvos no Google Drive permanecem lá até você excluí-los — pelo Claritas ou diretamente no Google Drive.</li>
+      <li>Desinstalar o Claritas remove o app e suas configurações locais. Arquivos já salvos no Drive não são afetados.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Serviços de terceiros</h2>
+    <p>O Claritas usa os seguintes serviços de terceiros:</p>
+    <ul>
+      <li>
+        <strong>Google Drive API</strong> — para armazenar e organizar arquivos exportados na sua própria conta do Drive.
+        Regido pela <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Política de Privacidade do Google</a>.
+      </li>
+      <li>
+        <strong>GitHub Releases</strong> — para entregar atualizações automáticas do app. Somente o número de versão do app é verificado;
+        nenhum dado pessoal é transmitido.
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Privacidade de crianças</h2>
+    <p>
+      O Claritas é uma ferramenta de engenharia profissional não direcionada a crianças menores de 13 anos.
+      Não coletamos intencionalmente nenhuma informação de crianças.
+    </p>
+  </section>
+
+  <section>
+    <h2>Alterações nesta política</h2>
+    <p>
+      Se esta política mudar de forma relevante, a versão atualizada será publicada aqui com uma
+      nova data de "Última atualização". O uso contínuo do app após as alterações constitui
+      aceitação da política revisada.
+    </p>
+  </section>
+
+  <section>
+    <h2>Contato</h2>
+    <p>
+      Dúvidas sobre esta política? Abra uma issue no
+      <a href="https://github.com/LucasLima38/Claritas/issues" target="_blank" rel="noopener">GitHub</a>
+      ou envie e-mail para
+      <a href="mailto:vieiralucas9797@gmail.com">vieiralucas9797@gmail.com</a>.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <p>
+    Claritas é open-source sob licença
+    <a href="https://github.com/LucasLima38/Claritas/blob/master/LICENSE" target="_blank" rel="noopener">MIT</a>
+    <span>·</span>
+    <a href="https://github.com/LucasLima38/Claritas" target="_blank" rel="noopener">GitHub</a>
+    <span>·</span>
+    <a href="index.html">Site</a>
+  </p>
+</footer>
+
+</body>
+</html>

@@ -12,7 +12,7 @@ vi.mock('child_process', () => ({ spawn: mockSpawn }))
 // Electron mock not needed — new impl doesn't use electron.clipboard
 vi.mock('electron', () => ({}))
 
-const { readEMF, hasEMF } = await import('../../src/main/clipboardService.js')
+const { readEMF } = await import('../../src/main/clipboardService.js')
 
 function makePs(base64Output = '', exitCode = 0, delay = 10) {
   const proc = new EventEmitter()
@@ -75,16 +75,4 @@ describe('ClipboardService', () => {
     })
   })
 
-  describe('hasEMF()', () => {
-    it('returns true when readEMF resolves with a Buffer', async () => {
-      const emfBytes = Buffer.from([0x01])
-      mockSpawn.mockReturnValue(makePs(emfBytes.toString('base64')))
-      expect(await hasEMF()).toBe(true)
-    })
-
-    it('returns false when readEMF resolves with null', async () => {
-      mockSpawn.mockReturnValue(makePs(''))
-      expect(await hasEMF()).toBe(false)
-    })
-  })
 })

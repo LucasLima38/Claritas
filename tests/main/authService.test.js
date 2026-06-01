@@ -91,12 +91,6 @@ beforeEach(async () => {
   authService = await import('../../src/main/authService.js')
 })
 
-describe('initAuthService', () => {
-  it('sets the store without throwing', () => {
-    expect(() => authService.initAuthService(mockStore)).not.toThrow()
-  })
-})
-
 describe('getAuthClient', () => {
   it('returns null when no tokens stored', () => {
     mockStore.get.mockReturnValue(undefined)

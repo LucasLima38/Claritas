@@ -25,8 +25,6 @@ const LOGIN_TIMEOUT_MS = 5 * 60 * 1000
 
 const _store = new Store({ name: 'auth' })
 
-export function initAuthService() {}
-
 function generatePKCE() {
   const codeVerifier = crypto.randomBytes(32).toString('base64url')
   const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url')

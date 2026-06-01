@@ -103,10 +103,7 @@ export async function recognizeDataURL(dataURL) {
       proc.stderr.on('data', d => { stderr += d })
       proc.on('close', code => {
         if (code !== 0) reject(new Error(stderr.trim() || `PowerShell exited ${code}`))
-        else {
-          if (stderr) console.log('[OCR diag]', stderr.trim())
-          resolve(stdout.trim())
-        }
+        else resolve(stdout.trim())
       })
       proc.on('error', reject)
     })

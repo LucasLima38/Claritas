@@ -93,10 +93,3 @@ export function readEMF() {
     }, 10000)
   })
 }
-
-/**
- * Returns true if CF_ENHMETAFILE data is currently on the clipboard.
- */
-export async function hasEMF() {
-  return (await readEMF()) !== null
-}

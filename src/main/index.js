@@ -17,7 +17,7 @@ import { ClipboardMonitor } from './clipboardMonitor.js'
 import { createTray, updateTrayMenu, startTrayBlink, stopTrayBlink } from './tray.js'
 import { initAutoUpdater } from './updateService.js'
 import { recognizeDataURL, terminateOcr } from './ocrService.js'
-import { initAuthService, loginWithGoogle, loadStoredSession, logout, getAuthClient, getStoredUser } from './authService.js'
+import { loginWithGoogle, loadStoredSession, logout, getAuthClient, getStoredUser } from './authService.js'
 import { uploadFile, shareFileWithEmail, listDriveFolders, createDriveFolder, deleteDriveFolder, deleteDriveFile, uploadFileToDriveFolder, shareFolderWithEmail } from './driveService.js'
 import { pullProjects, pushProjects } from './syncService.js'
 
@@ -27,7 +27,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new ProjectStore()
 const authStore = new _AuthStoreClass({ name: 'auth' })
-initAuthService(authStore)
 
 const VALID_EXPORT_FORMATS = ['svg', 'png', 'jpg', 'pdf']
 
@@ -237,15 +236,6 @@ app.whenReady().then(() => {
         mainWindow?.webContents.send('projects-updated', {
           projects: store.getProjects(),
           activeProjectId: store.getActiveProjectId(),
-        })
-        result.newProjectNames?.forEach((name) => {
-          mainWindow?.webContents.send('notification', {
-            id: crypto.randomUUID(),
-            type: 'info',
-            message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
-            read: false,
-            timestamp: Date.now(),
-          })
         })
       }
       mainWindow?.webContents.send('account-changed', user)
@@ -799,15 +789,6 @@ ipcMain.handle('google-login', async () => {
         projects: store.getProjects(),
         activeProjectId: store.getActiveProjectId(),
       })
-      syncResult.newProjectNames?.forEach((name) => {
-        mainWindow?.webContents.send('notification', {
-          id: crypto.randomUUID(),
-          type: 'info',
-          message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
-          read: false,
-          timestamp: Date.now(),
-        })
-      })
     } else {
       await pushProjects(authClient, store.getProjects()).catch(() => {})
     }
@@ -844,15 +825,6 @@ ipcMain.handle('sync-projects', async () => {
       mainWindow?.webContents.send('projects-updated', {
         projects: store.getProjects(),
         activeProjectId: store.getActiveProjectId(),
-      })
-      result.newProjectNames?.forEach((name) => {
-        mainWindow?.webContents.send('notification', {
-          id: crypto.randomUUID(),
-          type: 'info',
-          message: `Projeto '${name}' sincronizado — configure a pasta de saída.`,
-          read: false,
-          timestamp: Date.now(),
-        })
       })
     } else {
       pushProjects(authClient, store.getProjects()).catch(() => {})

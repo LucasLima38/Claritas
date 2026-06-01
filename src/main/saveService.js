@@ -3,16 +3,6 @@ import path from 'path'
 import sharp from 'sharp'
 
 /**
- * Generates a filename from a prefix and counter.
- * Counter is zero-padded to 3 digits (e.g., prefix=BLDC_ counter=3 → BLDC_003.svg).
- * Counters above 999 are not padded.
- */
-export function generateFilename(prefix, counter) {
-  const padded = String(counter).padStart(3, '0')
-  return `${prefix}${padded}.svg`
-}
-
-/**
  * Generates a filename from a prefix, counter, and file extension.
  * Counter is zero-padded to 3 digits (e.g., prefix=BLDC_ counter=3 ext=png → BLDC_003.png).
  * Counters above 999 are not padded.
@@ -34,23 +24,6 @@ export async function checkOutputDir(dir) {
   } catch {
     return { exists: false }
   }
-}
-
-/**
- * Saves SVG content to disk.
- * Creates the output directory if it does not exist.
- * @returns {Promise<string>} The full absolute path of the saved file.
- */
-export async function saveSVG(svgContent, outputDir, filename) {
-  await fsp.mkdir(outputDir, { recursive: true })
-  const fullPath = path.join(outputDir, filename)
-  try {
-    await fsp.writeFile(fullPath, svgContent, 'utf8')
-  } catch (err) {
-    const code = err.code ?? 'WRITE_ERROR'
-    throw new Error(`${code}: ${err.message}`)
-  }
-  return fullPath
 }
 
 /**

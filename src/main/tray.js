@@ -1,9 +1,5 @@
 import { app, Tray, Menu, nativeImage } from 'electron'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import { is } from '@electron-toolkit/utils'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
+import { getIconPath } from './paths.js'
 
 let tray = null
 let _blinkInterval = null
@@ -15,10 +11,7 @@ let _normalIcon = null
  * @param {ProjectStore} projectStore
  */
 export function createTray(mainWindow, projectStore) {
-  const iconPath = is.dev
-    ? path.join(__dirname, '../../resources/icon.png')
-    : path.join(process.resourcesPath, 'icon.png')
-  const icon = nativeImage.createFromPath(iconPath).resize({ width: 16, height: 16 })
+  const icon = nativeImage.createFromPath(getIconPath()).resize({ width: 16, height: 16 })
   _normalIcon = icon
 
   tray = new Tray(icon)

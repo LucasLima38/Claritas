@@ -1,15 +1,18 @@
 import { Toaster as Sonner } from "sonner"
 import { useEffect, useState } from "react"
 
+const DARK_THEME_CLASSES = ['dark', 'theme-charcoal', 'theme-black-moon', 'theme-blue-moon']
+
+function resolveTheme() {
+  const classList = document.documentElement.classList
+  return DARK_THEME_CLASSES.some(c => classList.contains(c)) ? 'dark' : 'light'
+}
+
 const Toaster = ({ ...props }) => {
-  const [theme, setTheme] = useState(() =>
-    document.documentElement.classList.contains('dark') ? 'dark' : 'light'
-  )
+  const [theme, setTheme] = useState(resolveTheme)
 
   useEffect(() => {
-    const obs = new MutationObserver(() => {
-      setTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light')
-    })
+    const obs = new MutationObserver(() => setTheme(resolveTheme()))
     obs.observe(document.documentElement, { attributeFilter: ['class'] })
     return () => obs.disconnect()
   }, [])

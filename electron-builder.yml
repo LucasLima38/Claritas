@@ -27,8 +27,7 @@ win:
   icon: assets/icon.png
 
 nsis:
-  oneClick: false
-  allowToChangeInstallationDirectory: true
+  oneClick: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: Claritas

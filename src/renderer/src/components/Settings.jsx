@@ -440,7 +440,7 @@ function DriveFolderBrowser({ onSelectLocation, onSelectExisting }) {
                   {onSelectExisting && (
                     <button
                       onClick={() => onSelectExisting(f)}
-                      className="text-[9.5px] text-primary hover:underline px-1 shrink-0"
+                      className="text-[9.5px] text-accent-foreground font-medium hover:underline px-1 shrink-0"
                       title={t('settings.drive.selectFolder')}
                     >
                       {t('settings.drive.select')}

@@ -516,6 +516,14 @@ ipcMain.handle('open-external', (_e, url) => shell.openExternal(url))
 
 ipcMain.handle('get-settings', () => store.getSettings())
 
+ipcMain.handle('set-titlebar-dim', (_event, { dimmed }) => {
+  if (!mainWindow) return
+  const overlay = dimmed
+    ? { color: '#000000', symbolColor: '#666666', height: 40 }
+    : titleBarColors(store.getSettings().theme ?? 'system', nativeTheme.shouldUseDarkColors)
+  mainWindow.setTitleBarOverlay(overlay)
+})
+
 ipcMain.handle('update-settings', (_event, updates) => {
   store.updateSettings(updates)
   if (updates.theme !== undefined) {

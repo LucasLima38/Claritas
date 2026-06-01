@@ -46,3 +46,4 @@ CLAUDE.md
 
 # Tauri build artifacts
 src-tauri/target/
+node_modules

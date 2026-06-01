@@ -107,6 +107,11 @@ export default function App() {
 
   useEffect(() => () => clearTimeout(checkTimeoutRef.current), [])
 
+  useEffect(() => {
+    const dimmed = aboutOpen || notifOpen || accountOpen
+    window.electronAPI.setTitleBarDim(dimmed)
+  }, [aboutOpen, notifOpen, accountOpen])
+
   const handleResizeMouseDown = useCallback((e) => {
     e.preventDefault()
     isResizing.current = true
@@ -209,7 +214,7 @@ export default function App() {
       />
       <About open={aboutOpen} onOpenChange={setAboutOpen} onCheckUpdate={handleCheckUpdate} updateStatus={updateStatus} downloadPercent={downloadPercent} />
       <AccountPanel open={accountOpen} onOpenChange={setAccountOpen} />
-      <Toaster richColors position="bottom-center" />
+      <Toaster position="bottom-center" />
       <SaveToast />
     </div>
   )

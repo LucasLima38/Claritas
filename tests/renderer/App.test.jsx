@@ -74,6 +74,7 @@ beforeEach(() => {
     onThemeChanged:            vi.fn(() => () => {}),
     onAccountChanged:          vi.fn(() => () => {}),
     installUpdate:             vi.fn(),
+    setTitleBarDim:            vi.fn(),
   }
 })
 

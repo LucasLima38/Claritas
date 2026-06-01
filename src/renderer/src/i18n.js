@@ -28,8 +28,8 @@ i18n.use(initReactI18next).init({
     'zh-CN': { translation: zhCN },
     'zh-TW': { translation: zhTW },
   },
-  lng: 'pt-BR',
-  fallbackLng: 'pt-BR',
+  lng: 'en',
+  fallbackLng: 'en',
   interpolation: { escapeValue: false },
 })
 

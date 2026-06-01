@@ -1183,7 +1183,7 @@ export default function Settings({ onBack }) {
             <div className="flex flex-col gap-1.5">
               <Label className="text-[10.5px]">{t('settings.language')}</Label>
               <Select
-                value={state.settings.language ?? 'pt-BR'}
+                value={state.settings.language ?? 'en'}
                 onValueChange={(lang) => {
                   actions.updateSettings({ language: lang })
                 }}

@@ -15,7 +15,7 @@ const SETTINGS_DEFAULTS = {
   theme: 'system',
   globalShortcut: 'Ctrl+Shift+V',
   sidebarWidth: 200,
-  language: 'pt-BR',
+  language: 'en',
 }
 
 export class ProjectStore {
@@ -92,7 +92,7 @@ export class ProjectStore {
       theme: this._settings.get('theme', 'system'),
       globalShortcut: this._settings.get('globalShortcut', ''),
       sidebarWidth: this._settings.get('sidebarWidth', 200),
-      language: this._settings.get('language', 'pt-BR'),
+      language: this._settings.get('language', 'en'),
     }
   }
 

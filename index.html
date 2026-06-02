@@ -1,15 +1,15 @@
 ﻿<!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Claritas — Capture. Organize. Export.</title>
-<meta name="description" content="Claritas monitora o clipboard do Altium Designer, converte esquemáticos para SVG instantaneamente e os organiza por projeto — sem configuração, sem cliques extras.">
+<title data-i18n="meta.title">Claritas — Capture. Organize. Export.</title>
+<meta name="description" data-i18n-content="meta.description" content="Claritas monitors the Altium Designer clipboard, instantly converts schematics to SVG, and organizes them by project — no setup, no extra clicks.">
 <link rel="icon" href="assets/icon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script>var t=localStorage.getItem('claritas-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}</script>
+<script>var t=localStorage.getItem('claritas-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');}var l=localStorage.getItem('claritas-lang')||'en';document.documentElement.setAttribute('lang',l);</script>
 <style>
 /* === CSS VARS === */
 :root {
@@ -233,6 +233,36 @@ footer a{color:var(--muted-2)}
 footer a:hover{color:var(--accent)}
 footer span{color:var(--border-hi)}
 
+/* === LANGUAGE SELECTOR === */
+.lang-selector{position:relative}
+.lang-btn{
+  display:flex;align-items:center;gap:0.35rem;
+  border:1px solid var(--border);border-radius:8px;
+  background:transparent;color:var(--muted-2);
+  font-family:inherit;font-size:0.8rem;font-weight:600;
+  padding:0.3rem 0.65rem;cursor:pointer;
+  transition:border-color 0.2s,color 0.2s;white-space:nowrap;
+}
+.lang-btn:hover{border-color:var(--accent);color:var(--accent)}
+.lang-btn .chevron{font-size:0.65rem;transition:transform 0.2s}
+.lang-selector.open .lang-btn .chevron{transform:rotate(180deg)}
+.lang-dropdown{
+  display:none;position:absolute;top:calc(100% + 6px);right:0;
+  background:var(--surface);border:1px solid var(--border-hi);border-radius:10px;
+  overflow:hidden;z-index:300;min-width:170px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.28);
+}
+.lang-selector.open .lang-dropdown{display:block}
+.lang-opt{
+  display:flex;align-items:center;gap:0.6rem;
+  padding:0.55rem 1rem;font-size:0.85rem;font-weight:500;
+  color:var(--muted-2);cursor:pointer;border:none;
+  background:transparent;font-family:inherit;width:100%;text-align:left;
+  transition:background 0.15s,color 0.15s;
+}
+.lang-opt:hover{background:var(--accent-dim);color:var(--text)}
+.lang-opt.active{color:var(--accent);font-weight:700}
+
 /* === MOBILE POLISH === */
 @media(max-width:519px){
   .hero h1{font-size:1.9rem}
@@ -254,14 +284,27 @@ footer span{color:var(--border-hi)}
       </a>
       <button class="hamburger" id="hamburger-btn" aria-label="Menu" aria-expanded="false">☰</button>
       <nav class="nav-links" id="nav-links">
-        <a href="#visao-geral">Visão Geral</a>
-        <a href="#modo-clipboard">Modo Clipboard</a>
-        <a href="#modo-captura">Modo Captura</a>
+        <a href="#visao-geral" data-i18n="nav.overview">Overview</a>
+        <a href="#modo-clipboard" data-i18n="nav.clipboard">Clipboard Mode</a>
+        <a href="#modo-captura" data-i18n="nav.capture">Capture Mode</a>
         <a href="#google-drive-sync">Google Drive Sync</a>
         <a href="#kofi-section">Ko-fi Ω</a>
       </nav>
     </div>
     <div class="header-right">
+      <div class="lang-selector" id="lang-selector">
+        <button class="lang-btn" id="lang-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span id="lang-flag">🇺🇸</span><span id="lang-code">EN</span><span class="chevron">▾</span>
+        </button>
+        <div class="lang-dropdown" role="listbox" id="lang-dropdown">
+          <button class="lang-opt" data-lang="en">🇺🇸 English</button>
+          <button class="lang-opt" data-lang="pt-BR">🇧🇷 Português (BR)</button>
+          <button class="lang-opt" data-lang="es">🇪🇸 Español</button>
+          <button class="lang-opt" data-lang="fr">🇫🇷 Francês</button>
+          <button class="lang-opt" data-lang="de">🇩🇪 Deutsch</button>
+          <button class="lang-opt" data-lang="zh-CN">🇨🇳 中文</button>
+        </div>
+      </div>
       <div class="theme-pills" role="group" aria-label="Tema">
         <button class="pill-btn" id="pill-light" data-theme-set="light">Claritas</button>
         <button class="pill-btn" id="pill-dark" data-theme-set="dark">Dark</button>
@@ -278,12 +321,12 @@ footer span{color:var(--border-hi)}
   </video>
   <div class="hero">
     <div class="hero-text reveal">
-      <div class="hero-badge">Gratuito &amp; Open-Source</div>
-      <h1>Seus esquemáticos,<br><span class="gradient">organizados em segundos</span></h1>
-      <p class="hero-sub">Claritas monitora o clipboard do Altium Designer, converte esquemáticos para SVG instantaneamente e os organiza por projeto — sem configuração, sem cliques extras.</p>
+      <div class="hero-badge" data-i18n="hero.badge">Free &amp; Open-Source</div>
+      <h1><span data-i18n="hero.title">Your schematics,</span><br><span class="gradient" data-i18n="hero.titleAccent">organized in seconds</span></h1>
+      <p class="hero-sub" data-i18n="hero.sub">Claritas monitors the Altium Designer clipboard, instantly converts schematics to SVG, and organizes them by project — no setup, no extra clicks.</p>
       <div class="hero-ctas">
-        <a href="https://github.com/LucasLima38/Claritas/releases/latest" class="btn-primary" target="_blank" rel="noopener">↓ Download grátis</a>
-        <a href="https://github.com/LucasLima38/Claritas" class="btn-secondary" target="_blank" rel="noopener">Ver no GitHub</a>
+        <a href="https://github.com/LucasLima38/Claritas/releases/latest" class="btn-primary" target="_blank" rel="noopener" data-i18n="hero.download">↓ Download free</a>
+        <a href="https://github.com/LucasLima38/Claritas" class="btn-secondary" target="_blank" rel="noopener" data-i18n="hero.github">View on GitHub</a>
       </div>
     </div>
   </div>
@@ -294,26 +337,26 @@ footer span{color:var(--border-hi)}
   <div class="feature-scroll-track">
   <div class="feature-inner">
     <div class="feature-section-header reveal">
-      <div class="section-eyebrow">Visão Geral</div>
-      <h2 class="section-title gradient">O que é o Claritas?</h2>
-      <p class="feature-subtitle gradient">Captura, converte e organiza seus esquemáticos do Altium em segundos — sem configuração.</p>
+      <div class="section-eyebrow" data-i18n="overview.eyebrow">Overview</div>
+      <h2 class="section-title gradient" data-i18n="overview.title">What is Claritas?</h2>
+      <p class="feature-subtitle gradient" data-i18n="overview.sub">Capture, convert and organize your Altium schematics in seconds — no setup.</p>
     </div>
     <div class="feature-body">
       <div class="feature-steps">
         <div class="step-block active" data-step="1" data-img="assets/screenshots/modo-clipboard-passo-2-ctrl-shift-v-previa-do-esquematico-em-svg.png">
-          <div class="step-num">⚡ Clipboard automático</div>
-          <div class="step-title">Detecta e converte em segundos</div>
-          <div class="step-desc">Copie o esquemático no Altium com Ctrl+C e o Claritas detecta automaticamente, converte para SVG e exibe a prévia ao vivo — sem nenhum clique extra. <strong>Dica: Use Ctrl + Shift + V para abrir o Claritas após o Ctrl + C.</strong></div>
+          <div class="step-num" data-i18n="overview.s1.num">⚡ Auto Clipboard</div>
+          <div class="step-title" data-i18n="overview.s1.title">Detects and converts in seconds</div>
+          <div class="step-desc" data-i18n="overview.s1.desc">Copy the schematic in Altium with Ctrl+C and Claritas automatically detects it, converts to SVG and shows a live preview — no extra clicks. <strong>Tip: Use Ctrl + Shift + V to open Claritas after Ctrl + C.</strong></div>
         </div>
         <div class="step-block" data-step="2" data-img="assets/screenshots/modo-clipboard-passo-3-projeto-salvo-no-diretorio-escolhido.png">
-          <div class="step-num">📁 Organizado por projeto</div>
-          <div class="step-title">Nomenclatura sequencial automática</div>
-          <div class="step-desc">Cada projeto tem sua própria pasta. Os arquivos são salvos com prefixos de modo sequencial, automático e customizável — sem precisar renomear manualmente.</div>
+          <div class="step-num" data-i18n="overview.s2.num">📁 Organized by project</div>
+          <div class="step-title" data-i18n="overview.s2.title">Automatic sequential naming</div>
+          <div class="step-desc" data-i18n="overview.s2.desc">Each project has its own folder. Files are saved with sequential, automatic, and customizable prefixes — no manual renaming needed.</div>
         </div>
         <div class="step-block" data-step="3" data-img="assets/screenshots/modo-google-drive-passo-2-pastas-no-drive.png">
-          <div class="step-num">☁️ Sync com Google Drive</div>
-          <div class="step-title">Seus arquivos em nuvem</div>
-          <div class="step-desc">Sincronize automaticamente com o Google Drive — sem servidor intermediário, sem expor dados, direto na sua conta!</div>
+          <div class="step-num" data-i18n="overview.s3.num">☁️ Google Drive Sync</div>
+          <div class="step-title" data-i18n="overview.s3.title">Your files in the cloud</div>
+          <div class="step-desc" data-i18n="overview.s3.desc">Automatically sync with Google Drive — no intermediate server, no data exposure, straight to your account!</div>
         </div>
       </div>
       <div class="feature-media">
@@ -336,26 +379,26 @@ footer span{color:var(--border-hi)}
   <div class="feature-scroll-track">
   <div class="feature-inner">
     <div class="feature-section-header reveal">
-      <div class="section-eyebrow">Modo Clipboard</div>
-      <h2 class="section-title gradient">Modo Clipboard</h2>
-      <p class="feature-subtitle gradient">Copie do Altium, o Claritas faz o resto.</p>
+      <div class="section-eyebrow" data-i18n="clipboard.eyebrow">Clipboard Mode</div>
+      <h2 class="section-title gradient" data-i18n="clipboard.title">Clipboard Mode</h2>
+      <p class="feature-subtitle gradient" data-i18n="clipboard.sub">Copy from Altium, Claritas does the rest.</p>
     </div>
     <div class="feature-body">
       <div class="feature-steps">
         <div class="step-block active" data-step="1" data-img="assets/screenshots/modo-clipboard-passo-1-selecionar-esquematico.png">
-          <div class="step-num">📐 Altium Designer</div>
-          <div class="step-title">Abra seu projeto no Altium</div>
-          <div class="step-desc">Abra o projeto que deseja expor no Altium Designer. Selecione o esquemático para copiar.</div>
+          <div class="step-num" data-i18n="clipboard.s1.num">📐 Altium Designer</div>
+          <div class="step-title" data-i18n="clipboard.s1.title">Open your project in Altium</div>
+          <div class="step-desc" data-i18n="clipboard.s1.desc">Open the project you want to export in Altium Designer. Select the schematic to copy.</div>
         </div>
         <div class="step-block" data-step="2" data-img="assets/screenshots/modo-clipboard-passo-2-ctrl-shift-v-previa-do-esquematico-em-svg.png">
-          <div class="step-num">⌨️ Atalho instantâneo</div>
-          <div class="step-title">Cole usando Ctrl + Shift + V</div>
-          <div class="step-desc">Selecione e pressione Ctrl + Shift + V. O Claritas detecta automaticamente o conteúdo do clipboard e abre o aplicativo para você ver a prévia do esquemático em SVG.</div>
+          <div class="step-num" data-i18n="clipboard.s2.num">⌨️ Instant shortcut</div>
+          <div class="step-title" data-i18n="clipboard.s2.title">Paste using Ctrl + Shift + V</div>
+          <div class="step-desc" data-i18n="clipboard.s2.desc">Select and press Ctrl + Shift + V. Claritas automatically detects the clipboard content and opens the app so you can preview the schematic as SVG.</div>
         </div>
         <div class="step-block" data-step="3" data-img="assets/screenshots/modo-clipboard-passo-3-projeto-salvo-no-diretorio-escolhido.png">
-          <div class="step-num">💾 Salvo e organizado</div>
-          <div class="step-title">Projeto salvo no diretório customizado do seu computador ou no Google Drive</div>
-          <div class="step-desc">Organize e estrutura as imagens dos documentos dos projetos de forma simples, prática e rápida!</div>
+          <div class="step-num" data-i18n="clipboard.s3.num">💾 Saved and organized</div>
+          <div class="step-title" data-i18n="clipboard.s3.title">Project saved to your custom directory or Google Drive</div>
+          <div class="step-desc" data-i18n="clipboard.s3.desc">Organize and structure project document images in a simple, practical and fast way!</div>
         </div>
       </div>
       <div class="feature-media">
@@ -378,26 +421,26 @@ footer span{color:var(--border-hi)}
   <div class="feature-scroll-track">
   <div class="feature-inner">
     <div class="feature-section-header reveal">
-      <div class="section-eyebrow">Modo Captura</div>
-      <h2 class="section-title gradient">Modo Captura</h2>
-      <p class="feature-subtitle gradient">Capture qualquer janela ou região da tela.</p>
+      <div class="section-eyebrow" data-i18n="capture.eyebrow">Capture Mode</div>
+      <h2 class="section-title gradient" data-i18n="capture.title">Capture Mode</h2>
+      <p class="feature-subtitle gradient" data-i18n="capture.sub">Capture any window or screen region.</p>
     </div>
     <div class="feature-body">
       <div class="feature-steps">
         <div class="step-block active" data-step="1" data-img="assets/screenshots/modo-captura-passo-1-selecioando-captura.png">
-          <div class="step-num">🎛️ Configure a captura</div>
-          <div class="step-title">Selecione modo, delay e resolução</div>
-          <div class="step-desc">Escolha entre os modos de captura, defina delay (ou não) e configure a resolução que desejar!</div>
+          <div class="step-num" data-i18n="capture.s1.num">🎛️ Configure the capture</div>
+          <div class="step-title" data-i18n="capture.s1.title">Select mode, delay and resolution</div>
+          <div class="step-desc" data-i18n="capture.s1.desc">Choose between capture modes, set a delay (or not) and configure the resolution you want!</div>
         </div>
         <div class="step-block" data-step="2" data-img="assets/screenshots/modo-captura-passo-2-editando-print.png">
-          <div class="step-num">🎨 Editor integrado</div>
-          <div class="step-title">Customize sua captura de tela</div>
-          <div class="step-desc">Editor completo com seta, retângulo, elipse, linha, lápis, texto, marca-texto, borracha e paleta de cores — anote, destaque e organize sua imagem antes de salvar.</div>
+          <div class="step-num" data-i18n="capture.s2.num">🎨 Built-in editor</div>
+          <div class="step-title" data-i18n="capture.s2.title">Customize your screenshot</div>
+          <div class="step-desc" data-i18n="capture.s2.desc">Full editor with arrow, rectangle, ellipse, line, pencil, text, highlighter, eraser and color palette — annotate, highlight and organize your image before saving.</div>
         </div>
         <div class="step-block" data-step="3" data-img="assets/screenshots/modo-captura-passo-3-OCR-feature.png">
-          <div class="step-num">🔍 Bônus OCR</div>
-          <div class="step-title">Bônus — Extração de Texto com OCR</div>
-          <div class="step-desc">Selecione qualquer região da imagem e extraia o texto em segundos. Ideal para copiar dados de tabelas, erros de log ou qualquer informação visual sem redigitar nada.</div>
+          <div class="step-num" data-i18n="capture.s3.num">🔍 Bonus OCR</div>
+          <div class="step-title" data-i18n="capture.s3.title">Bonus — Text extraction with OCR</div>
+          <div class="step-desc" data-i18n="capture.s3.desc">Select any region of the image and extract text in seconds. Ideal for copying data from tables, log errors or any visual information without retyping.</div>
         </div>
       </div>
       <div class="feature-media">
@@ -422,24 +465,24 @@ footer span{color:var(--border-hi)}
     <div class="feature-section-header reveal">
       <div class="section-eyebrow">Google Drive Sync</div>
       <h2 class="section-title gradient">Google Drive Sync</h2>
-      <p class="feature-subtitle gradient">Seus arquivos na nuvem, na sua própria conta.</p>
+      <p class="feature-subtitle gradient" data-i18n="drive.sub">Your files in the cloud, in your own account.</p>
     </div>
     <div class="feature-body">
       <div class="feature-steps">
         <div class="step-block active" data-step="1" data-img="assets/screenshots/modo-google-drive-passo-1-login.png">
-          <div class="step-num">🔑 Login seguro</div>
-          <div class="step-title">Conecte sua conta Google</div>
-          <div class="step-desc">Faça login com sua conta Google com tranquilidade — o Claritas usa o próprio sistema de autenticação do Google, então seus dados ficam protegidos e nunca passam por nós.</div>
+          <div class="step-num" data-i18n="drive.s1.num">🔑 Secure login</div>
+          <div class="step-title" data-i18n="drive.s1.title">Connect your Google account</div>
+          <div class="step-desc" data-i18n="drive.s1.desc">Sign in with your Google account with confidence — Claritas uses Google's own authentication system, so your data stays protected and never passes through us.</div>
         </div>
         <div class="step-block" data-step="2" data-img="assets/screenshots/modo-google-drive-passo-2-pastas-no-drive.png">
-          <div class="step-num">📂 Pastas por projeto</div>
-          <div class="step-title">Associe pastas aos projetos</div>
-          <div class="step-desc">Cada projeto do Claritas pode ter uma pasta dedicada no Drive para sincronização automática.</div>
+          <div class="step-num" data-i18n="drive.s2.num">📂 Folders per project</div>
+          <div class="step-title" data-i18n="drive.s2.title">Link folders to projects</div>
+          <div class="step-desc" data-i18n="drive.s2.desc">Each Claritas project can have a dedicated Drive folder for automatic sync.</div>
         </div>
         <div class="step-block" data-step="3" data-img="assets/screenshots/modo-google-drive-passo-3-sincronizacao.png">
-          <div class="step-num">🔄 Sync automático</div>
-          <div class="step-title">Salve e sincronize automaticamente</div>
-          <div class="step-desc">Ao salvar um arquivo, o Claritas faz o upload direto para a pasta do Drive escolhida. E o melhor: você pode compartilhar essa pasta com seus colegas de trabalho, dando acesso a todos os arquivos do projeto em tempo real.</div>
+          <div class="step-num" data-i18n="drive.s3.num">🔄 Auto sync</div>
+          <div class="step-title" data-i18n="drive.s3.title">Save and sync automatically</div>
+          <div class="step-desc" data-i18n="drive.s3.desc">When you save a file, Claritas uploads it directly to the chosen Drive folder. Best of all: you can share that folder with your teammates, giving everyone real-time access to all project files.</div>
         </div>
       </div>
       <div class="feature-media">
@@ -462,19 +505,19 @@ footer span{color:var(--border-hi)}
   <div class="feature-scroll-track">
   <div class="feature-inner kofi-inner">
     <div class="kofi-content">
-      <div class="kofi-eyebrow"><span class="kofi-spark">✦</span><span>Você chegou até aqui</span></div>
-      <h2 class="kofi-heading">Gratuito hoje.<br><span class="kofi-heading--accent">Gratuito para sempre.</span></h2>
-      <p class="kofi-lead">Sem plano pago. Sem anúncios. Sem freemium.<br>O Claritas existe porque boas ferramentas não deveriam ter preço.</p>
+      <div class="kofi-eyebrow"><span class="kofi-spark">✦</span><span data-i18n="kofi.eyebrow">You made it this far</span></div>
+      <h2 class="kofi-heading"><span data-i18n="kofi.heading">Free today.</span><br><span class="kofi-heading--accent" data-i18n="kofi.headingAccent">Free forever.</span></h2>
+      <p class="kofi-lead" data-i18n="kofi.lead">No paid plan. No ads. No freemium.<br>Claritas exists because great tools should not have a price.</p>
       <div class="kofi-stats">
-        <div class="kofi-stat"><span class="kofi-stat-num">0s</span><span class="kofi-stat-label">de configuração</span></div>
+        <div class="kofi-stat"><span class="kofi-stat-num">0s</span><span class="kofi-stat-label" data-i18n="kofi.stat1">setup time</span></div>
         <div class="kofi-stat-div"></div>
-        <div class="kofi-stat"><span class="kofi-stat-num">∞</span><span class="kofi-stat-label">projetos ilimitados</span></div>
+        <div class="kofi-stat"><span class="kofi-stat-num">∞</span><span class="kofi-stat-label" data-i18n="kofi.stat2">unlimited projects</span></div>
         <div class="kofi-stat-div"></div>
-        <div class="kofi-stat"><span class="kofi-stat-num">100%</span><span class="kofi-stat-label">open source</span></div>
+        <div class="kofi-stat"><span class="kofi-stat-num">100%</span><span class="kofi-stat-label" data-i18n="kofi.stat3">open source</span></div>
       </div>
-      <p class="kofi-ask">Se o Claritas te poupou tempo esta semana — uma hora, dez minutos, qualquer coisa — um resistorzinho ajuda a manter o domínio, as atualizações e o projeto vivo.</p>
-      <a href="https://ko-fi.com/vieiralucas9797" class="btn-kofi" target="_blank" rel="noopener">Pague-me um resistor Ω</a>
-      <p class="kofi-micro">Uma vez já ajuda. Todo mês faz diferença. Você decide.</p>
+      <p class="kofi-ask" data-i18n="kofi.ask">If Claritas saved you time this week — an hour, ten minutes, anything — a small resistor helps keep the domain, updates and the project alive.</p>
+      <a href="https://ko-fi.com/vieiralucas9797" class="btn-kofi" target="_blank" rel="noopener" data-i18n="kofi.btn">Buy me a resistor Ω</a>
+      <p class="kofi-micro" data-i18n="kofi.micro">Once already helps. Every month makes a difference. You decide.</p>
     </div>
   </div>
   </div>
@@ -482,7 +525,7 @@ footer span{color:var(--border-hi)}
 
 <!-- ══ FOOTER ══ -->
 <footer>
-  <p>Claritas é open-source sob licença <a href="https://github.com/LucasLima38/Claritas/blob/master/LICENSE" target="_blank" rel="noopener">MIT</a><span>·</span><a href="https://github.com/LucasLima38/Claritas" target="_blank" rel="noopener">GitHub</a><span>·</span><a href="privacy.html">Privacidade</a></p>
+  <p><span data-i18n="footer.copy">Claritas is open-source under the</span> <a href="https://github.com/LucasLima38/Claritas/blob/master/LICENSE" target="_blank" rel="noopener">MIT</a><span>·</span><a href="https://github.com/LucasLima38/Claritas" target="_blank" rel="noopener">GitHub</a><span>·</span><a href="privacy.html" data-i18n="footer.privacy">Privacy</a></p>
 </footer>
 
 <script>
@@ -806,6 +849,520 @@ footer span{color:var(--border-hi)}
   document.querySelectorAll('.feature-scroll-track').forEach(function(el,i){
     el.insertAdjacentHTML('afterbegin','<div class="section-watermark-sticky">'+makeSVG(orders[i]||orders[0])+'</div>');
   });
+})();
+
+// ── i18n ──
+(function () {
+  var TRANSLATIONS = {
+    en: {
+      'meta.title': 'Claritas — EMF to SVG for Altium Designer',
+      'meta.description': 'Claritas captures schematics from Altium Designer clipboard, converts EMF to SVG via Inkscape, and saves them with sequential names per project.',
+      'nav.overview': 'Overview',
+      'nav.clipboard': 'Clipboard Mode',
+      'nav.capture': 'Capture Mode',
+      'nav.drive': 'Google Drive',
+      'nav.kofi': 'Support',
+      'hero.badge': '✦ Free & Open Source',
+      'hero.title': 'Your schematics,',
+      'hero.titleAccent': 'organized in seconds.',
+      'hero.sub': 'Claritas captures EMF directly from the Altium Designer clipboard, converts it to SVG via Inkscape, and saves it with sequential names — automatically.',
+      'hero.download': '⬇ Download for Windows',
+      'hero.github': 'GitHub',
+      'overview.eyebrow': 'Overview',
+      'overview.title': 'Everything in one place.',
+      'overview.sub': 'Claritas connects your Altium workflow to an organized folder structure, without changing how you work.',
+      'overview.s1.num': '📋 Zero friction',
+      'overview.s1.title': 'Copy and it\'s done',
+      'overview.s1.desc': 'Copy the schematic in Altium (Ctrl+C) and Claritas detects the EMF automatically. No drag-and-drop, no manual export.',
+      'overview.s2.num': '🗂 Structure',
+      'overview.s2.title': 'Organized by project',
+      'overview.s2.desc': 'Each project has its own folder. Files are named sequentially — schematic_001.svg, schematic_002.svg — so your history never gets messy.',
+      'overview.s3.num': '⚙ Control',
+      'overview.s3.title': 'SVG, PNG, JPG or PDF',
+      'overview.s3.desc': 'Choose the export format per project. Claritas uses Inkscape in the background — complete vector fidelity, no quality loss.',
+      'clipboard.eyebrow': 'Clipboard Mode',
+      'clipboard.title': 'Copy once. Save forever.',
+      'clipboard.sub': 'Claritas watches the clipboard in the background. The moment Altium copies an EMF, conversion starts — no clicks needed.',
+      'clipboard.s1.num': '1 — Copy in Altium',
+      'clipboard.s1.title': 'Ctrl+C in Altium',
+      'clipboard.s1.desc': 'Select the schematic area in Altium Designer and press Ctrl+C. The EMF lands in the clipboard — Claritas detects it instantly.',
+      'clipboard.s2.num': '2 — Auto-convert',
+      'clipboard.s2.title': 'Inkscape converts silently',
+      'clipboard.s2.desc': 'Claritas passes the EMF to the Inkscape persistent shell. The conversion happens in milliseconds — no window opens, nothing interrupts your flow.',
+      'clipboard.s3.num': '3 — Preview and save',
+      'clipboard.s3.title': 'Review and confirm',
+      'clipboard.s3.desc': 'The preview appears in Claritas. Zoom, pan, confirm and save — or discard if the capture wasn\'t what you wanted.',
+      'capture.eyebrow': 'Capture Mode',
+      'capture.title': 'Shortcut. Instant.',
+      'capture.sub': 'Press the global shortcut to capture the schematic without switching windows.',
+      'capture.s1.num': '1 — Global shortcut',
+      'capture.s1.title': 'Press anywhere',
+      'capture.s1.desc': 'The Claritas shortcut (default: Ctrl+Shift+S) works even when Altium is in focus. Press it and the capture starts immediately.',
+      'capture.s2.num': '2 — Background conversion',
+      'capture.s2.title': 'Instant conversion',
+      'capture.s2.desc': 'The same Inkscape pipeline from Clipboard Mode runs here. Speed is the same — the shortcut just saves you one step.',
+      'capture.s3.num': '3 — Save or discard',
+      'capture.s3.title': 'Your decision',
+      'capture.s3.desc': 'Preview appears, you review, you decide. Save to the active project or discard and capture again.',
+      'drive.eyebrow': 'Google Drive Sync',
+      'drive.title': 'Always backed up.',
+      'drive.sub': 'Connect a Google Drive folder to your project. Every saved SVG is uploaded automatically.',
+      'drive.s1.num': '☁ Connect Drive',
+      'drive.s1.title': 'Link your Google account',
+      'drive.s1.desc': 'In project settings, choose a Google Drive folder. Claritas authenticates via OAuth2 — your credentials stay on your machine.',
+      'drive.s2.num': '📁 Map folder',
+      'drive.s2.title': 'Choose the destination folder',
+      'drive.s2.desc': 'Select any folder in your Drive — root, inside a project, inside Documents. Claritas mirrors the same structure locally.',
+      'drive.s3.num': '🔄 Auto sync',
+      'drive.s3.title': 'Save and sync automatically',
+      'drive.s3.desc': 'When you save a file, Claritas uploads it directly to the chosen Drive folder — in the background, without interrupting your work.',
+      'kofi.eyebrow': 'You made it this far',
+      'kofi.heading': 'Free today.',
+      'kofi.headingAccent': 'Free forever.',
+      'kofi.lead': 'No paid plan. No ads. No freemium.<br>Claritas exists because great tools should not have a price.',
+      'kofi.stat1': 'setup time',
+      'kofi.stat2': 'unlimited projects',
+      'kofi.stat3': 'open source',
+      'kofi.ask': 'If Claritas saved you time this week — an hour, ten minutes, anything — a small resistor helps keep the domain, updates and the project alive.',
+      'kofi.btn': 'Buy me a resistor Ω',
+      'kofi.micro': 'Once already helps. Every month makes a difference. You decide.',
+      'footer.copy': 'Claritas is open-source under the',
+      'footer.privacy': 'Privacy'
+    },
+    'pt-BR': {
+      'meta.title': 'Claritas — EMF para SVG no Altium Designer',
+      'meta.description': 'Claritas captura esquemáticos da área de transferência do Altium Designer, converte EMF em SVG via Inkscape e salva com nomes sequenciais por projeto.',
+      'nav.overview': 'Visão Geral',
+      'nav.clipboard': 'Modo Clipboard',
+      'nav.capture': 'Modo Captura',
+      'nav.drive': 'Google Drive',
+      'nav.kofi': 'Apoiar',
+      'hero.badge': '✦ Gratuito & Open Source',
+      'hero.title': 'Seus esquemáticos,',
+      'hero.titleAccent': 'organizados em segundos.',
+      'hero.sub': 'O Claritas captura EMF diretamente da área de transferência do Altium Designer, converte para SVG via Inkscape e salva com nomes sequenciais — automaticamente.',
+      'hero.download': '⬇ Baixar para Windows',
+      'hero.github': 'GitHub',
+      'overview.eyebrow': 'Visão Geral',
+      'overview.title': 'Tudo em um só lugar.',
+      'overview.sub': 'O Claritas conecta o seu fluxo no Altium a uma estrutura de pastas organizada, sem mudar como você trabalha.',
+      'overview.s1.num': '📋 Zero atrito',
+      'overview.s1.title': 'Copie e está feito',
+      'overview.s1.desc': 'Copie o esquemático no Altium (Ctrl+C) e o Claritas detecta o EMF automaticamente. Sem arrastar, sem exportar manualmente.',
+      'overview.s2.num': '🗂 Estrutura',
+      'overview.s2.title': 'Organizado por projeto',
+      'overview.s2.desc': 'Cada projeto tem sua própria pasta. Os arquivos são nomeados sequencialmente — esquematico_001.svg, esquematico_002.svg — sem bagunça no histórico.',
+      'overview.s3.num': '⚙ Controle',
+      'overview.s3.title': 'SVG, PNG, JPG ou PDF',
+      'overview.s3.desc': 'Escolha o formato de exportação por projeto. O Claritas usa o Inkscape em segundo plano — fidelidade vetorial completa, sem perda de qualidade.',
+      'clipboard.eyebrow': 'Modo Clipboard',
+      'clipboard.title': 'Copie uma vez. Salve para sempre.',
+      'clipboard.sub': 'O Claritas monitora a área de transferência em segundo plano. No momento em que o Altium copia um EMF, a conversão começa — sem cliques.',
+      'clipboard.s1.num': '1 — Copie no Altium',
+      'clipboard.s1.title': 'Ctrl+C no Altium',
+      'clipboard.s1.desc': 'Selecione a área do esquemático no Altium Designer e pressione Ctrl+C. O EMF vai para a área de transferência — o Claritas detecta na hora.',
+      'clipboard.s2.num': '2 — Conversão automática',
+      'clipboard.s2.title': 'Inkscape converte em silêncio',
+      'clipboard.s2.desc': 'O Claritas passa o EMF para o shell persistente do Inkscape. A conversão acontece em milissegundos — nenhuma janela abre, nada interrompe o fluxo.',
+      'clipboard.s3.num': '3 — Prévia e salvar',
+      'clipboard.s3.title': 'Revise e confirme',
+      'clipboard.s3.desc': 'A prévia aparece no Claritas. Zoom, pan, confirme e salve — ou descarte se a captura não foi o que você queria.',
+      'capture.eyebrow': 'Modo Captura',
+      'capture.title': 'Atalho. Instantâneo.',
+      'capture.sub': 'Pressione o atalho global para capturar o esquemático sem trocar de janela.',
+      'capture.s1.num': '1 — Atalho global',
+      'capture.s1.title': 'Pressione em qualquer lugar',
+      'capture.s1.desc': 'O atalho do Claritas (padrão: Ctrl+Shift+S) funciona mesmo com o Altium em foco. Pressione e a captura começa imediatamente.',
+      'capture.s2.num': '2 — Conversão em segundo plano',
+      'capture.s2.title': 'Conversão instantânea',
+      'capture.s2.desc': 'O mesmo pipeline do Inkscape do Modo Clipboard roda aqui. A velocidade é a mesma — o atalho só poupa um passo.',
+      'capture.s3.num': '3 — Salvar ou descartar',
+      'capture.s3.title': 'Sua decisão',
+      'capture.s3.desc': 'A prévia aparece, você revisa, você decide. Salve no projeto ativo ou descarte e capture novamente.',
+      'drive.eyebrow': 'Google Drive Sync',
+      'drive.title': 'Sempre com backup.',
+      'drive.sub': 'Conecte uma pasta do Google Drive ao seu projeto. Cada SVG salvo é enviado automaticamente.',
+      'drive.s1.num': '☁ Conectar Drive',
+      'drive.s1.title': 'Vincule sua conta Google',
+      'drive.s1.desc': 'Nas configurações do projeto, escolha uma pasta do Google Drive. O Claritas autentica via OAuth2 — suas credenciais ficam na sua máquina.',
+      'drive.s2.num': '📁 Mapear pasta',
+      'drive.s2.title': 'Escolha a pasta de destino',
+      'drive.s2.desc': 'Selecione qualquer pasta no seu Drive — raiz, dentro de um projeto, dentro de Documentos. O Claritas espelha a mesma estrutura localmente.',
+      'drive.s3.num': '🔄 Sync automático',
+      'drive.s3.title': 'Salve e sincronize automaticamente',
+      'drive.s3.desc': 'Ao salvar um arquivo, o Claritas o envia direto para a pasta do Drive escolhida — em segundo plano, sem interromper o trabalho.',
+      'kofi.eyebrow': 'Você chegou até aqui',
+      'kofi.heading': 'Gratuito hoje.',
+      'kofi.headingAccent': 'Gratuito para sempre.',
+      'kofi.lead': 'Sem plano pago. Sem anúncios. Sem freemium.<br>O Claritas existe porque boas ferramentas não deveriam ter preço.',
+      'kofi.stat1': 'de configuração',
+      'kofi.stat2': 'projetos ilimitados',
+      'kofi.stat3': 'open source',
+      'kofi.ask': 'Se o Claritas te poupou tempo esta semana — uma hora, dez minutos, qualquer coisa — um resistorzinho ajuda a manter o domínio, as atualizações e o projeto vivo.',
+      'kofi.btn': 'Pague-me um resistor Ω',
+      'kofi.micro': 'Uma vez já ajuda. Todo mês faz diferença. Você decide.',
+      'footer.copy': 'Claritas é open-source sob licença',
+      'footer.privacy': 'Privacidade'
+    },
+    es: {
+      'meta.title': 'Claritas — EMF a SVG para Altium Designer',
+      'meta.description': 'Claritas captura esquemas del portapapeles de Altium Designer, convierte EMF a SVG con Inkscape y los guarda con nombres secuenciales por proyecto.',
+      'nav.overview': 'Resumen',
+      'nav.clipboard': 'Modo Portapapeles',
+      'nav.capture': 'Modo Captura',
+      'nav.drive': 'Google Drive',
+      'nav.kofi': 'Apoyar',
+      'hero.badge': '✦ Gratuito & Open Source',
+      'hero.title': 'Tus esquemas,',
+      'hero.titleAccent': 'organizados en segundos.',
+      'hero.sub': 'Claritas captura EMF directamente del portapapeles de Altium Designer, lo convierte a SVG con Inkscape y lo guarda con nombres secuenciales — automáticamente.',
+      'hero.download': '⬇ Descargar para Windows',
+      'hero.github': 'GitHub',
+      'overview.eyebrow': 'Resumen',
+      'overview.title': 'Todo en un solo lugar.',
+      'overview.sub': 'Claritas conecta tu flujo en Altium a una estructura de carpetas organizada, sin cambiar tu forma de trabajar.',
+      'overview.s1.num': '📋 Sin fricción',
+      'overview.s1.title': 'Copia y listo',
+      'overview.s1.desc': 'Copia el esquema en Altium (Ctrl+C) y Claritas detecta el EMF automáticamente. Sin arrastrar, sin exportar manualmente.',
+      'overview.s2.num': '🗂 Estructura',
+      'overview.s2.title': 'Organizado por proyecto',
+      'overview.s2.desc': 'Cada proyecto tiene su propia carpeta. Los archivos se nombran secuencialmente — esquema_001.svg, esquema_002.svg — sin desorden en el historial.',
+      'overview.s3.num': '⚙ Control',
+      'overview.s3.title': 'SVG, PNG, JPG o PDF',
+      'overview.s3.desc': 'Elige el formato de exportación por proyecto. Claritas usa Inkscape en segundo plano — fidelidad vectorial completa, sin pérdida de calidad.',
+      'clipboard.eyebrow': 'Modo Portapapeles',
+      'clipboard.title': 'Copia una vez. Guarda para siempre.',
+      'clipboard.sub': 'Claritas monitorea el portapapeles en segundo plano. En el momento en que Altium copia un EMF, comienza la conversión — sin clics.',
+      'clipboard.s1.num': '1 — Copia en Altium',
+      'clipboard.s1.title': 'Ctrl+C en Altium',
+      'clipboard.s1.desc': 'Selecciona el área del esquema en Altium Designer y presiona Ctrl+C. El EMF va al portapapeles — Claritas lo detecta al instante.',
+      'clipboard.s2.num': '2 — Conversión automática',
+      'clipboard.s2.title': 'Inkscape convierte en silencio',
+      'clipboard.s2.desc': 'Claritas pasa el EMF al shell persistente de Inkscape. La conversión ocurre en milisegundos — ninguna ventana se abre, nada interrumpe tu flujo.',
+      'clipboard.s3.num': '3 — Vista previa y guardar',
+      'clipboard.s3.title': 'Revisa y confirma',
+      'clipboard.s3.desc': 'La vista previa aparece en Claritas. Zoom, pan, confirma y guarda — o descarta si la captura no fue lo que querías.',
+      'capture.eyebrow': 'Modo Captura',
+      'capture.title': 'Atajo. Instantáneo.',
+      'capture.sub': 'Presiona el atajo global para capturar el esquema sin cambiar de ventana.',
+      'capture.s1.num': '1 — Atajo global',
+      'capture.s1.title': 'Presiona en cualquier lugar',
+      'capture.s1.desc': 'El atajo de Claritas (predeterminado: Ctrl+Shift+S) funciona incluso con Altium en foco. Presiónalo y la captura comienza de inmediato.',
+      'capture.s2.num': '2 — Conversión en segundo plano',
+      'capture.s2.title': 'Conversión instantánea',
+      'capture.s2.desc': 'El mismo pipeline de Inkscape del Modo Portapapeles corre aquí. La velocidad es la misma — el atajo solo ahorra un paso.',
+      'capture.s3.num': '3 — Guardar o descartar',
+      'capture.s3.title': 'Tu decisión',
+      'capture.s3.desc': 'Aparece la vista previa, revisas, decides. Guarda en el proyecto activo o descarta y captura de nuevo.',
+      'drive.eyebrow': 'Google Drive Sync',
+      'drive.title': 'Siempre con respaldo.',
+      'drive.sub': 'Conecta una carpeta de Google Drive a tu proyecto. Cada SVG guardado se sube automáticamente.',
+      'drive.s1.num': '☁ Conectar Drive',
+      'drive.s1.title': 'Vincula tu cuenta de Google',
+      'drive.s1.desc': 'En la configuración del proyecto, elige una carpeta de Google Drive. Claritas se autentica vía OAuth2 — tus credenciales se quedan en tu máquina.',
+      'drive.s2.num': '📁 Mapear carpeta',
+      'drive.s2.title': 'Elige la carpeta de destino',
+      'drive.s2.desc': 'Selecciona cualquier carpeta en tu Drive — raíz, dentro de un proyecto, dentro de Documentos. Claritas replica la misma estructura localmente.',
+      'drive.s3.num': '🔄 Sincronización automática',
+      'drive.s3.title': 'Guarda y sincroniza automáticamente',
+      'drive.s3.desc': 'Cuando guardas un archivo, Claritas lo sube directamente a la carpeta de Drive elegida — en segundo plano, sin interrumpir tu trabajo.',
+      'kofi.eyebrow': 'Llegaste hasta aquí',
+      'kofi.heading': 'Gratis hoy.',
+      'kofi.headingAccent': 'Gratis para siempre.',
+      'kofi.lead': 'Sin plan de pago. Sin anuncios. Sin freemium.<br>Claritas existe porque las buenas herramientas no deberían tener precio.',
+      'kofi.stat1': 'de configuración',
+      'kofi.stat2': 'proyectos ilimitados',
+      'kofi.stat3': 'open source',
+      'kofi.ask': 'Si Claritas te ahorró tiempo esta semana — una hora, diez minutos, lo que sea — un pequeño resistor ayuda a mantener el dominio, las actualizaciones y el proyecto vivo.',
+      'kofi.btn': 'Cómprame un resistor Ω',
+      'kofi.micro': 'Una vez ya ayuda. Cada mes marca la diferencia. Tú decides.',
+      'footer.copy': 'Claritas es open-source bajo licencia',
+      'footer.privacy': 'Privacidad'
+    },
+    fr: {
+      'meta.title': 'Claritas — EMF vers SVG pour Altium Designer',
+      'meta.description': 'Claritas capture les schémas du presse-papiers d\'Altium Designer, convertit EMF en SVG via Inkscape et les sauvegarde avec des noms séquentiels par projet.',
+      'nav.overview': 'Aperçu',
+      'nav.clipboard': 'Mode Presse-papiers',
+      'nav.capture': 'Mode Capture',
+      'nav.drive': 'Google Drive',
+      'nav.kofi': 'Soutenir',
+      'hero.badge': '✦ Gratuit & Open Source',
+      'hero.title': 'Vos schémas,',
+      'hero.titleAccent': 'organisés en secondes.',
+      'hero.sub': 'Claritas capture l\'EMF directement depuis le presse-papiers d\'Altium Designer, le convertit en SVG via Inkscape et le sauvegarde avec des noms séquentiels — automatiquement.',
+      'hero.download': '⬇ Télécharger pour Windows',
+      'hero.github': 'GitHub',
+      'overview.eyebrow': 'Aperçu',
+      'overview.title': 'Tout en un seul endroit.',
+      'overview.sub': 'Claritas connecte votre flux Altium à une structure de dossiers organisée, sans changer votre façon de travailler.',
+      'overview.s1.num': '📋 Zéro friction',
+      'overview.s1.title': 'Copiez et c\'est fait',
+      'overview.s1.desc': 'Copiez le schéma dans Altium (Ctrl+C) et Claritas détecte l\'EMF automatiquement. Pas de glisser-déposer, pas d\'export manuel.',
+      'overview.s2.num': '🗂 Structure',
+      'overview.s2.title': 'Organisé par projet',
+      'overview.s2.desc': 'Chaque projet a son propre dossier. Les fichiers sont nommés séquentiellement — schema_001.svg, schema_002.svg — sans désordre dans l\'historique.',
+      'overview.s3.num': '⚙ Contrôle',
+      'overview.s3.title': 'SVG, PNG, JPG ou PDF',
+      'overview.s3.desc': 'Choisissez le format d\'export par projet. Claritas utilise Inkscape en arrière-plan — fidélité vectorielle complète, sans perte de qualité.',
+      'clipboard.eyebrow': 'Mode Presse-papiers',
+      'clipboard.title': 'Copiez une fois. Sauvegardez pour toujours.',
+      'clipboard.sub': 'Claritas surveille le presse-papiers en arrière-plan. Dès qu\'Altium copie un EMF, la conversion commence — sans clics.',
+      'clipboard.s1.num': '1 — Copiez dans Altium',
+      'clipboard.s1.title': 'Ctrl+C dans Altium',
+      'clipboard.s1.desc': 'Sélectionnez la zone du schéma dans Altium Designer et appuyez sur Ctrl+C. L\'EMF va dans le presse-papiers — Claritas le détecte instantanément.',
+      'clipboard.s2.num': '2 — Conversion automatique',
+      'clipboard.s2.title': 'Inkscape convertit silencieusement',
+      'clipboard.s2.desc': 'Claritas passe l\'EMF au shell persistant d\'Inkscape. La conversion se fait en millisecondes — aucune fenêtre ne s\'ouvre, rien n\'interrompt votre flux.',
+      'clipboard.s3.num': '3 — Aperçu et sauvegarde',
+      'clipboard.s3.title': 'Vérifiez et confirmez',
+      'clipboard.s3.desc': 'L\'aperçu apparaît dans Claritas. Zoom, panoramique, confirmez et sauvegardez — ou rejetez si la capture n\'était pas ce que vous vouliez.',
+      'capture.eyebrow': 'Mode Capture',
+      'capture.title': 'Raccourci. Instantané.',
+      'capture.sub': 'Appuyez sur le raccourci global pour capturer le schéma sans changer de fenêtre.',
+      'capture.s1.num': '1 — Raccourci global',
+      'capture.s1.title': 'Appuyez n\'importe où',
+      'capture.s1.desc': 'Le raccourci Claritas (par défaut : Ctrl+Shift+S) fonctionne même quand Altium est au premier plan. Appuyez et la capture commence immédiatement.',
+      'capture.s2.num': '2 — Conversion en arrière-plan',
+      'capture.s2.title': 'Conversion instantanée',
+      'capture.s2.desc': 'Le même pipeline Inkscape du Mode Presse-papiers s\'exécute ici. La vitesse est identique — le raccourci vous évite juste une étape.',
+      'capture.s3.num': '3 — Sauvegarder ou rejeter',
+      'capture.s3.title': 'Votre décision',
+      'capture.s3.desc': 'L\'aperçu apparaît, vous vérifiez, vous décidez. Sauvegardez dans le projet actif ou rejetez et capturez à nouveau.',
+      'drive.eyebrow': 'Google Drive Sync',
+      'drive.title': 'Toujours sauvegardé.',
+      'drive.sub': 'Connectez un dossier Google Drive à votre projet. Chaque SVG sauvegardé est uploadé automatiquement.',
+      'drive.s1.num': '☁ Connecter Drive',
+      'drive.s1.title': 'Liez votre compte Google',
+      'drive.s1.desc': 'Dans les paramètres du projet, choisissez un dossier Google Drive. Claritas s\'authentifie via OAuth2 — vos identifiants restent sur votre machine.',
+      'drive.s2.num': '📁 Mapper un dossier',
+      'drive.s2.title': 'Choisissez le dossier de destination',
+      'drive.s2.desc': 'Sélectionnez n\'importe quel dossier dans votre Drive — racine, dans un projet, dans Documents. Claritas réplique la même structure localement.',
+      'drive.s3.num': '🔄 Sync automatique',
+      'drive.s3.title': 'Sauvegardez et synchronisez automatiquement',
+      'drive.s3.desc': 'Quand vous sauvegardez un fichier, Claritas l\'envoie directement dans le dossier Drive choisi — en arrière-plan, sans interrompre votre travail.',
+      'kofi.eyebrow': 'Vous êtes allé jusqu\'ici',
+      'kofi.heading': 'Gratuit aujourd\'hui.',
+      'kofi.headingAccent': 'Gratuit pour toujours.',
+      'kofi.lead': 'Pas de plan payant. Pas de publicités. Pas de freemium.<br>Claritas existe parce que les bons outils ne devraient pas avoir de prix.',
+      'kofi.stat1': 'de configuration',
+      'kofi.stat2': 'projets illimités',
+      'kofi.stat3': 'open source',
+      'kofi.ask': 'Si Claritas vous a économisé du temps cette semaine — une heure, dix minutes, n\'importe quoi — une petite résistance aide à maintenir le domaine, les mises à jour et le projet en vie.',
+      'kofi.btn': 'Offrez-moi une résistance Ω',
+      'kofi.micro': 'Une fois aide déjà. Chaque mois fait la différence. Vous décidez.',
+      'footer.copy': 'Claritas est open-source sous licence',
+      'footer.privacy': 'Confidentialité'
+    },
+    de: {
+      'meta.title': 'Claritas — EMF zu SVG für Altium Designer',
+      'meta.description': 'Claritas erfasst Schaltpläne aus der Zwischenablage von Altium Designer, konvertiert EMF zu SVG mit Inkscape und speichert sie mit sequenziellen Namen pro Projekt.',
+      'nav.overview': 'Übersicht',
+      'nav.clipboard': 'Zwischenablage-Modus',
+      'nav.capture': 'Aufnahme-Modus',
+      'nav.drive': 'Google Drive',
+      'nav.kofi': 'Unterstützen',
+      'hero.badge': '✦ Kostenlos & Open Source',
+      'hero.title': 'Ihre Schaltpläne,',
+      'hero.titleAccent': 'in Sekunden organisiert.',
+      'hero.sub': 'Claritas erfasst EMF direkt aus der Zwischenablage von Altium Designer, konvertiert es mit Inkscape zu SVG und speichert es mit sequenziellen Namen — automatisch.',
+      'hero.download': '⬇ Für Windows herunterladen',
+      'hero.github': 'GitHub',
+      'overview.eyebrow': 'Übersicht',
+      'overview.title': 'Alles an einem Ort.',
+      'overview.sub': 'Claritas verbindet Ihren Altium-Workflow mit einer organisierten Ordnerstruktur, ohne Ihre Arbeitsweise zu ändern.',
+      'overview.s1.num': '📋 Null Reibung',
+      'overview.s1.title': 'Kopieren und fertig',
+      'overview.s1.desc': 'Kopieren Sie den Schaltplan in Altium (Ctrl+C) und Claritas erkennt das EMF automatisch. Kein Drag-and-Drop, kein manueller Export.',
+      'overview.s2.num': '🗂 Struktur',
+      'overview.s2.title': 'Nach Projekt organisiert',
+      'overview.s2.desc': 'Jedes Projekt hat seinen eigenen Ordner. Dateien werden sequenziell benannt — schaltplan_001.svg, schaltplan_002.svg — ohne Unordnung im Verlauf.',
+      'overview.s3.num': '⚙ Kontrolle',
+      'overview.s3.title': 'SVG, PNG, JPG oder PDF',
+      'overview.s3.desc': 'Wählen Sie das Exportformat pro Projekt. Claritas verwendet Inkscape im Hintergrund — vollständige Vektortreue, ohne Qualitätsverlust.',
+      'clipboard.eyebrow': 'Zwischenablage-Modus',
+      'clipboard.title': 'Einmal kopieren. Für immer speichern.',
+      'clipboard.sub': 'Claritas überwacht die Zwischenablage im Hintergrund. Sobald Altium ein EMF kopiert, beginnt die Konvertierung — ohne Klicks.',
+      'clipboard.s1.num': '1 — In Altium kopieren',
+      'clipboard.s1.title': 'Ctrl+C in Altium',
+      'clipboard.s1.desc': 'Wählen Sie den Schaltplanbereich in Altium Designer aus und drücken Sie Ctrl+C. Das EMF geht in die Zwischenablage — Claritas erkennt es sofort.',
+      'clipboard.s2.num': '2 — Automatische Konvertierung',
+      'clipboard.s2.title': 'Inkscape konvertiert lautlos',
+      'clipboard.s2.desc': 'Claritas übergibt das EMF an die persistente Inkscape-Shell. Die Konvertierung erfolgt in Millisekunden — kein Fenster öffnet sich, nichts unterbricht den Fluss.',
+      'clipboard.s3.num': '3 — Vorschau und speichern',
+      'clipboard.s3.title': 'Überprüfen und bestätigen',
+      'clipboard.s3.desc': 'Die Vorschau erscheint in Claritas. Zoomen, schwenken, bestätigen und speichern — oder verwerfen, wenn die Aufnahme nicht das war, was Sie wollten.',
+      'capture.eyebrow': 'Aufnahme-Modus',
+      'capture.title': 'Tastenkürzel. Sofort.',
+      'capture.sub': 'Drücken Sie das globale Tastenkürzel, um den Schaltplan aufzunehmen, ohne das Fenster zu wechseln.',
+      'capture.s1.num': '1 — Globales Tastenkürzel',
+      'capture.s1.title': 'Überall drücken',
+      'capture.s1.desc': 'Das Claritas-Tastenkürzel (Standard: Ctrl+Shift+S) funktioniert auch wenn Altium im Fokus ist. Drücken Sie es und die Aufnahme beginnt sofort.',
+      'capture.s2.num': '2 — Konvertierung im Hintergrund',
+      'capture.s2.title': 'Sofortige Konvertierung',
+      'capture.s2.desc': 'Dieselbe Inkscape-Pipeline aus dem Zwischenablage-Modus läuft hier. Die Geschwindigkeit ist dieselbe — das Tastenkürzel spart nur einen Schritt.',
+      'capture.s3.num': '3 — Speichern oder verwerfen',
+      'capture.s3.title': 'Ihre Entscheidung',
+      'capture.s3.desc': 'Die Vorschau erscheint, Sie überprüfen, Sie entscheiden. Im aktiven Projekt speichern oder verwerfen und erneut aufnehmen.',
+      'drive.eyebrow': 'Google Drive Sync',
+      'drive.title': 'Immer gesichert.',
+      'drive.sub': 'Verbinden Sie einen Google Drive-Ordner mit Ihrem Projekt. Jedes gespeicherte SVG wird automatisch hochgeladen.',
+      'drive.s1.num': '☁ Drive verbinden',
+      'drive.s1.title': 'Google-Konto verknüpfen',
+      'drive.s1.desc': 'Wählen Sie in den Projekteinstellungen einen Google Drive-Ordner. Claritas authentifiziert sich über OAuth2 — Ihre Anmeldedaten bleiben auf Ihrem Computer.',
+      'drive.s2.num': '📁 Ordner zuordnen',
+      'drive.s2.title': 'Zielordner auswählen',
+      'drive.s2.desc': 'Wählen Sie einen beliebigen Ordner in Ihrem Drive — Stammverzeichnis, innerhalb eines Projekts, innerhalb von Dokumenten. Claritas spiegelt dieselbe Struktur lokal.',
+      'drive.s3.num': '🔄 Automatische Synchronisierung',
+      'drive.s3.title': 'Automatisch speichern und synchronisieren',
+      'drive.s3.desc': 'Wenn Sie eine Datei speichern, lädt Claritas sie direkt in den gewählten Drive-Ordner hoch — im Hintergrund, ohne Ihre Arbeit zu unterbrechen.',
+      'kofi.eyebrow': 'Sie sind bis hierher gekommen',
+      'kofi.heading': 'Heute kostenlos.',
+      'kofi.headingAccent': 'Für immer kostenlos.',
+      'kofi.lead': 'Kein bezahlter Plan. Keine Werbung. Kein Freemium.<br>Claritas existiert, weil gute Werkzeuge keinen Preis haben sollten.',
+      'kofi.stat1': 'Einrichtungszeit',
+      'kofi.stat2': 'unbegrenzte Projekte',
+      'kofi.stat3': 'open source',
+      'kofi.ask': 'Wenn Claritas Ihnen diese Woche Zeit gespart hat — eine Stunde, zehn Minuten, irgendetwas — ein kleiner Widerstand hilft, die Domain, Updates und das Projekt am Leben zu erhalten.',
+      'kofi.btn': 'Kaufen Sie mir einen Widerstand Ω',
+      'kofi.micro': 'Einmal hilft schon. Jeden Monat macht einen Unterschied. Sie entscheiden.',
+      'footer.copy': 'Claritas ist open-source unter der',
+      'footer.privacy': 'Datenschutz'
+    },
+    'zh-CN': {
+      'meta.title': 'Claritas — Altium Designer EMF 转 SVG',
+      'meta.description': 'Claritas 从 Altium Designer 剪贴板捕获原理图，通过 Inkscape 将 EMF 转换为 SVG，并按项目顺序命名保存。',
+      'nav.overview': '概览',
+      'nav.clipboard': '剪贴板模式',
+      'nav.capture': '捕获模式',
+      'nav.drive': 'Google Drive',
+      'nav.kofi': '支持',
+      'hero.badge': '✦ 免费开源',
+      'hero.title': '您的原理图，',
+      'hero.titleAccent': '秒级整理完毕。',
+      'hero.sub': 'Claritas 直接从 Altium Designer 剪贴板捕获 EMF，通过 Inkscape 转换为 SVG，并自动以顺序命名保存。',
+      'hero.download': '⬇ 下载 Windows 版',
+      'hero.github': 'GitHub',
+      'overview.eyebrow': '概览',
+      'overview.title': '一切尽在一处。',
+      'overview.sub': 'Claritas 将您的 Altium 工作流连接到有序的文件夹结构，而不改变您的工作方式。',
+      'overview.s1.num': '📋 零摩擦',
+      'overview.s1.title': '复制即完成',
+      'overview.s1.desc': '在 Altium 中复制原理图（Ctrl+C），Claritas 自动检测 EMF。无需拖放，无需手动导出。',
+      'overview.s2.num': '🗂 结构',
+      'overview.s2.title': '按项目整理',
+      'overview.s2.desc': '每个项目都有独立的文件夹。文件按顺序命名 — schematic_001.svg、schematic_002.svg — 历史记录永不混乱。',
+      'overview.s3.num': '⚙ 控制',
+      'overview.s3.title': 'SVG、PNG、JPG 或 PDF',
+      'overview.s3.desc': '按项目选择导出格式。Claritas 在后台使用 Inkscape — 完整矢量保真，无质量损失。',
+      'clipboard.eyebrow': '剪贴板模式',
+      'clipboard.title': '复制一次。永久保存。',
+      'clipboard.sub': 'Claritas 在后台监控剪贴板。Altium 一旦复制 EMF，转换即刻开始 — 无需点击。',
+      'clipboard.s1.num': '1 — 在 Altium 中复制',
+      'clipboard.s1.title': '在 Altium 中按 Ctrl+C',
+      'clipboard.s1.desc': '在 Altium Designer 中选择原理图区域并按 Ctrl+C。EMF 进入剪贴板 — Claritas 立即检测到。',
+      'clipboard.s2.num': '2 — 自动转换',
+      'clipboard.s2.title': 'Inkscape 静默转换',
+      'clipboard.s2.desc': 'Claritas 将 EMF 传递给 Inkscape 持久化 shell。转换在毫秒内完成 — 不打开任何窗口，不中断您的工作流。',
+      'clipboard.s3.num': '3 — 预览并保存',
+      'clipboard.s3.title': '审查并确认',
+      'clipboard.s3.desc': '预览在 Claritas 中显示。缩放、平移、确认并保存 — 如果捕获不是您想要的，也可以丢弃。',
+      'capture.eyebrow': '捕获模式',
+      'capture.title': '快捷键。即时。',
+      'capture.sub': '按全局快捷键无需切换窗口即可捕获原理图。',
+      'capture.s1.num': '1 — 全局快捷键',
+      'capture.s1.title': '随处按下',
+      'capture.s1.desc': 'Claritas 快捷键（默认：Ctrl+Shift+S）即使 Altium 处于焦点时也有效。按下即开始捕获。',
+      'capture.s2.num': '2 — 后台转换',
+      'capture.s2.title': '即时转换',
+      'capture.s2.desc': '与剪贴板模式相同的 Inkscape 流水线在此运行。速度相同 — 快捷键只是省去了一个步骤。',
+      'capture.s3.num': '3 — 保存或丢弃',
+      'capture.s3.title': '您的决定',
+      'capture.s3.desc': '预览出现，您审查，您决定。保存到活动项目或丢弃并重新捕获。',
+      'drive.eyebrow': 'Google Drive 同步',
+      'drive.title': '始终有备份。',
+      'drive.sub': '将 Google Drive 文件夹连接到您的项目。每个保存的 SVG 自动上传。',
+      'drive.s1.num': '☁ 连接 Drive',
+      'drive.s1.title': '关联您的 Google 账户',
+      'drive.s1.desc': '在项目设置中，选择一个 Google Drive 文件夹。Claritas 通过 OAuth2 认证 — 您的凭据留在您的机器上。',
+      'drive.s2.num': '📁 映射文件夹',
+      'drive.s2.title': '选择目标文件夹',
+      'drive.s2.desc': '选择您 Drive 中的任意文件夹 — 根目录、项目内、文档内。Claritas 在本地镜像相同的结构。',
+      'drive.s3.num': '🔄 自动同步',
+      'drive.s3.title': '自动保存并同步',
+      'drive.s3.desc': '当您保存文件时，Claritas 直接将其上传到所选的 Drive 文件夹 — 在后台，不中断您的工作。',
+      'kofi.eyebrow': '您来到了这里',
+      'kofi.heading': '今天免费。',
+      'kofi.headingAccent': '永远免费。',
+      'kofi.lead': '没有付费计划。没有广告。没有免费增值。<br>Claritas 的存在，是因为好工具不应该有价格。',
+      'kofi.stat1': '配置时间',
+      'kofi.stat2': '无限项目',
+      'kofi.stat3': '开源',
+      'kofi.ask': '如果 Claritas 本周为您节省了时间 — 一小时、十分钟、任何时间 — 一个小电阻有助于维持域名、更新和项目的运营。',
+      'kofi.btn': '请我喝杯奶茶 Ω',
+      'kofi.micro': '一次就有帮助。每月都有影响。您决定。',
+      'footer.copy': 'Claritas 是开源软件，采用',
+      'footer.privacy': '隐私政策'
+    }
+  };
+
+  var LANG_META = {
+    'en':    { flag: '🇺🇸', code: 'EN' },
+    'pt-BR': { flag: '🇧🇷', code: 'PT' },
+    'es':    { flag: '🇪🇸', code: 'ES' },
+    'fr':    { flag: '🇫🇷', code: 'FR' },
+    'de':    { flag: '🇩🇪', code: 'DE' },
+    'zh-CN': { flag: '🇨🇳', code: 'ZH' }
+  };
+
+  function setLanguage(lang) {
+    var t = TRANSLATIONS[lang] || TRANSLATIONS['en'];
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      if (t[key] !== undefined) { el.innerHTML = t[key]; }
+    });
+    document.documentElement.setAttribute('lang', lang);
+    var titleEl = document.querySelector('title');
+    if (titleEl && t['meta.title']) { titleEl.textContent = t['meta.title']; }
+    var metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc && t['meta.description']) { metaDesc.setAttribute('content', t['meta.description']); }
+    localStorage.setItem('claritas-lang', lang);
+    var meta = LANG_META[lang] || LANG_META['en'];
+    var flagEl = document.getElementById('lang-flag');
+    var codeEl = document.getElementById('lang-code');
+    if (flagEl) { flagEl.textContent = meta.flag; }
+    if (codeEl) { codeEl.textContent = meta.code; }
+    document.querySelectorAll('.lang-opt').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+    });
+  }
+
+  // Init
+  var stored = localStorage.getItem('claritas-lang') || 'en';
+  setLanguage(stored);
+
+  // Dropdown toggle
+  var selector = document.getElementById('lang-selector');
+  var btn = document.getElementById('lang-btn');
+  var dropdown = document.getElementById('lang-dropdown');
+  if (selector && btn && dropdown) {
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = selector.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    dropdown.querySelectorAll('.lang-opt').forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        setLanguage(opt.getAttribute('data-lang'));
+        selector.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      });
+    });
+    document.addEventListener('click', function () {
+      selector.classList.remove('open');
+      btn.setAttribute('aria-expanded', 'false');
+    });
+  }
 })();
 </script>
 </body>

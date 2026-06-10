@@ -13,7 +13,7 @@ const mockSharpFn = vi.fn().mockReturnValue(mockSharpInstance)
 
 vi.mock('sharp', () => ({ default: mockSharpFn }))
 
-import { isValidSVG, getSVGMetadata, optimizeSvg, processEmbeddedImages, expandCanvasToContent } from '../../src/main/svgUtils.js'
+import { isValidSVG, getSVGMetadata, optimizeSvg, processEmbeddedImages, expandCanvasToContent, fixRotatedTextBaseline } from '../../src/main/svgUtils.js'
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -232,5 +232,35 @@ describe('expandCanvasToContent()', () => {
     expect(vb).not.toBeNull()
     const [, , y, , h] = vb.map(Number)
     expect(y + h).toBeGreaterThanOrEqual(348)
+  })
+})
+
+describe('fixRotatedTextBaseline()', () => {
+  it('adds the baseline offset as local dx for -90° glyphs', () => {
+    const svg = '<text transform="rotate(-90, 231.0000, 350.0000) translate(0, 7.2000)" x="231.0000" y="342.8000" font-size="8.0000"><![CDATA[G]]></text>'
+    const out = fixRotatedTextBaseline(svg)
+    expect(out).toContain('rotate(-90, 231.0000, 350.0000) translate(7.2, 7.2000)')
+  })
+
+  it('subtracts the baseline offset as local dx for +90° glyphs', () => {
+    const svg = '<text transform="rotate(90, 100.0000, 50.0000) translate(0, 7.2000)" x="100.0000" y="42.8000" font-size="8.0000"><![CDATA[G]]></text>'
+    const out = fixRotatedTextBaseline(svg)
+    expect(out).toContain('rotate(90, 100.0000, 50.0000) translate(-7.2, 7.2000)')
+  })
+
+  it('preserves an existing non-zero translate dx', () => {
+    const svg = '<text transform="rotate(-90, 10, 20) translate(1.5, 7.2000)" x="10" y="12.8"><![CDATA[A]]></text>'
+    const out = fixRotatedTextBaseline(svg)
+    expect(out).toContain('rotate(-90, 10, 20) translate(8.7, 7.2000)')
+  })
+
+  it('leaves non-±90° rotations untouched', () => {
+    const svg = '<text transform="rotate(-45, 10, 20) translate(0, 7.2000)" x="10" y="12.8"><![CDATA[A]]></text>'
+    expect(fixRotatedTextBaseline(svg)).toBe(svg)
+  })
+
+  it('leaves zero baseline offsets untouched', () => {
+    const svg = '<text transform="rotate(-90, 10, 20) translate(0, 0)" x="10" y="20"><![CDATA[A]]></text>'
+    expect(fixRotatedTextBaseline(svg)).toBe(svg)
   })
 })

@@ -221,6 +221,26 @@ export function expandCanvasToContent(svgContent) {
   )
 }
 
+// Inkscape's EMF conversion emits rotated glyphs as
+// rotate(±90, x, y+dy) translate(0, dy), where dy is the font ascent
+// (0.9 × font-size). That applies the baseline offset along screen Y, but for
+// ±90° text it must act along the rotated baseline axis — every vertical label
+// lands dy units too low (-90°) or too high (+90°), so labels on a symbol's
+// top edge sit too far inside while bottom-edge labels touch the border.
+// Compensate with a local-space X offset, which rotation maps onto screen Y.
+export function fixRotatedTextBaseline(svgContent) {
+  return svgContent.replace(
+    /transform="rotate\(\s*(-?[\d.]+)[\s,]+(-?[\d.]+)[\s,]+(-?[\d.]+)\s*\)\s*translate\(\s*(-?[\d.]+)[\s,]+(-?[\d.]+)\s*\)"/g,
+    (match, angle, cx, cy, tdx, tdy) => {
+      const a = parseFloat(angle)
+      const dy = parseFloat(tdy)
+      if (Math.abs(Math.abs(a) - 90) > 1 || dy === 0) return match
+      const localDx = a < 0 ? dy : -dy
+      return `transform="rotate(${angle}, ${cx}, ${cy}) translate(${parseFloat(tdx) + localDx}, ${tdy})"`
+    }
+  )
+}
+
 export function optimizeSvg(svgContent) {
   try {
     const result = optimize(svgContent, {

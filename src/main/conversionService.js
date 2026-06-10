@@ -2,7 +2,7 @@ import { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
 import { randomUUID } from 'crypto'
-import { isValidSVG, getSVGMetadata, optimizeSvg } from './svgUtils.js'
+import { isValidSVG, getSVGMetadata, optimizeSvg, processEmbeddedImages, expandCanvasToContent } from './svgUtils.js'
 
 export { isValidSVG, getSVGMetadata }
 
@@ -80,7 +80,10 @@ export async function convert(emfBuffer, timeout = 15_000) {
     if (!_shell) throw new Error('SHELL_NOT_INITIALIZED')
     await _shell.convert(emfPath, svgPath, timeout)
     const svgContent = await fsp.readFile(svgPath, 'utf8')
-    return optimizeSvg(svgContent)
+    const processed = await processEmbeddedImages(svgContent)
+    const expanded = expandCanvasToContent(processed)
+    const optimized = optimizeSvg(expanded)
+    return optimized
   } finally {
     await fsp.unlink(emfPath).catch(() => {})
     await fsp.unlink(svgPath).catch(() => {})

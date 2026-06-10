@@ -1,38 +1,57 @@
 import fs from 'node:fs'
 import { google } from 'googleapis'
 
+const CLARITAS_FOLDER_NAME = '.claritas'
+
 function getDrive(authClient) {
   return google.drive({ version: 'v3', auth: authClient })
 }
 
-async function findAppDataFile(authClient, filename) {
+async function findOrCreateClaritasFolder(authClient) {
   const drive = getDrive(authClient)
   const res = await drive.files.list({
-    spaces: 'appDataFolder',
-    q: `name = '${filename.replace(/'/g, "\\'")}'`,
+    q: `name = '${CLARITAS_FOLDER_NAME}' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
     fields: 'files(id)',
     pageSize: 1,
+    spaces: 'drive',
   })
-  return res.data.files?.[0]?.id ?? null
+  if (res.data.files?.[0]?.id) return res.data.files[0].id
+  const created = await drive.files.create({
+    requestBody: { name: CLARITAS_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' },
+    fields: 'id',
+  })
+  return created.data.id
 }
 
 export async function getAppDataFile(authClient, filename) {
-  const fileId = await findAppDataFile(authClient, filename)
-  if (!fileId) return null
   const drive = getDrive(authClient)
-  const res = await drive.files.get({ fileId, alt: 'media' })
-  return typeof res.data === 'string' ? res.data : JSON.stringify(res.data)
+  const folderId = await findOrCreateClaritasFolder(authClient)
+  const res = await drive.files.list({
+    q: `name = '${filename.replace(/'/g, "\\'")}' and '${folderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+    pageSize: 1,
+  })
+  const fileId = res.data.files?.[0]?.id
+  if (!fileId) return null
+  const fileRes = await drive.files.get({ fileId, alt: 'media' })
+  return typeof fileRes.data === 'string' ? fileRes.data : JSON.stringify(fileRes.data)
 }
 
 export async function upsertAppDataFile(authClient, filename, content) {
   const drive = getDrive(authClient)
+  const folderId = await findOrCreateClaritasFolder(authClient)
   const media = { mimeType: 'application/json', body: content }
-  const existingId = await findAppDataFile(authClient, filename)
+  const res = await drive.files.list({
+    q: `name = '${filename.replace(/'/g, "\\'")}' and '${folderId}' in parents and trashed = false`,
+    fields: 'files(id)',
+    pageSize: 1,
+  })
+  const existingId = res.data.files?.[0]?.id
   if (existingId) {
     await drive.files.update({ fileId: existingId, media })
   } else {
     await drive.files.create({
-      requestBody: { name: filename, parents: ['appDataFolder'] },
+      requestBody: { name: filename, parents: [folderId] },
       media,
     })
   }

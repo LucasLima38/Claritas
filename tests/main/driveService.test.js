@@ -39,19 +39,37 @@ beforeEach(async () => {
   driveService = await import('../../src/main/driveService.js')
 })
 
+const FOLDER_ID = 'claritas-folder-id'
+
 describe('getAppDataFile', () => {
-  it('returns null when file does not exist in appDataFolder', async () => {
-    mockDriveInstance.files.list.mockResolvedValue({ data: { files: [] } })
+  it('returns null when file does not exist in .claritas folder', async () => {
+    // 1st list: find .claritas folder (exists), 2nd list: find file (not found)
+    mockDriveInstance.files.list
+      .mockResolvedValueOnce({ data: { files: [{ id: FOLDER_ID }] } })
+      .mockResolvedValueOnce({ data: { files: [] } })
     const result = await driveService.getAppDataFile(mockAuthClient, 'projects.json')
     expect(result).toBeNull()
   })
 
   it('returns file content string when file exists', async () => {
     const fileId = 'file-id-123'
-    mockDriveInstance.files.list.mockResolvedValue({ data: { files: [{ id: fileId }] } })
+    mockDriveInstance.files.list
+      .mockResolvedValueOnce({ data: { files: [{ id: FOLDER_ID }] } })
+      .mockResolvedValueOnce({ data: { files: [{ id: fileId }] } })
     mockDriveInstance.files.get.mockResolvedValue({ data: '{"updatedAt":1,"projects":[]}' })
     const result = await driveService.getAppDataFile(mockAuthClient, 'projects.json')
     expect(result).toBe('{"updatedAt":1,"projects":[]}')
+  })
+
+  it('creates .claritas folder when it does not exist yet', async () => {
+    // 1st list: folder not found → create it; 2nd list: file not found
+    mockDriveInstance.files.list
+      .mockResolvedValueOnce({ data: { files: [] } })
+      .mockResolvedValueOnce({ data: { files: [] } })
+    mockDriveInstance.files.create.mockResolvedValue({ data: { id: FOLDER_ID } })
+    const result = await driveService.getAppDataFile(mockAuthClient, 'projects.json')
+    expect(result).toBeNull()
+    expect(mockDriveInstance.files.create).toHaveBeenCalledTimes(1)
   })
 
   it('propagates error when files.list rejects', async () => {
@@ -62,7 +80,10 @@ describe('getAppDataFile', () => {
 
 describe('upsertAppDataFile', () => {
   it('creates a new file when it does not exist', async () => {
-    mockDriveInstance.files.list.mockResolvedValue({ data: { files: [] } })
+    // folder exists, file does not → create file only (1 create call)
+    mockDriveInstance.files.list
+      .mockResolvedValueOnce({ data: { files: [{ id: FOLDER_ID }] } })
+      .mockResolvedValueOnce({ data: { files: [] } })
     mockDriveInstance.files.create.mockResolvedValue({ data: { id: 'new-id' } })
     const result = await driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"projects":[]}')
     expect(result).toEqual({ ok: true })
@@ -70,7 +91,9 @@ describe('upsertAppDataFile', () => {
   })
 
   it('updates existing file when it already exists', async () => {
-    mockDriveInstance.files.list.mockResolvedValue({ data: { files: [{ id: 'existing-id' }] } })
+    mockDriveInstance.files.list
+      .mockResolvedValueOnce({ data: { files: [{ id: FOLDER_ID }] } })
+      .mockResolvedValueOnce({ data: { files: [{ id: 'existing-id' }] } })
     mockDriveInstance.files.update.mockResolvedValue({ data: { id: 'existing-id' } })
     const result = await driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"projects":[]}')
     expect(result).toEqual({ ok: true })
@@ -79,7 +102,9 @@ describe('upsertAppDataFile', () => {
   })
 
   it('propagates error when create rejects', async () => {
-    mockDriveInstance.files.list.mockResolvedValue({ data: { files: [] } })
+    mockDriveInstance.files.list
+      .mockResolvedValueOnce({ data: { files: [{ id: FOLDER_ID }] } })
+      .mockResolvedValueOnce({ data: { files: [] } })
     mockDriveInstance.files.create.mockRejectedValue(new Error('quota exceeded'))
     await expect(driveService.upsertAppDataFile(mockAuthClient, 'projects.json', '{"projects":[]}')).rejects.toThrow('quota exceeded')
   })

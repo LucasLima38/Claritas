@@ -15,7 +15,7 @@ export class Libemf2svgShell {
 
   async convert(emfPath, svgPath, timeout = 15_000) {
     return new Promise((resolve, reject) => {
-      const proc = spawn(this._exe, ['-i', emfPath, '-o', svgPath], {
+      const proc = spawn(this._exe, ['-i', emfPath, '-o', svgPath, '--emfplus'], {
         cwd: this._dir,
         stdio: ['ignore', 'pipe', 'pipe'],
       })

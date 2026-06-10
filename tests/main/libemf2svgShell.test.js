@@ -62,12 +62,12 @@ describe('Libemf2svgShell', () => {
   // ── convert() ─────────────────────────────────────────────────────────────
 
   describe('convert()', () => {
-    it('spawns emf2svg-conv.exe with -i and -o flags and resolves on exit code 0', async () => {
+    it('spawns emf2svg-conv.exe with -i, -o and --emfplus flags and resolves on exit code 0', async () => {
       const p = shell.convert('C:\\tmp\\in.emf', 'C:\\tmp\\out.svg')
 
       expect(mockSpawn).toHaveBeenCalledWith(
         `${FAKE_DIR}\\emf2svg-conv.exe`,
-        ['-i', 'C:\\tmp\\in.emf', '-o', 'C:\\tmp\\out.svg'],
+        ['-i', 'C:\\tmp\\in.emf', '-o', 'C:\\tmp\\out.svg', '--emfplus'],
         expect.objectContaining({ cwd: FAKE_DIR })
       )
 

@@ -46,6 +46,7 @@ const conversionShell = new Libemf2svgShell(resolveLibemf2svgDir())
 
 let mainWindow = null
 let tray = null
+let isQuitting = false
 // Queue of converted SVGs waiting for user action — each item: { svgContent, metadata, sent }
 // 'sent' = already delivered to renderer via preview-ready (items captured while window hidden are not yet sent)
 let pendingQueue = []
@@ -158,7 +159,7 @@ function createWindow() {
   }
 
   mainWindow.on('close', (e) => {
-    if (store.getSettings().closeHides) {
+    if (!isQuitting && store.getSettings().closeHides) {
       e.preventDefault()
       mainWindow.hide()
     }
@@ -259,6 +260,7 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  isQuitting = true
   stopTrayBlink()
   tray?.destroy()
   clipboardMonitor.stop()

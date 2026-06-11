@@ -159,7 +159,7 @@ export async function processEmbeddedImages(svgContent) {
   return segments.join('')
 }
 
-// Inkscape's EMF conversion sizes the canvas to the drawing's vector geometry,
+// EMF conversion sizes the canvas to the drawing's vector geometry,
 // but text glyphs (rendered as <text>, one element per glyph for rotated labels)
 // can extend past it and get clipped. Expand the canvas to cover all text anchors.
 export function expandCanvasToContent(svgContent) {
@@ -221,7 +221,7 @@ export function expandCanvasToContent(svgContent) {
   )
 }
 
-// Inkscape's EMF conversion emits rotated glyphs as
+// EMF conversion emits rotated glyphs as
 // rotate(±90, x, y+dy) translate(0, dy), where dy is the font ascent
 // (0.9 × font-size). That applies the baseline offset along screen Y, but for
 // ±90° text it must act along the rotated baseline axis — every vertical label

@@ -1,6 +1,6 @@
 {
   "name": "claritas",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "An Electron application with React",
   "main": "./out/main/index.js",
   "author": "Lucas Lima <vieiralucas9797@gmail.com>",

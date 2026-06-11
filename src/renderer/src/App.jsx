@@ -89,7 +89,8 @@ export default function App() {
         isManualCheck.current = false
         toast(t('app.upToDate'), { duration: 3000 })
       }
-      setUpdateStatus((prev) => (prev === 'checking' ? 'idle' : prev))
+      setUpdateStatus('idle')
+      setDownloadPercent(0)
     })
   }, [])
 
